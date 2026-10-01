@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jarvis">
+<meta name="theme-color" content="#07090d">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<title>Jarvis</title>
+<style>
+  :root {
+    --bg: #07090d;
+    --panel: #10141b;
+    --line: #1d2430;
+    --text: #e8edf4;
+    --muted: #7d8898;
+    --accent: #4fd1c5;
+    --think: #f6c26b;
+    --speak: #7aa2ff;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 16px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; }
+  body { display: flex; flex-direction: column; padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom); }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 18px 2px 8px; gap: 12px; }
+  header h1 { font-size: 15px; letter-spacing: .32em; font-weight: 600; margin: 0; }
+  .voice { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .voice button { background: var(--panel); border: 1px solid var(--line); color: var(--text); border-radius: 999px;
+    padding: 5px 11px; font-size: 12px; }
+  .voice button:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #log { flex: 1; overflow-y: auto; padding: 8px 0 12px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .msg { max-width: 86%; padding: 10px 13px; border-radius: 16px; font-size: 15px; white-space: pre-wrap; word-wrap: break-word; }
+  .me { align-self: flex-end; background: #1a2230; border-bottom-right-radius: 5px; }
+  .jv { align-self: flex-start; background: var(--panel); border: 1px solid var(--line); border-bottom-left-radius: 5px; }
+  .sys { align-self: center; color: var(--muted); font-size: 12px; text-align: center; max-width: 92%; }
+  .live { opacity: .6; font-style: italic; }
+  #stage { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 10px 0 14px; }
+  #orb { width: 132px; height: 132px; border-radius: 50%; border: 0; cursor: pointer; position: relative;
+    background: radial-gradient(circle at 35% 30%, #1d2b33, #0b1014 70%); box-shadow: 0 0 0 1px var(--line) inset;
+    transition: transform .15s ease; }
+  #orb:active { transform: scale(.96); }
+  #orb::after { content: ""; position: absolute; inset: 22px; border-radius: 50%;
+    background: radial-gradient(circle, var(--c, #34404d) 0%, transparent 70%); opacity: .9;
+    transform: scale(var(--lvl, 1)); transition: transform .08s linear, background .3s; }
+  #orb.listening { --c: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset, 0 0 40px -8px var(--accent); animation: breathe 1.6s ease-in-out infinite; }
+  #orb.thinking  { --c: var(--think);  box-shadow: 0 0 0 2px var(--think) inset; animation: pulse 1.2s ease-in-out infinite; }
+  #orb.speaking  { --c: var(--speak);  box-shadow: 0 0 0 2px var(--speak) inset, 0 0 40px -8px var(--speak); }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 2px var(--think) inset, 0 0 46px -6px var(--think); } }
+  @keyframes breathe { 50% { --lvl: 1.25; box-shadow: 0 0 0 2px var(--accent) inset, 0 0 52px -6px var(--accent); } }
+  @media (prefers-reduced-motion: reduce) { #orb, #orb::after { animation: none !important; transition: none; } }
+  #status { font-size: 13px; color: var(--muted); min-height: 18px; text-align: center; }
+  form { display: flex; gap: 8px; padding-bottom: 14px; }
+  input { flex: 1; min-width: 0; background: var(--panel); border: 1px solid var(--line); color: var(--text);
+    border-radius: 12px; padding: 11px 13px; font-size: 16px; outline: none; }
+  button.send { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 0 15px; font-size: 15px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>JARVIS</h1>
+  <div class="voice">Stimme <button id="voiceBtn" type="button">iPhone · gratis</button></div>
+</header>
+<div id="log"><div class="msg sys">Tippe auf den Kreis und sprich. Nochmal tippen beendet das Gespräch.</div></div>
+<div id="stage">
+  <button id="orb" type="button" aria-label="Gespräch starten oder beenden"></button>
+  <div id="status">Bereit</div>
+</div>
+<form id="form" autocomplete="off">
+  <input id="text" placeholder="Oder hier schreiben …" enterkeyhint="send" aria-label="Nachricht an Jarvis">
+  <button class="send" type="submit">Senden</button>
+</form>
+<script>
+(function () {
+  var ENDPOINT = 'https://luisdtg16.app.n8n.cloud/webhook/jarvis-talk';
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  var KEY = new URLSearchParams(location.search).get('key') || store('jarvis_key') || '';
+  if (KEY) store('jarvis_key', KEY);
+
+  var orb = document.getElementById('orb');
+  var statusEl = document.getElementById('status');
+  var log = document.getElementById('log');
+  var form = document.getElementById('form');
+  var textIn = document.getElementById('text');
+  var voiceBtn = document.getElementById('voiceBtn');
+
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var hasTTS = 'speechSynthesis' in window;
+  var serverVoice = store('jarvis_voice') === 'server' || !hasTTS;
+  var active = false, state = 'idle', busy = false;
+  var rec = null, liveEl = null, finalText = '';
+  var audioCtx = null, currentSource = null;
+  var stream = null, recorder = null, chunks = [], mime = '', analyser = null, buf = null, rafId = 0;
+
+  function paintVoice() { voiceBtn.textContent = serverVoice ? 'Jarvis · HD' : 'iPhone · gratis'; }
+  paintVoice();
+  voiceBtn.addEventListener('click', function () {
+    if (!hasTTS) return;
+    serverVoice = !serverVoice; store('jarvis_voice', serverVoice ? 'server' : 'device'); paintVoice();
+    add('sys', serverVoice ? 'HD-Stimme an (kostet ca. 1 Cent pro Antwort).' : 'iPhone-Stimme an (kostenlos).');
+  });
+
+  function add(cls, txt) {
+    var el = document.createElement('div');
+    el.className = 'msg ' + cls; el.textContent = txt;
+    log.appendChild(el); log.scrollTop = log.scrollHeight; return el;
+  }
+  function setState(s, label) { state = s; orb.className = (s === 'idle') ? '' : s; statusEl.textContent = label; }
+  function clean(t) { return String(t || '').replace(/<[^>]+>/g, '').replace(/[•*_#]/g, '').replace(/\s+\n/g, '\n').trim(); }
+
+  // ---------- Stimme (Ausgabe) ----------
+  var voice = null;
+  function pickVoice() {
+    if (!hasTTS) return;
+    var vs = speechSynthesis.getVoices().filter(function (v) { return /^de/i.test(v.lang); });
+    var pref = ['Martin', 'Markus', 'Yannick', 'Viktor', 'Helena', 'Anna'];
+    vs.sort(function (a, b) {
+      var q = function (v) { return /premium|enhanced|erweitert/i.test(v.name) ? 0 : 1; };
+      var p = function (v) { var i = pref.findIndex(function (n) { return v.name.indexOf(n) > -1; }); return i < 0 ? 99 : i; };
+      return q(a) - q(b) || p(a) - p(b);
+    });
+    voice = vs[0] || null;
+  }
+  if (hasTTS) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+
+  function speakDevice(text) {
+    return new Promise(function (resolve) {
+      try {
+        speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(clean(text));
+        u.lang = 'de-DE'; if (voice) u.voice = voice; u.rate = 1.03;
+        u.onend = resolve; u.onerror = resolve;
+        setState('speaking', 'Jarvis spricht … (tippen zum Beenden)');
+        speechSynthesis.speak(u);
+      } catch (e) { resolve(); }
+    });
+  }
+  function playServer(b64) {
+    return new Promise(async function (resolve) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
+        var bin = atob(b64), bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        var ab = await audioCtx.decodeAudioData(bytes.buffer);
+        var src = audioCtx.createBufferSource(); src.buffer = ab; src.connect(audioCtx.destination);
+        currentSource = src;
+        setState('speaking', 'Jarvis spricht … (tippen zum Beenden)');
+        src.onended = function () { currentSource = null; resolve(); };
+        src.start();
+      } catch (e) { resolve(); }
+    });
+  }
+  function unlockAudio() {
+    try { if (hasTTS) { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } } catch (e) {}
+    try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch (e) {}
+  }
+
+  // ---------- Senden ----------
+  async function send(payload) {
+    busy = true;
+    setState('thinking', 'Jarvis denkt nach …');
+    payload.key = KEY; payload.tts = serverVoice;
+    try {
+      var res = await fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (!res.ok) throw new Error('Server antwortet mit ' + res.status);
+      var data = await res.json();
+      if (data.frage && payload.audio) add('me', data.frage);
+      if (data.antwort) add('jv', clean(data.antwort));
+      if (active || payload.fromVoice) {
+        if (data.audio) await playServer(data.audio);
+        else if (data.antwort && hasTTS) await speakDevice(data.antwort);
+      }
+    } catch (e) {
+      add('sys', 'Keine Verbindung zu Jarvis (' + e.message + '). Bitte nochmal versuchen.');
+    }
+    busy = false;
+    if (active) listen(); else setState('idle', 'Bereit');
+  }
+
+  // ---------- Zuhören: iPhone-Spracherkennung ----------
+  function listenSR() {
+    finalText = ''; liveEl = null;
+    rec = new SR();
+    rec.lang = 'de-DE'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+    rec.onresult = function (ev) {
+      var interim = '';
+      for (var i = ev.resultIndex; i < ev.results.length; i++) {
+        var r = ev.results[i];
+        if (r.isFinal) finalText += r[0].transcript; else interim += r[0].transcript;
+      }
+      var shown = (finalText + ' ' + interim).trim();
+      if (shown) { if (!liveEl) liveEl = add('me live', shown); else liveEl.textContent = shown; log.scrollTop = log.scrollHeight; }
+    };
+    rec.onerror = function (ev) {
+      if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
+        add('sys', 'Mikrofon oder Spracherkennung ist nicht erlaubt. iPhone: Einstellungen → Apps → Safari → Mikrofon → Erlauben, und Siri & Diktieren einschalten.');
+        active = false; setState('idle', 'Bereit');
+      }
+    };
+    rec.onend = function () {
+      var t = (finalText || (liveEl ? liveEl.textContent : '')).trim();
+      if (liveEl) { liveEl.classList.remove('live'); liveEl.textContent = t; if (!t) liveEl.remove(); }
+      rec = null;
+      if (!active) { setState('idle', 'Bereit'); return; }
+      if (t) send({ text: t, fromVoice: true });
+      else listen();
+    };
+    try { rec.start(); setState('listening', 'Ich höre zu …'); }
+    catch (e) { add('sys', 'Spracherkennung konnte nicht starten.'); active = false; setState('idle', 'Bereit'); }
+  }
+
+  // ---------- Zuhören: Aufnahme (Fallback) ----------
+  async function ensureMic() {
+    if (!stream) stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!analyser) {
+      var src = audioCtx.createMediaStreamSource(stream);
+      analyser = audioCtx.createAnalyser(); analyser.fftSize = 1024; buf = new Float32Array(analyser.fftSize);
+      src.connect(analyser);
+    }
+  }
+  function level() { analyser.getFloatTimeDomainData(buf); var s = 0; for (var i = 0; i < buf.length; i++) s += buf[i] * buf[i]; return Math.sqrt(s / buf.length); }
+  function listenRec() {
+    chunks = [];
+    var opts = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'];
+    mime = ''; for (var i = 0; i < opts.length; i++) if (window.MediaRecorder && MediaRecorder.isTypeSupported(opts[i])) { mime = opts[i]; break; }
+    recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    mime = recorder.mimeType || mime || 'audio/webm';
+    recorder.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+    recorder.onstop = function () {
+      if (!active) return;
+      var blob = new Blob(chunks, { type: mime });
+      if (blob.size < 2000) { listen(); return; }
+      var r = new FileReader();
+      r.onloadend = function () { send({ audio: String(r.result).split(',')[1] || '', mime: mime.split(';')[0], ext: mime.indexOf('mp4') > -1 ? 'm4a' : 'webm', fromVoice: true }); };
+      r.readAsDataURL(blob);
+    };
+    recorder.start(250);
+    setState('listening', 'Ich höre zu …');
+    var start = performance.now(), speech = 0, last = 0;
+    (function loop() {
+      if (state !== 'listening' || !recorder || recorder.state === 'inactive') return;
+      var now = performance.now(), l = level();
+      if (l > 0.035) { if (!speech) speech = now; last = now; }
+      if ((speech && last - speech > 350 && now - last > 1300) || now - start > 30000) { recorder.stop(); return; }
+      rafId = requestAnimationFrame(loop);
+    })();
+  }
+
+  function listen() { if (!active || busy) return; if (SR) listenSR(); else listenRec(); }
+
+  function stopAll() {
+    active = false;
+    try { if (rec) rec.abort(); } catch (e) {}
+    try { if (recorder && recorder.state !== 'inactive') recorder.stop(); } catch (e) {}
+    cancelAnimationFrame(rafId);
+    try { if (hasTTS) speechSynthesis.cancel(); } catch (e) {}
+    try { if (currentSource) currentSource.stop(); } catch (e) {}
+    setState('idle', 'Gespräch beendet');
+  }
+
+  orb.addEventListener('click', async function () {
+    if (active) { stopAll(); return; }
+    if (!KEY) { add('sys', 'Bitte den vollständigen Jarvis-Link mit Schlüssel einmal öffnen.'); return; }
+    unlockAudio();
+    active = true;
+    if (!SR) {
+      try { await ensureMic(); }
+      catch (e) { active = false; add('sys', 'Mikrofon nicht verfügbar (' + (e.name || e.message) + '). In den Einstellungen für Safari erlauben.'); setState('idle', 'Bereit'); return; }
+    }
+    listen();
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var t = textIn.value.trim(); if (!t || busy) return;
+    textIn.value = ''; add('me', t); unlockAudio();
+    try { if (rec) rec.abort(); } catch (err) {}
+    send({ text: t, fromVoice: false });
+  });
+
+  if (!KEY) add('sys', 'Bitte den vollständigen Jarvis-Link mit Schlüssel einmal öffnen.');
+})();
+</script>
+</body>
+</html>
