@@ -50,6 +50,9 @@
     transform: scale(var(--lvl, 1)); transition: transform .08s linear, background .3s; }
   #orb.listening { --c: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset, 0 0 40px -8px var(--accent); animation: breathe 1.6s ease-in-out infinite; }
   #orb.thinking  { --c: var(--think);  box-shadow: 0 0 0 2px var(--think) inset; animation: pulse 1.2s ease-in-out infinite; }
+  #orb.standby   { --c: #2a6f69; box-shadow: 0 0 0 1px #2a6f69 inset, 0 0 30px -12px var(--accent); animation: idle 3.2s ease-in-out infinite; }
+  @keyframes idle { 50% { box-shadow: 0 0 0 1px var(--accent) inset, 0 0 36px -10px var(--accent); } }
+  .voice button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
   #orb.speaking  { --c: var(--speak);  box-shadow: 0 0 0 2px var(--speak) inset, 0 0 40px -8px var(--speak); }
   @keyframes pulse { 50% { box-shadow: 0 0 0 2px var(--think) inset, 0 0 46px -6px var(--think); } }
   @keyframes breathe { 50% { --lvl: 1.25; box-shadow: 0 0 0 2px var(--accent) inset, 0 0 52px -6px var(--accent); } }
@@ -64,7 +67,7 @@
 <body>
 <header>
   <h1>JARVIS</h1>
-  <div class="voice">Stimme <button id="voiceBtn" type="button">iPhone · gratis</button></div>
+  <div class="voice"><button id="standbyBtn" type="button" aria-pressed="false">Standby aus</button><button id="voiceBtn" type="button">iPhone · gratis</button></div>
 </header>
 <div id="log"><div class="msg sys">Tippe auf den Kreis und sprich. Nochmal tippen beendet das Gespräch.</div></div>
 <div id="stage">
@@ -180,7 +183,7 @@
       add('sys', 'Keine Verbindung zu Jarvis (' + e.message + '). Bitte nochmal versuchen.');
     }
     busy = false;
-    if (active) listen(); else setState('idle', 'Bereit');
+    if (active) listen(); else if (standby) armStandby(); else setState('idle', 'Bereit');
   }
 
   // ---------- Zuhören: iPhone-Spracherkennung ----------
@@ -207,8 +210,9 @@
       var t = (finalText || (liveEl ? liveEl.textContent : '')).trim();
       if (liveEl) { liveEl.classList.remove('live'); liveEl.textContent = t; if (!t) liveEl.remove(); }
       rec = null;
-      if (!active) { setState('idle', 'Bereit'); return; }
+      if (!active) { if (standby) armStandby(); else setState('idle', 'Bereit'); return; }
       if (t) send({ text: t, fromVoice: true });
+      else if (standby) { active = false; armStandby(); }
       else listen();
     };
     try { rec.start(); setState('listening', 'Ich höre zu …'); }
@@ -248,12 +252,91 @@
       if (state !== 'listening' || !recorder || recorder.state === 'inactive') return;
       var now = performance.now(), l = level();
       if (l > 0.035) { if (!speech) speech = now; last = now; }
+      if (!speech && standby && now - start > 8000) { recorder.onstop = null; recorder.stop(); active = false; armStandby(); return; }
       if ((speech && last - speech > 350 && now - last > 1300) || now - start > 30000) { recorder.stop(); return; }
       rafId = requestAnimationFrame(loop);
     })();
   }
 
   function listen() { if (!active || busy) return; if (SR) listenSR(); else listenRec(); }
+
+  // ---------- Standby: "Jarvis" rufen oder zweimal klatschen ----------
+  var standbyBtn = document.getElementById('standbyBtn');
+  var standby = false, wakeRec = null, wakeLock = null;
+  var clapStream = null, clapAn = null, clapBuf = null, clapRaf = 0, clapTimes = [], noise = 0.01, lastClap = 0;
+  function paintStandby() { standbyBtn.textContent = standby ? 'Standby an' : 'Standby aus'; standbyBtn.setAttribute('aria-pressed', standby ? 'true' : 'false'); }
+  async function keepScreenOn() { try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', function () { wakeLock = null; }); } } catch (e) {} }
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && standby) { keepScreenOn(); if (!active) armStandby(); } });
+
+  function armStandby() {
+    if (!standby || active) return;
+    setState('standby', 'Standby: sag „Jarvis“ oder klatsch zweimal');
+    startWake(); startClap();
+  }
+  function disarm() {
+    try { if (wakeRec) { wakeRec.onend = null; wakeRec.abort(); } } catch (e) {}
+    wakeRec = null; cancelAnimationFrame(clapRaf); clapRaf = 0;
+  }
+  function wake(rest) {
+    disarm();
+    unlockAudio();
+    active = true;
+    rest = (rest || '').replace(/^[\s,.!?:-]+/, '').trim();
+    if (rest.split(/\s+/).length >= 2) { add('me', rest); send({ text: rest, fromVoice: true }); }
+    else if (hasTTS && !serverVoice) { speakDevice('Ja, Boss?').then(function () { if (active) listen(); }); }
+    else listen();
+  }
+  function startWake() {
+    if (!SR || !standby || active || wakeRec) return;
+    var r = new SR(); wakeRec = r;
+    r.lang = 'de-DE'; r.continuous = true; r.interimResults = true;
+    r.onresult = function (ev) {
+      for (var i = ev.resultIndex; i < ev.results.length; i++) {
+        var t = ev.results[i][0].transcript;
+        if (!/jarvis|dschawis|tscharwis/i.test(t)) continue;
+        if (ev.results[i].isFinal) { wake(t.split(/jarvis|dschawis|tscharwis/i).pop()); return; }
+      }
+    };
+    r.onerror = function (ev) { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { add('sys', 'Spracherkennung nicht erlaubt. Standby hört nur auf Klatschen.'); } };
+    r.onend = function () { wakeRec = null; if (standby && !active) setTimeout(startWake, 250); };
+    try { r.start(); } catch (e) { wakeRec = null; }
+  }
+  async function startClap() {
+    if (!standby || active) return;
+    try {
+      if (!clapStream) clapStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      if (!clapAn) { var s = audioCtx.createMediaStreamSource(clapStream); clapAn = audioCtx.createAnalyser(); clapAn.fftSize = 512; clapBuf = new Float32Array(clapAn.fftSize); s.connect(clapAn); }
+    } catch (e) { return; }
+    clapTimes = [];
+    (function loop() {
+      if (!standby || active) return;
+      clapAn.getFloatTimeDomainData(clapBuf);
+      var peak = 0, sum = 0;
+      for (var i = 0; i < clapBuf.length; i++) { var a = Math.abs(clapBuf[i]); if (a > peak) peak = a; sum += a * a; }
+      var rms = Math.sqrt(sum / clapBuf.length), now = performance.now();
+      if (peak > 0.45 && rms > noise * 6 && now - lastClap > 120) {
+        lastClap = now;
+        clapTimes = clapTimes.filter(function (t) { return now - t < 900; });
+        clapTimes.push(now);
+        if (clapTimes.length >= 2 && now - clapTimes[clapTimes.length - 2] > 140) { clapTimes = []; wake(''); return; }
+      } else { noise = noise * 0.98 + rms * 0.02; }
+      clapRaf = requestAnimationFrame(loop);
+    })();
+  }
+  standbyBtn.addEventListener('click', async function () {
+    standby = !standby; paintStandby();
+    if (standby) {
+      if (!KEY) { standby = false; paintStandby(); add('sys', 'Bitte den vollständigen Jarvis-Link mit Schlüssel einmal öffnen.'); return; }
+      unlockAudio(); keepScreenOn();
+      add('sys', 'Standby an. Sag „Jarvis“ oder klatsch zweimal. Funktioniert, solange die App offen ist.');
+      if (!active) armStandby();
+    } else {
+      disarm(); try { if (wakeLock) wakeLock.release(); } catch (e) {}
+      if (!active) setState('idle', 'Bereit');
+    }
+  });
 
   function stopAll() {
     active = false;
@@ -263,12 +346,14 @@
     try { if (hasTTS) speechSynthesis.cancel(); } catch (e) {}
     try { if (currentSource) currentSource.stop(); } catch (e) {}
     setState('idle', 'Gespräch beendet');
+    if (standby) setTimeout(armStandby, 600);
   }
 
   orb.addEventListener('click', async function () {
     if (active) { stopAll(); return; }
     if (!KEY) { add('sys', 'Bitte den vollständigen Jarvis-Link mit Schlüssel einmal öffnen.'); return; }
     unlockAudio();
+    disarm();
     active = true;
     if (!SR) {
       try { await ensureMic(); }
