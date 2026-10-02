@@ -899,7 +899,8 @@
     });
     $('lg-sort').value = lgSort;
     vis.sort(lgSort === 'wert' ? function (a, b) { return b.wert - a.wert; } : lgSort === 'name' ? function (a, b) { return a.artikel.localeCompare(b.artikel, 'de'); } : function (a, b) { return String(b.ld || b.bd || '').localeCompare(String(a.ld || a.bd || '')); });
-    var stk = sum(vis, function (p) { return p.anzahl; }), wb = sum(vis, function (p) { return p.wert; }), wn = sum(vis, function (p) { return p.wert_netto || (p.wert / 1.19); });
+    var iv = lgFilter === 'BESTELLT' ? vis : vis.filter(function (p) { return p.status === 'IM_LAGER'; });
+    var stk = sum(iv, function (p) { return p.anzahl; }), wb = sum(iv, function (p) { return p.wert; }), wn = sum(iv, function (p) { return p.wert_netto || (p.wert / 1.19); });
     $('inv-b').textContent = eur(wb, 2); $('inv-bs').textContent = 'Ø ' + eur(stk ? wb / stk : 0, 2) + ' · ' + stk + ' Artikel';
     $('inv-n').textContent = eur(wn, 2); $('inv-ns').textContent = 'Ø ' + eur(stk ? wn / stk : 0, 2) + ' · ' + stk + ' Artikel';
     var dt = function (x) { return x ? x.slice(8, 10) + '.' + x.slice(5, 7) + '.' : ''; };
