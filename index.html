@@ -43,9 +43,9 @@
   #stage { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0 12px; }
   #v-chat::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; background: radial-gradient(90% 55% at 50% 72%, rgba(40, 92, 190, .30), rgba(7, 9, 13, 0) 70%); }
   #v-chat > * { position: relative; z-index: 1; }
-  #orb { width: 230px; height: 230px; border-radius: 50%; border: 0; cursor: pointer; position: relative; background: transparent; padding: 0;
+  #orb { width: min(84vw, 360px); height: min(84vw, 360px); touch-action: none; border-radius: 50%; border: 0; cursor: pointer; position: relative; background: transparent; padding: 0;
     transition: transform .15s ease; -webkit-tap-highlight-color: transparent; }
-  #orb:active { transform: scale(.97); }
+  #orb:active { transform: none; }
   #orb canvas { width: 100%; height: 100%; display: block; pointer-events: none; }
   #status { font-size: 13px; color: var(--muted); min-height: 18px; text-align: center; }
   form { display: flex; gap: 8px; padding-bottom: 14px; }
@@ -167,6 +167,27 @@
   .pc .kl { font-size: 10.5px; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .pc .tags { margin-top: 2px; }
   .pc .tag { font-size: 10px; padding: 1px 6px; }
+  .pc { cursor: pointer; } .pc:active { transform: scale(.985); }
+  .tag.good { color: #3ddc84; border-color: #1f5a3a; }
+  #sheet { position: fixed; inset: 0; z-index: 50; }
+  #sheet .sh-bg { position: absolute; inset: 0; background: rgba(0,0,0,.6); }
+  #sheet .sh { position: absolute; left: 0; right: 0; bottom: 0; max-height: 88vh; overflow-y: auto; background: var(--panel); border-top: 1px solid var(--line); border-radius: 20px 20px 0 0; padding: 14px 16px calc(18px + env(safe-area-inset-bottom)); animation: shUp .22s ease; }
+  @keyframes shUp { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+  #sheet .sh-x { position: absolute; top: 10px; right: 12px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--text); font-size: 20px; line-height: 1; z-index: 2; }
+  .sh-img { background: #fff; border-radius: 14px; height: 200px; display: flex; align-items: center; justify-content: center; margin: 4px 0 12px; }
+  .sh-img img { max-width: 80%; max-height: 180px; object-fit: contain; }
+  .sh h4 { margin: 0 0 4px; font-size: 16px; line-height: 1.3; padding-right: 36px; }
+  .sh .m { color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+  .verdict { border-radius: 12px; padding: 11px 12px; margin-bottom: 12px; border: 1px solid var(--line); background: var(--bg); }
+  .verdict b { display: block; font-size: 15px; margin-bottom: 3px; }
+  .verdict span { font-size: 13px; color: var(--muted); }
+  .verdict.good { border-color: #1f5a3a; background: rgba(61,220,132,.08); } .verdict.good b { color: #3ddc84; }
+  .verdict.warn { border-color: #6b5a33; background: rgba(246,194,107,.07); } .verdict.warn b { color: #f6c26b; }
+  .shg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .shg div { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .shg span { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .shg b { font-size: 15px; font-variant-numeric: tabular-nums; }
+  .sh svg.ln { width: 100%; height: 110px; display: block; }
   .legend { font-size: 11px; color: var(--muted); display: flex; gap: 12px; margin-top: 6px; }
   .legend b { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 4px; }
   .mini-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
@@ -193,7 +214,7 @@
   <h1>JARVIS</h1>
   <div class="voice"><button id="standbyBtn" type="button" aria-pressed="false">Standby aus</button><button id="voiceBtn" type="button">iPhone · gratis</button></div>
 </header>
-<section class="view" id="v-dash" aria-label="Übersicht">
+<section class="view" id="v-dash" aria-label="Heute">
   <div class="scroll" id="dash">
     <div class="hello"><div><h2 id="greet">Hallo, Boss</h2><p id="today"></p></div><div class="wx" id="wx"></div></div>
     <div class="bar-row"><span id="stand">Lade Daten …</span><span><button id="notifBtn" type="button" hidden>Push aktivieren</button> <button id="reload" type="button">Aktualisieren</button></span></div>
@@ -202,22 +223,10 @@
     <div class="kpis">
       <div class="kpi"><span>Heute</span><b id="k-heute">–</b><small id="k-heute-s"></small></div>
       <div class="kpi"><span>Letzte 7 Tage</span><b id="k-woche">–</b><small id="k-woche-s"></small></div>
-      <div class="kpi"><span>Rechnungen diesen Monat</span><b id="k-monat">–</b><small>alle Kanäle · Lexware</small></div>
-      <div class="kpi"><span>Lagerwert (EK)</span><b id="k-lager">–</b><small id="k-lager-s"></small></div>
     </div>
-    <div class="card"><h3>Kaufland · 30 Tage <em id="sum30"></em></h3><svg class="chart" id="c-tage" role="img" aria-label="Kaufland-Umsatz der letzten 30 Tage"></svg><div class="tip" id="t-tage">Tippe auf einen Balken</div></div>
-    <div class="card"><h3>Gewinn pro Monat <em id="sumGewinn"></em></h3><svg class="chart" id="c-gewinn" role="img" aria-label="Geschätzter Gewinn pro Monat auf Kaufland"></svg><div class="tip" id="t-gewinn">Kaufland, netto nach Gebühren und EK · geschätzt</div></div>
-    <div class="card"><h3>Monatsabschluss <em id="ma-gewinn"></em></h3>
-      <div class="seg" id="ma-seg"><button type="button" data-m="vormonat" aria-pressed="false">Vormonat</button><button type="button" data-m="aktuell" aria-pressed="true">Dieser Monat</button></div>
-      <ul class="list" id="ma-konten"></ul><div class="tip" id="ma-tip"></div></div>
-    <div class="card"><h3>Umsatz pro Monat <em id="sumJahr"></em></h3><svg class="chart" id="c-monate" role="img" aria-label="Rechnungsumsatz pro Monat laut Lexware"></svg><div class="tip" id="t-monate">Alle Verkaufsrechnungen aus Lexware, brutto</div></div>
-    <div class="card" id="card-belege"><h3>Fehlende Belege <em id="n-belege"></em></h3><ul class="list" id="belege"></ul><div class="tip" id="t-belege">Aus dem 22:30-Check (neXus ↔ Excel)</div></div>
-    <div class="card"><h3>Kaufland Preis-Check <em id="pc-info"></em></h3><ul class="list" id="preischeck"></ul><div class="tip" id="pc-tip">Gebühr 12 % geschätzt · EK aus neXus</div></div>
-    <div class="card"><h3>Preisverlauf · 7 Tage <em id="vl-info"></em></h3><ul class="list" id="verlauf"></ul><div class="legend"><span><b style="background:var(--accent)"></b>dein Preis</span><span><b style="background:#ff9f6b"></b>günstigster Konkurrent</span></div></div>
     <div class="card"><h3>Aufgaben <em id="n-aufg"></em></h3><ul class="list" id="aufgaben"></ul></div>
     <div class="card"><h3>Termine · 14 Tage</h3><ul class="list" id="termine"></ul></div>
     <div class="card"><h3>Letzte Verkäufe</h3><ul class="list" id="verkaeufe"></ul></div>
-    <div class="card"><h3>Postfach</h3><ul class="list" id="post"></ul></div>
   </div>
 </section>
 
@@ -237,10 +246,25 @@
       <div class="kat" id="lg-kat" role="group" aria-label="Kategorien"></div>
       <div class="inv"><div><span>Inventarwert (brutto)</span><b id="inv-b">–</b><small id="inv-bs"></small></div><div><span>Inventarwert (netto)</span><b id="inv-n">–</b><small id="inv-ns"></small></div></div>
       <input type="search" id="lg-q" class="lg-q" placeholder="Suchen (Artikel, EAN, Händler …)" autocomplete="off" aria-label="Lager durchsuchen">
-      <div class="lg-bar"><div class="seg" id="lg-seg"><button type="button" data-f="alle" aria-pressed="true">Alle</button><button type="button" data-f="IM_LAGER" aria-pressed="false">Im Lager</button><button type="button" data-f="BESTELLT" aria-pressed="false">Bestellt</button><button type="button" data-f="todo" aria-pressed="false">To-do</button></div>
+      <div class="lg-bar"><div class="seg" id="lg-seg"><button type="button" data-f="alle" aria-pressed="true">Alle</button><button type="button" data-f="IM_LAGER" aria-pressed="false">Im Lager</button><button type="button" data-f="BESTELLT" aria-pressed="false">Bestellt</button><button type="button" data-f="luft" aria-pressed="false">Zu günstig?</button><button type="button" data-f="lh" aria-pressed="false">Ladenhüter</button><button type="button" data-f="todo" aria-pressed="false">To-do</button></div>
         <select id="lg-sort" aria-label="Sortieren"><option value="datum">Lieferdatum</option><option value="wert">Wert</option><option value="name">Name</option></select></div>
       <ul class="grid" id="lager"></ul><div class="tip" id="lg-tip">Aus neXus (Sync abends 22:30) · Kaufland-Preise live</div></div>
-    <div class="card"><h3>Ladenhüter <em id="lh-info"></em></h3><ul class="list" id="ladenhueter"></ul><div class="tip">Am längsten im Lager (seit Bestellung) · ab 30 Tagen rot</div></div>
+  </div>
+</section>
+
+<section class="view" id="v-geld" aria-label="Geld">
+  <div class="scroll">
+    <div class="kpis">
+      <div class="kpi"><span>Gewinn diesen Monat</span><b id="k-gew">–</b><small id="k-gew-s"></small></div>
+      <div class="kpi"><span>Rechnungen diesen Monat</span><b id="k-monat">–</b><small>alle Kanäle · Lexware</small></div>
+    </div>
+    <div class="card"><h3>Monatsabschluss <em id="ma-gewinn"></em></h3>
+      <div class="seg" id="ma-seg"><button type="button" data-m="vormonat" aria-pressed="false">Vormonat</button><button type="button" data-m="aktuell" aria-pressed="true">Dieser Monat</button></div>
+      <ul class="list" id="ma-konten"></ul><div class="tip" id="ma-tip"></div></div>
+    <div class="card"><h3>Gewinn pro Monat <em id="sumGewinn"></em></h3><svg class="chart" id="c-gewinn" role="img" aria-label="Geschätzter Gewinn pro Monat auf Kaufland"></svg><div class="tip" id="t-gewinn">Kaufland, netto nach Gebühren und EK · geschätzt</div></div>
+    <div class="card"><h3>Umsatz pro Monat <em id="sumJahr"></em></h3><svg class="chart" id="c-monate" role="img" aria-label="Rechnungsumsatz pro Monat laut Lexware"></svg><div class="tip" id="t-monate">Alle Verkaufsrechnungen aus Lexware, brutto</div></div>
+    <div class="card"><h3>Kaufland · 30 Tage <em id="sum30"></em></h3><svg class="chart" id="c-tage" role="img" aria-label="Kaufland-Umsatz der letzten 30 Tage"></svg><div class="tip" id="t-tage">Tippe auf einen Balken</div></div>
+    <div class="card" id="card-belege"><h3>Fehlende Belege <em id="n-belege"></em></h3><ul class="list" id="belege"></ul><div class="tip" id="t-belege">Aus dem 22:30-Check (neXus ↔ Excel)</div></div>
   </div>
 </section>
 
@@ -288,6 +312,14 @@
   </div>
 </section>
 
+<div hidden aria-hidden="true">
+<div class="kpis">      <div class="kpi"><span>Lagerwert (EK)</span><b id="k-lager">–</b><small id="k-lager-s"></small></div>
+</div>
+    <div class="card"><h3>Kaufland Preis-Check <em id="pc-info"></em></h3><ul class="list" id="preischeck"></ul><div class="tip" id="pc-tip">Gebühr 12 % geschätzt · EK aus neXus</div></div>
+    <div class="card"><h3>Preisverlauf · 7 Tage <em id="vl-info"></em></h3><ul class="list" id="verlauf"></ul><div class="legend"><span><b style="background:var(--accent)"></b>dein Preis</span><span><b style="background:#ff9f6b"></b>günstigster Konkurrent</span></div></div>
+    <div class="card"><h3>Postfach</h3><ul class="list" id="post"></ul></div>
+    <div class="card"><h3>Ladenhüter <em id="lh-info"></em></h3><ul class="list" id="ladenhueter"></ul><div class="tip">Am längsten im Lager (seit Bestellung) · ab 30 Tagen rot</div></div>
+</div>
 <section class="view on" id="v-chat" aria-label="Jarvis">
 <div id="log"><div class="msg sys">Tippe auf den Kreis und sprich. Nochmal tippen beendet das Gespräch.</div></div>
 <div id="stage">
@@ -300,10 +332,12 @@
 </form>
 </section>
 
+<div id="sheet" hidden><div class="sh-bg" data-close="1"></div><div class="sh" role="dialog" aria-modal="true" aria-label="Artikel-Details"><button type="button" class="sh-x" data-close="1" aria-label="Schließen">×</button><div id="sh-body"></div></div></div>
 <nav class="tabs" role="tablist">
   <button type="button" role="tab" data-v="v-chat" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Jarvis</button>
-  <button type="button" role="tab" data-v="v-dash" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Übersicht</button>
+  <button type="button" role="tab" data-v="v-dash" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Heute</button>
   <button type="button" role="tab" data-v="v-lager" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8"/></svg>Lager</button>
+  <button type="button" role="tab" data-v="v-geld" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Geld</button>
   <button type="button" role="tab" data-v="v-trade" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Trading</button>
 </nav>
 <script>
@@ -343,47 +377,130 @@
   }
   function setState(s, label) { state = s; orb.className = (s === 'idle') ? '' : s; statusEl.textContent = label; }
 
-  // ---------- Jarvis-Kugel (Partikel-Sphäre) ----------
+  // ---------- Jarvis-Kugel (holografischer Globus, drehbar) ----------
+  var orbDragged = false;
   (function () {
     var cv = document.getElementById('orbc'); if (!cv || !cv.getContext) return;
-    var ctx = cv.getContext('2d'), N = 720, P = [];
-    for (var i = 0; i < N; i++) { var y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), th = i * 2.399963; P.push([Math.cos(th) * r, y, Math.sin(th) * r, Math.random() * 6.28]); }
-    var COL = { idle: [96, 168, 255], standby: [96, 168, 255], listening: [79, 209, 197], thinking: [246, 194, 107], speaking: [122, 170, 255] };
-    var cur = COL.idle.slice(), lvl = 0, rotY = 0, rotX = 0.35, reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    function size() { var d = Math.min(window.devicePixelRatio || 1, 2), w = cv.clientWidth || 230; cv.width = w * d; cv.height = w * d; }
+    var ctx = cv.getContext('2d');
+    // Kontinente: weiches Rauschen auf der Kugel
+    function land(x, y, z) {
+      var v = Math.sin(2.1 * x + 0.7) * Math.cos(1.7 * y - 0.3) + Math.sin(2.6 * z + 1.9) * Math.cos(2.2 * x + 0.4) * 0.9 +
+        Math.sin(4.3 * y + 3.1 * z + 0.5) * 0.45 + Math.cos(5.2 * x - 2.4 * z) * 0.3;
+      return v;
+    }
+    var P = [], N = 5200;
+    for (var i = 0; i < N; i++) {
+      var y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), th = i * 2.399963, x = Math.cos(th) * r, z = Math.sin(th) * r;
+      var l = land(x, y, z) + 0.35 * Math.sin(7.1 * x + 5.3 * y - 3.7 * z) > 0.42 && Math.abs(y) < 0.9;
+      if (l || i % 5 === 0) P.push([x, y, z, l ? 1 : 0, Math.random() * 6.28]);
+    }
+    // Gradnetz
+    var G = [];
+    for (var m = 0; m < 12; m++) { var lo = m * Math.PI / 6; for (var k = 0; k <= 64; k++) { var la = -Math.PI / 2 + k * Math.PI / 64; G.push([Math.cos(la) * Math.cos(lo), Math.sin(la), Math.cos(la) * Math.sin(lo)]); } }
+    for (var pa = -2; pa <= 2; pa++) { var la2 = pa * Math.PI / 6; for (var k2 = 0; k2 < 120; k2++) { var lo2 = k2 * Math.PI / 60; G.push([Math.cos(la2) * Math.cos(lo2), Math.sin(la2), Math.cos(la2) * Math.sin(lo2)]); } }
+    // Satelliten auf schrägen Bahnen
+    var S = [{ inc: 0.5, sp: 0.0009, ph: 0, rr: 1.32 }, { inc: -0.9, sp: -0.0006, ph: 2, rr: 1.46 }, { inc: 1.25, sp: 0.0012, ph: 4, rr: 1.22 }];
+    var COL = { idle: [86, 170, 255], standby: [86, 170, 255], listening: [64, 226, 210], thinking: [255, 196, 96], speaking: [130, 180, 255] };
+    var cur = COL.idle.slice(), lvl = 0, rotY = 0.6, rotX = 0.38, vY = 0, vX = 0, drag = null, lastAct = 0;
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function size() { var d = Math.min(window.devicePixelRatio || 1, 2), w = cv.clientWidth || 300; cv.width = w * d; cv.height = w * d; }
     size(); window.addEventListener('resize', size);
+    // Drehen mit dem Finger
+    var ob = document.getElementById('orb');
+    ob.addEventListener('pointerdown', function (e) { drag = { x: e.clientX, y: e.clientY, moved: false, t: performance.now() }; try { ob.setPointerCapture(e.pointerId); } catch (er) {} });
+    ob.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!drag.moved && Math.abs(dx) + Math.abs(dy) > 7) drag.moved = true;
+      if (!drag.moved) return;
+      var now = performance.now(), dt = Math.max(8, now - drag.t);
+      rotY += dx * 0.011; rotX = Math.max(-1.3, Math.min(1.3, rotX + dy * 0.011));
+      vY = dx * 0.011 / dt * 16; vX = dy * 0.011 / dt * 16;
+      drag.x = e.clientX; drag.y = e.clientY; drag.t = now; lastAct = now;
+    });
+    function end() { if (drag && drag.moved) { orbDragged = true; setTimeout(function () { orbDragged = false; }, 350); } drag = null; }
+    ob.addEventListener('pointerup', end); ob.addEventListener('pointercancel', end);
     function amp(t) {
       if (state === 'listening' && analyser && buf) { try { return Math.min(1, level() * 6); } catch (e) { return .2; } }
       if (state === 'speaking') return .35 + .3 * Math.abs(Math.sin(t / 110) * Math.sin(t / 260));
       if (state === 'thinking') return .22 + .12 * Math.sin(t / 160);
-      return .06 + .04 * Math.sin(t / 900);
+      return .05 + .03 * Math.sin(t / 900);
     }
     function frame(t) {
-      var W = cv.width, H = cv.height, cx = W / 2, cy = H / 2, R = W * 0.26;
+      var W = cv.width, H = cv.height, cx = W / 2, cy = H / 2, R = W * 0.32;
       var tgt = COL[state] || COL.idle; for (var k = 0; k < 3; k++) cur[k] += (tgt[k] - cur[k]) * 0.06;
       lvl += (amp(t) - lvl) * 0.18;
-      var spd = state === 'thinking' ? 0.016 : state === 'speaking' ? 0.010 : 0.004;
-      if (!reduce) rotY += spd;
-      var c = cur.map(Math.round).join(',');
+      if (!drag) {
+        var auto = reduce ? 0 : (state === 'thinking' ? 0.014 : state === 'speaking' ? 0.008 : 0.0035);
+        vY *= 0.95; vX *= 0.93;
+        rotY += vY + (performance.now() - lastAct > 1200 ? auto : 0);
+        rotX += vX; rotX += (0.38 - rotX) * (performance.now() - lastAct > 2500 ? 0.01 : 0); rotX = Math.max(-1.3, Math.min(1.3, rotX));
+      }
+      var c = cur.map(Math.round).join(','), lw = Math.max(1, W / 420);
       ctx.clearRect(0, 0, W, H);
-      // Glow-Kern
-      var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * (1.25 + lvl * .6));
-      g.addColorStop(0, 'rgba(255,255,255,' + (0.85) + ')'); g.addColorStop(0.08, 'rgba(' + c + ',.9)'); g.addColorStop(0.35, 'rgba(' + c + ',.28)'); g.addColorStop(1, 'rgba(' + c + ',0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.9, 0, 6.283); ctx.fill();
-      // Ringe
-      ctx.lineWidth = Math.max(1, W / 460);
-      ctx.strokeStyle = 'rgba(' + c + ',.22)'; ctx.beginPath(); ctx.arc(cx, cy, W * 0.46, 0, 6.283); ctx.stroke();
-      ctx.strokeStyle = 'rgba(' + c + ',.55)'; ctx.setLineDash([W / 60, W / 90]); ctx.beginPath();
-      var a0 = (reduce ? 0 : t / 4000); ctx.arc(cx, cy, W * 0.40, a0, a0 + 4.2); ctx.stroke(); ctx.setLineDash([]);
-      ctx.strokeStyle = 'rgba(' + c + ',.35)'; ctx.beginPath(); ctx.arc(cx, cy, W * 0.40, a0 + 4.6, a0 + 5.6); ctx.stroke();
-      // Partikel
-      var cy1 = Math.cos(rotY), sy1 = Math.sin(rotY), cx1 = Math.cos(rotX), sx1 = Math.sin(rotX);
-      for (var i = 0; i < N; i++) {
-        var p = P[i], wob = 1 + lvl * 0.35 * Math.sin(t / 180 + p[3] * 3) + (state === 'listening' ? lvl * 0.25 : 0);
-        var x = p[0] * cy1 - p[2] * sy1, z = p[0] * sy1 + p[2] * cy1, y = p[1] * cx1 - z * sx1; z = p[1] * sx1 + z * cx1;
-        var s = R * wob, px = cx + x * s, py = cy + y * s, d = (z + 1.4) / 2.4;
-        ctx.fillStyle = 'rgba(' + c + ',' + (0.15 + d * 0.85).toFixed(3) + ')';
-        var ps = (0.6 + d * 1.6) * W / 400; ctx.fillRect(px - ps / 2, py - ps / 2, ps, ps);
+      // Atmosphäre / Kern
+      var g = ctx.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * (1.55 + lvl * .5));
+      g.addColorStop(0, 'rgba(' + c + ',.20)'); g.addColorStop(0.62, 'rgba(' + c + ',.10)'); g.addColorStop(0.7, 'rgba(' + c + ',.22)'); g.addColorStop(1, 'rgba(' + c + ',0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.7, 0, 6.283); ctx.fill();
+      var core = ctx.createRadialGradient(cx - R * .25, cy - R * .3, 0, cx, cy, R);
+      core.addColorStop(0, 'rgba(' + c + ',.16)'); core.addColorStop(1, 'rgba(4,8,16,.55)');
+      ctx.fillStyle = core; ctx.beginPath(); ctx.arc(cx, cy, R * (1 + lvl * .06), 0, 6.283); ctx.fill();
+      ctx.strokeStyle = 'rgba(' + c + ',.55)'; ctx.lineWidth = lw * 1.2; ctx.beginPath(); ctx.arc(cx, cy, R * (1 + lvl * .06), 0, 6.283); ctx.stroke();
+      // HUD-Ringe
+      var a0 = reduce ? 0 : t / 5000;
+      ctx.lineWidth = lw;
+      for (var tk = 0; tk < 120; tk++) {
+        var an = tk / 120 * 6.283 - a0 * .4, big = tk % 10 === 0, r1 = W * 0.455, r2 = r1 - (big ? W * 0.022 : W * 0.009);
+        ctx.strokeStyle = 'rgba(' + c + ',' + (big ? .7 : .28) + ')';
+        ctx.beginPath(); ctx.moveTo(cx + Math.cos(an) * r1, cy + Math.sin(an) * r1); ctx.lineTo(cx + Math.cos(an) * r2, cy + Math.sin(an) * r2); ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(' + c + ',.75)'; ctx.lineWidth = lw * 2;
+      ctx.beginPath(); ctx.arc(cx, cy, W * 0.405, a0, a0 + 1.1); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, cy, W * 0.405, a0 + 3.14, a0 + 3.6); ctx.stroke();
+      ctx.lineWidth = lw; ctx.strokeStyle = 'rgba(' + c + ',.3)'; ctx.setLineDash([W / 140, W / 70]);
+      ctx.beginPath(); ctx.arc(cx, cy, W * 0.38, -a0 * 1.6, -a0 * 1.6 + 6.283); ctx.stroke(); ctx.setLineDash([]);
+      // Radar-Strahl
+      var sw = (reduce ? 0 : t / 1400) % 6.283, sg = ctx.createLinearGradient(cx, cy, cx + Math.cos(sw) * R * 1.3, cy + Math.sin(sw) * R * 1.3);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = 'rgba(' + c + ',.07)'; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, W * 0.38, sw - 0.5, sw); ctx.closePath(); ctx.fill();
+      ctx.restore();
+      // Projektion
+      var cY = Math.cos(rotY), sY = Math.sin(rotY), cX = Math.cos(rotX), sX = Math.sin(rotX);
+      function pr(px, py, pz, s) { var x = px * cY - pz * sY, z = px * sY + pz * cY, y = py * cX - z * sX; z = py * sX + z * cX; return [cx + x * s, cy + y * s, z]; }
+      // Gradnetz
+      for (var j = 0; j < G.length; j += 1) {
+        var q = pr(G[j][0], G[j][1], G[j][2], R); if (q[2] < -0.05) continue;
+        ctx.fillStyle = 'rgba(' + c + ',' + (0.10 + q[2] * 0.30).toFixed(3) + ')'; ctx.fillRect(q[0], q[1], lw, lw);
+      }
+      // Kontinente + Ozean-Punkte
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      for (var i2 = 0; i2 < P.length; i2++) {
+        var p = P[i2], wob = 1 + (p[3] ? lvl * 0.08 * Math.sin(t / 160 + p[4] * 3) : 0);
+        var q2 = pr(p[0], p[1], p[2], R * wob), d = (q2[2] + 1) / 2;
+        if (q2[2] < -0.15) { if (!p[3]) continue; ctx.fillStyle = 'rgba(' + c + ',' + (0.05 * d).toFixed(3) + ')'; }
+        else ctx.fillStyle = p[3] ? 'rgba(' + c + ',' + (0.35 + d * 0.65).toFixed(3) + ')' : 'rgba(' + c + ',' + (0.10 + d * 0.25).toFixed(3) + ')';
+        var ps = (p[3] ? 1.0 + d * 1.4 : 0.9) * W / 420; ctx.fillRect(q2[0] - ps / 2, q2[1] - ps / 2, ps, ps);
+      }
+      // Satelliten
+      for (var si = 0; si < S.length; si++) {
+        var s = S[si], an2 = s.ph + (reduce ? 0 : t * s.sp), ox = Math.cos(an2) * s.rr, oz = Math.sin(an2) * s.rr;
+        var sx = ox, sy = -oz * Math.sin(s.inc), sz = oz * Math.cos(s.inc);
+        var q3 = pr(sx, sy, sz, R);
+        // Bahn
+        ctx.strokeStyle = 'rgba(' + c + ',.10)'; ctx.lineWidth = lw; ctx.beginPath();
+        for (var b = 0; b <= 48; b++) { var ab = b / 48 * 6.283, qx = pr(Math.cos(ab) * s.rr, -Math.sin(ab) * s.rr * Math.sin(s.inc), Math.sin(ab) * s.rr * Math.cos(s.inc), R); if (b) ctx.lineTo(qx[0], qx[1]); else ctx.moveTo(qx[0], qx[1]); }
+        ctx.stroke();
+        var sa = q3[2] > 0 ? 1 : .35;
+        ctx.fillStyle = 'rgba(255,255,255,' + sa + ')'; ctx.beginPath(); ctx.arc(q3[0], q3[1], lw * 2.2, 0, 6.283); ctx.fill();
+        ctx.fillStyle = 'rgba(' + c + ',' + (.25 * sa) + ')'; ctx.beginPath(); ctx.arc(q3[0], q3[1], lw * 6, 0, 6.283); ctx.fill();
+      }
+      ctx.restore();
+      // Pegel-Ring beim Sprechen/Zuhören
+      if (lvl > 0.12) {
+        ctx.strokeStyle = 'rgba(' + c + ',' + Math.min(.8, lvl).toFixed(2) + ')'; ctx.lineWidth = lw * 2;
+        ctx.beginPath();
+        for (var w = 0; w <= 96; w++) { var aw = w / 96 * 6.283, rw = R * (1.14 + lvl * 0.10 * Math.sin(aw * 6 + t / 90)); var xw = cx + Math.cos(aw) * rw, yw = cy + Math.sin(aw) * rw; if (w) ctx.lineTo(xw, yw); else ctx.moveTo(xw, yw); }
+        ctx.stroke();
       }
       requestAnimationFrame(frame);
     }
@@ -625,6 +742,7 @@
   }
 
   orb.addEventListener('click', async function () {
+    if (orbDragged) return;
     if (active) { stopAll(); return; }
     if (!KEY) { add('sys', 'Bitte den vollständigen Jarvis-Link mit Schlüssel einmal öffnen.'); return; }
     unlockAudio();
@@ -665,7 +783,7 @@
     document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('on', v.id === id); });
     tabs.forEach(function (b) { b.setAttribute('aria-selected', b.dataset.v === id ? 'true' : 'false'); });
     store('jarvis_tab', id);
-    if (id === 'v-dash' || id === 'v-lager') { if (last) render(last, Date.now() - lastLoad > 60000); maybeLoad(); }
+    if (id === 'v-dash' || id === 'v-lager' || id === 'v-geld') { if (last) render(last, Date.now() - lastLoad > 60000); maybeLoad(); }
     if (id === 'v-trade') { if (!loadedTrade) { loadedTrade = true; loadTrading(); } if (Date.now() - dLoad > 60000) depotCall(); }
   }
   tabs.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.v); }); });
@@ -730,6 +848,9 @@
     $('k-woche-s').textContent = (v.woche ? v.woche.stueck : 0) + ' Verkäufe' + (v.woche && v.woche.gewinn ? ' · ca. ' + eur(v.woche.gewinn) + ' Gewinn' : ' · Kaufland');
     var lm = (d.lexware && d.lexware.monate) || [];
     $('k-monat').textContent = eur(lm.length ? lm[lm.length - 1].umsatz : 0);
+    var maA = (d.monatsabschluss && d.monatsabschluss.aktuell) || {};
+    $('k-gew').textContent = eur(maA.gewinn || 0);
+    $('k-gew-s').textContent = (maA.verkaeufe || 0) + ' Verkäufe · geschätzt' + (maA.ohne_ek ? ' · ' + maA.ohne_ek + ' ohne EK' : '');
     $('k-lager').textContent = eur(d.lager && d.lager.wert);
     $('k-lager-s').textContent = (d.lager ? d.lager.stueck : 0) + ' Stück' + (d.lager && d.lager.bestellt ? ' · ' + d.lager.bestellt + ' bestellt' : '');
 
@@ -852,7 +973,7 @@
     var L = v.letzte || [];
     $('verkaeufe').innerHTML = L.length ? L.map(function (o) {
       var dt = new Date(o.datum);
-      return '<li><div class="main"><div>' + esc(o.artikel) + '</div><div class="sub">' + dt.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) + ', ' + dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' · Kaufland</div></div><div class="val">' + eur(o.preis, 2) + '</div></li>';
+      return '<li><div class="main"><div>' + esc(o.artikel) + '</div><div class="sub">' + dt.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) + ', ' + dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' · Kaufland</div>' + (o.konk_damals != null ? (o.zu_guenstig >= 1 ? '<div class="tags"><span class="tag good">zu günstig: Konkurrenz lag bei ' + eur(o.konk_damals, 2) + ' (+' + eur(o.zu_guenstig, 2) + ' drin)</span></div>' : '<div class="tags"><span class="tag">Preis ok · günstigster anderer Händler ' + eur(o.konk_damals, 2) + '</span></div>') : '') + '</div><div class="val">' + eur(o.preis, 2) + '</div></li>';
     }).join('') : '<li class="empty">Noch keine Verkäufe.</li>';
 
     // Lager (eigener Tab)
@@ -869,7 +990,7 @@
 
 
   // ---------- Lager-Tab ----------
-  var lgFilter = store('jarvis_lgf') || 'alle', lgKat = 'Alle', lgSort = store('jarvis_lgs') || 'datum';
+  var lgVis = [], lgFilter = store('jarvis_lgf') || 'alle', lgKat = 'Alle', lgSort = store('jarvis_lgs') || 'datum';
   function renderLager(d) {
     var lg = d.lager || {}, L = lg.liste || [];
     var imL = L.filter(function (p) { return p.status === 'IM_LAGER'; }), best = L.filter(function (p) { return p.status === 'BESTELLT'; });
@@ -895,6 +1016,8 @@
       if (lgKat !== 'Alle' && (p.kat || 'Sonstiges') !== lgKat) return false;
       if (lgFilter === 'IM_LAGER' || lgFilter === 'BESTELLT') { if (p.status !== lgFilter) return false; }
       else if (lgFilter === 'todo' && !todo(p)) return false;
+      else if (lgFilter === 'lh' && !(p.status === 'IM_LAGER' && p.tage != null && p.tage >= 30)) return false;
+      else if (lgFilter === 'luft' && !(p.kl_luft != null && p.kl_luft >= 1)) return false;
       return !q || (p.artikel + ' ' + p.ean + ' ' + p.haendler + ' ' + (p.kat || '')).toLowerCase().indexOf(q) >= 0;
     });
     $('lg-sort').value = lgSort;
@@ -905,7 +1028,8 @@
     $('inv-n').textContent = eur(wn, 2); $('inv-ns').textContent = 'Ø ' + eur(stk ? wn / stk : 0, 2) + ' · ' + stk + ' Artikel';
     var dt = function (x) { return x ? x.slice(8, 10) + '.' + x.slice(5, 7) + '.' : ''; };
     var box = '<svg class="noimg" viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8"/></svg>';
-    $('lager').innerHTML = vis.length ? vis.map(function (p) {
+    lgVis = vis;
+    $('lager').innerHTML = vis.length ? vis.map(function (p, i) {
       var tags = '';
       if (p.status === 'IM_LAGER' && p.ohne_listing > 0) tags += '<span class="tag warn">nicht gelistet</span>';
       if (p.ohne_rechnung > 0) tags += '<span class="tag bad">EK-Rechnung fehlt</span>';
@@ -913,8 +1037,9 @@
       var bestellt = p.status === 'BESTELLT';
       var img = /^https?:\/\//.test(p.bild || '') ? '<img loading="lazy" referrerpolicy="no-referrer" alt="" src="' + esc(p.bild) + '" onerror="this.outerHTML=\'' + box.replace(/"/g, '&quot;') + '\'">' : box;
       var klt = p.kl_preis != null ? 'Kaufland ' + eur(p.kl_preis, 2) + (p.kl_marge != null ? ' · ' + p.kl_marge + ' %' : '') : '';
+      if (p.kl_luft != null && p.kl_luft >= 1) tags = '<span class="tag good">Luft +' + eur(p.kl_luft, 2) + '</span>' + tags;
       var ekn = p.ekn != null ? p.ekn : (p.ek ? p.ek / 1.19 : null);
-      return '<li class="pc"><div class="im">' + img + '<span class="st' + (bestellt ? ' b' : '') + '"><i></i>' + (bestellt ? 'Bestellt' : 'Im Lager') + '</span>' + (p.anzahl > 1 ? '<span class="n">' + p.anzahl + '×</span>' : '') + '</div>' +
+      return '<li class="pc" data-i="' + i + '" tabindex="0" role="button" aria-label="Details: ' + esc(p.artikel) + '"><div class="im">' + img + '<span class="st' + (bestellt ? ' b' : '') + '"><i></i>' + (bestellt ? 'Bestellt' : 'Im Lager') + '</span>' + (p.anzahl > 1 ? '<span class="n">' + p.anzahl + '×</span>' : '') + '</div>' +
         '<div class="bd"><div class="t">' + esc(p.artikel) + '</div><div class="m">' + esc(p.haendler || '–') + (p.ld || p.bd ? ' · ' + dt(p.ld || p.bd) : '') + '</div>' +
         (klt ? '<div class="kl">' + klt + '</div>' : '') + (tags ? '<div class="tags">' + tags + '</div>' : '') +
         '<div class="p"><b>' + (ekn != null ? eur(ekn, 2) : '–') + '</b><small>' + (p.anzahl > 1 ? 'Σ ' + eur(p.wert_netto || p.wert / 1.19, 2) : 'netto') + '</small></div></div></li>';
@@ -922,6 +1047,45 @@
     $('lg-tip').textContent = vis.length + ' von ' + L.length + ' Positionen · Preis = EK netto wie in neXus · aus neXus (Sync abends 22:30) · Kaufland-Preise live';
   }
   $('lg-q').addEventListener('input', function () { if (last) renderLager(last); });
+  function openSheet(p) {
+    var box = '<svg class="noimg" viewBox="0 0 24 24" style="width:48px;height:48px;stroke:#b8c0cc;fill:none;stroke-width:1.5"><path d="M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8"/></svg>';
+    var img = /^https?:\/\//.test(p.bild || '') ? '<img referrerpolicy="no-referrer" alt="" src="' + esc(p.bild) + '">' : box;
+    var v = '';
+    if (p.kl_preis == null) v = '<div class="verdict"><b>Nicht auf Kaufland gelistet</b><span>Kein Preisvergleich möglich.</span></div>';
+    else if (p.kl_konk == null) v = '<div class="verdict good"><b>Keine Konkurrenz auf Kaufland</b><span>Du bist allein mit ' + eur(p.kl_preis, 2) + ' – Preis kann eher hoch.</span></div>';
+    else if (p.kl_luft >= 1) v = '<div class="verdict good"><b>Möglicherweise zu günstig</b><span>Nächster Händler (' + esc(p.kl_verkaeufer || '–') + ') verlangt ' + eur(p.kl_konk, 2) + '. Bis ca. ' + eur(p.kl_ziel, 2) + ' bleibst du günstigster' + (p.kl_gewinn_ziel != null ? ' – Gewinn dann ' + eur(p.kl_gewinn_ziel, 2) + ' statt ' + eur(p.kl_gewinn, 2) + ' pro Stück' : '') + '.</span></div>';
+    else if (p.kl_luft > -1) v = '<div class="verdict"><b>Preis passt</b><span>Du liegst gleichauf mit dem günstigsten anderen Händler (' + eur(p.kl_konk, 2) + ').</span></div>';
+    else v = '<div class="verdict"><b>Nicht zu günstig</b><span>Du bist ' + eur(-p.kl_luft, 2) + ' teurer als der günstigste andere Händler (' + esc(p.kl_verkaeufer || '–') + ', ' + eur(p.kl_konk, 2) + ').</span></div>';
+    var g = '<div class="shg"><div><span>EK netto / brutto</span><b>' + (p.ekn != null ? eur(p.ekn, 2) : '–') + '</b> <small style="color:var(--muted)">' + (p.ek ? eur(p.ek, 2) : '') + '</small></div>' +
+      '<div><span>Bestand</span><b>' + p.anzahl + ' Stk</b> <small style="color:var(--muted)">' + (p.status === 'BESTELLT' ? 'bestellt' : 'im Lager') + '</small></div>' +
+      '<div><span>Dein Kaufland-Preis</span><b>' + (p.kl_preis != null ? eur(p.kl_preis, 2) : '–') + '</b></div>' +
+      '<div><span>Günstigster anderer</span><b>' + (p.kl_konk != null ? eur(p.kl_konk, 2) : '–') + '</b></div>' +
+      '<div><span>Gewinn / Stück</span><b>' + (p.kl_gewinn != null ? eur(p.kl_gewinn, 2) : '–') + '</b> <small style="color:var(--muted)">' + (p.kl_marge != null ? p.kl_marge + ' %' : '') + '</small></div>' +
+      '<div><span>Im Lager seit</span><b>' + (p.tage != null ? p.tage + ' Tagen' : '–') + '</b></div></div>';
+    var ch = '';
+    var V = (p.kl_verlauf || []).filter(function (x) { return x[1] != null; });
+    if (V.length >= 2) {
+      var W = 320, H = 110, all = [], k;
+      V.forEach(function (x) { all.push(+x[1]); if (x[2] != null) all.push(+x[2]); });
+      var mn = Math.min.apply(null, all), mx = Math.max.apply(null, all); if (mx - mn < 1) { mx += 1; mn -= 1; }
+      var X = function (i) { return 6 + i * (W - 12) / (V.length - 1); }, Y = function (y) { return 8 + (H - 26) * (1 - (y - mn) / (mx - mn)); };
+      var pe = V.map(function (x, i) { return (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(+x[1]).toFixed(1); }).join(' ');
+      var pk = V.filter(function (x) { return x[2] != null; }).length > 1 ? V.map(function (x, i) { return x[2] == null ? '' : ((i && V[i - 1][2] != null ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(+x[2]).toFixed(1)); }).join(' ') : '';
+      ch = '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">Preisverlauf Kaufland (3× täglich)</div><svg class="ln" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none"><path d="' + pe + '" fill="none" stroke="var(--accent)" stroke-width="2"/>' + (pk ? '<path d="' + pk + '" fill="none" stroke="#ff9f6b" stroke-width="1.6" stroke-dasharray="4 3"/>' : '') +
+        '<text x="6" y="' + (H - 4) + '" fill="#7d8898" font-size="10">' + esc(V[0][0]) + '</text><text x="' + (W - 6) + '" y="' + (H - 4) + '" fill="#7d8898" font-size="10" text-anchor="end">' + esc(V[V.length - 1][0]) + '</text></svg>' +
+        '<div class="legend"><span><b style="background:var(--accent)"></b>dein Preis</span><span><b style="background:#ff9f6b"></b>günstigster anderer</span></div>';
+    }
+    var tg = '';
+    if (p.ohne_rechnung > 0) tg += '<span class="tag bad">EK-Rechnung fehlt</span>';
+    if (p.status === 'IM_LAGER' && p.ohne_listing > 0) tg += '<span class="tag warn">nicht gelistet</span>';
+    $('sh-body').innerHTML = '<div class="sh-img">' + img + '</div><h4>' + esc(p.artikel) + '</h4><div class="m">' + esc(p.haendler || '–') + (p.ld || p.bd ? ' · geliefert ' + (p.ld || p.bd).split('-').reverse().join('.') : '') + (p.ean ? ' · EAN ' + esc(p.ean) : '') + (p.kat ? ' · ' + esc(p.kat) : '') + '</div>' +
+      v + g + ch + (tg ? '<div class="tags" style="margin-top:10px">' + tg + '</div>' : '') + (p.kl_check ? '<div class="tip">Markt-Check: ' + esc(p.kl_check) + ' · Gebühr 12 % geschätzt · Preise änderst nur du</div>' : '');
+    $('sheet').hidden = false;
+  }
+  $('lager').addEventListener('click', function (e) { var li = e.target.closest('.pc'); if (li && lgVis[+li.dataset.i]) openSheet(lgVis[+li.dataset.i]); });
+  $('lager').addEventListener('keydown', function (e) { if (e.key !== 'Enter') return; var li = e.target.closest('.pc'); if (li && lgVis[+li.dataset.i]) openSheet(lgVis[+li.dataset.i]); });
+  $('sheet').addEventListener('click', function (e) { if (e.target.closest('[data-close]')) $('sheet').hidden = true; });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') $('sheet').hidden = true; });
   $('lg-kat').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; lgKat = b.dataset.k; if (last) renderLager(last); });
   $('lg-sort').addEventListener('change', function () { lgSort = this.value; store('jarvis_lgs', lgSort); if (last) renderLager(last); });
   $('lg-seg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; lgFilter = b.dataset.f; store('jarvis_lgf', lgFilter); if (last) renderLager(last); });
@@ -1086,7 +1250,7 @@
     this.dataset.all = this.dataset.all === '1' ? '0' : '1';
     if (last) render(last, false);
   });
-  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && ($('v-dash').classList.contains('on') || $('v-lager').classList.contains('on'))) maybeLoad(); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && ($('v-dash').classList.contains('on') || $('v-lager').classList.contains('on') || $('v-geld').classList.contains('on'))) maybeLoad(); });
   window.addEventListener('resize', function () { if (last) render(last, false); });
 
   // ---------- Trading (TradingView-Widgets) ----------
@@ -1194,7 +1358,7 @@
   startTab = startTab ? 'v-' + startTab : (store('jarvis_tab') || 'v-chat');
   if (!document.getElementById(startTab)) startTab = 'v-chat';
   show(startTab);
-  setInterval(function () { if (document.visibilityState === 'visible' && ($('v-dash').classList.contains('on') || $('v-lager').classList.contains('on'))) load(); }, 5 * 60000);
+  setInterval(function () { if (document.visibilityState === 'visible' && ($('v-dash').classList.contains('on') || $('v-lager').classList.contains('on') || $('v-geld').classList.contains('on'))) load(); }, 5 * 60000);
 })();
 </script>
 </body>
