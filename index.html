@@ -40,23 +40,13 @@
   .jv { align-self: flex-start; background: var(--panel); border: 1px solid var(--line); border-bottom-left-radius: 5px; }
   .sys { align-self: center; color: var(--muted); font-size: 12px; text-align: center; max-width: 92%; }
   .live { opacity: .6; font-style: italic; }
-  #stage { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 10px 0 14px; }
-  #orb { width: 132px; height: 132px; border-radius: 50%; border: 0; cursor: pointer; position: relative;
-    background: radial-gradient(circle at 35% 30%, #1d2b33, #0b1014 70%); box-shadow: 0 0 0 1px var(--line) inset;
-    transition: transform .15s ease; }
-  #orb:active { transform: scale(.96); }
-  #orb::after { content: ""; position: absolute; inset: 22px; border-radius: 50%;
-    background: radial-gradient(circle, var(--c, #34404d) 0%, transparent 70%); opacity: .9;
-    transform: scale(var(--lvl, 1)); transition: transform .08s linear, background .3s; }
-  #orb.listening { --c: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset, 0 0 40px -8px var(--accent); animation: breathe 1.6s ease-in-out infinite; }
-  #orb.thinking  { --c: var(--think);  box-shadow: 0 0 0 2px var(--think) inset; animation: pulse 1.2s ease-in-out infinite; }
-  #orb.standby   { --c: #2a6f69; box-shadow: 0 0 0 1px #2a6f69 inset, 0 0 30px -12px var(--accent); animation: idle 3.2s ease-in-out infinite; }
-  @keyframes idle { 50% { box-shadow: 0 0 0 1px var(--accent) inset, 0 0 36px -10px var(--accent); } }
-  .voice button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
-  #orb.speaking  { --c: var(--speak);  box-shadow: 0 0 0 2px var(--speak) inset, 0 0 40px -8px var(--speak); }
-  @keyframes pulse { 50% { box-shadow: 0 0 0 2px var(--think) inset, 0 0 46px -6px var(--think); } }
-  @keyframes breathe { 50% { --lvl: 1.25; box-shadow: 0 0 0 2px var(--accent) inset, 0 0 52px -6px var(--accent); } }
-  @media (prefers-reduced-motion: reduce) { #orb, #orb::after { animation: none !important; transition: none; } }
+  #stage { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0 12px; }
+  #v-chat::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; background: radial-gradient(90% 55% at 50% 72%, rgba(40, 92, 190, .30), rgba(7, 9, 13, 0) 70%); }
+  #v-chat > * { position: relative; z-index: 1; }
+  #orb { width: 230px; height: 230px; border-radius: 50%; border: 0; cursor: pointer; position: relative; background: transparent; padding: 0;
+    transition: transform .15s ease; -webkit-tap-highlight-color: transparent; }
+  #orb:active { transform: scale(.97); }
+  #orb canvas { width: 100%; height: 100%; display: block; pointer-events: none; }
   #status { font-size: 13px; color: var(--muted); min-height: 18px; text-align: center; }
   form { display: flex; gap: 8px; padding-bottom: 14px; }
   input { flex: 1; min-width: 0; background: var(--panel); border: 1px solid var(--line); color: var(--text);
@@ -264,7 +254,7 @@
 <section class="view on" id="v-chat" aria-label="Jarvis">
 <div id="log"><div class="msg sys">Tippe auf den Kreis und sprich. Nochmal tippen beendet das Gespräch.</div></div>
 <div id="stage">
-  <button id="orb" type="button" aria-label="Gespräch starten oder beenden"></button>
+  <button id="orb" type="button" aria-label="Gespräch starten oder beenden"><canvas id="orbc" aria-hidden="true"></canvas></button>
   <div id="status">Bereit</div>
 </div>
 <form id="form" autocomplete="off">
@@ -315,6 +305,53 @@
     log.appendChild(el); log.scrollTop = log.scrollHeight; return el;
   }
   function setState(s, label) { state = s; orb.className = (s === 'idle') ? '' : s; statusEl.textContent = label; }
+
+  // ---------- Jarvis-Kugel (Partikel-Sphäre) ----------
+  (function () {
+    var cv = document.getElementById('orbc'); if (!cv || !cv.getContext) return;
+    var ctx = cv.getContext('2d'), N = 720, P = [];
+    for (var i = 0; i < N; i++) { var y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), th = i * 2.399963; P.push([Math.cos(th) * r, y, Math.sin(th) * r, Math.random() * 6.28]); }
+    var COL = { idle: [96, 168, 255], standby: [96, 168, 255], listening: [79, 209, 197], thinking: [246, 194, 107], speaking: [122, 170, 255] };
+    var cur = COL.idle.slice(), lvl = 0, rotY = 0, rotX = 0.35, reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function size() { var d = Math.min(window.devicePixelRatio || 1, 2), w = cv.clientWidth || 230; cv.width = w * d; cv.height = w * d; }
+    size(); window.addEventListener('resize', size);
+    function amp(t) {
+      if (state === 'listening' && analyser && buf) { try { return Math.min(1, level() * 6); } catch (e) { return .2; } }
+      if (state === 'speaking') return .35 + .3 * Math.abs(Math.sin(t / 110) * Math.sin(t / 260));
+      if (state === 'thinking') return .22 + .12 * Math.sin(t / 160);
+      return .06 + .04 * Math.sin(t / 900);
+    }
+    function frame(t) {
+      var W = cv.width, H = cv.height, cx = W / 2, cy = H / 2, R = W * 0.26;
+      var tgt = COL[state] || COL.idle; for (var k = 0; k < 3; k++) cur[k] += (tgt[k] - cur[k]) * 0.06;
+      lvl += (amp(t) - lvl) * 0.18;
+      var spd = state === 'thinking' ? 0.016 : state === 'speaking' ? 0.010 : 0.004;
+      if (!reduce) rotY += spd;
+      var c = cur.map(Math.round).join(',');
+      ctx.clearRect(0, 0, W, H);
+      // Glow-Kern
+      var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * (1.25 + lvl * .6));
+      g.addColorStop(0, 'rgba(255,255,255,' + (0.85) + ')'); g.addColorStop(0.08, 'rgba(' + c + ',.9)'); g.addColorStop(0.35, 'rgba(' + c + ',.28)'); g.addColorStop(1, 'rgba(' + c + ',0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.9, 0, 6.283); ctx.fill();
+      // Ringe
+      ctx.lineWidth = Math.max(1, W / 460);
+      ctx.strokeStyle = 'rgba(' + c + ',.22)'; ctx.beginPath(); ctx.arc(cx, cy, W * 0.46, 0, 6.283); ctx.stroke();
+      ctx.strokeStyle = 'rgba(' + c + ',.55)'; ctx.setLineDash([W / 60, W / 90]); ctx.beginPath();
+      var a0 = (reduce ? 0 : t / 4000); ctx.arc(cx, cy, W * 0.40, a0, a0 + 4.2); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = 'rgba(' + c + ',.35)'; ctx.beginPath(); ctx.arc(cx, cy, W * 0.40, a0 + 4.6, a0 + 5.6); ctx.stroke();
+      // Partikel
+      var cy1 = Math.cos(rotY), sy1 = Math.sin(rotY), cx1 = Math.cos(rotX), sx1 = Math.sin(rotX);
+      for (var i = 0; i < N; i++) {
+        var p = P[i], wob = 1 + lvl * 0.35 * Math.sin(t / 180 + p[3] * 3) + (state === 'listening' ? lvl * 0.25 : 0);
+        var x = p[0] * cy1 - p[2] * sy1, z = p[0] * sy1 + p[2] * cy1, y = p[1] * cx1 - z * sx1; z = p[1] * sx1 + z * cx1;
+        var s = R * wob, px = cx + x * s, py = cy + y * s, d = (z + 1.4) / 2.4;
+        ctx.fillStyle = 'rgba(' + c + ',' + (0.15 + d * 0.85).toFixed(3) + ')';
+        var ps = (0.6 + d * 1.6) * W / 400; ctx.fillRect(px - ps / 2, py - ps / 2, ps, ps);
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
   function clean(t) { return String(t || '').replace(/<[^>]+>/g, '').replace(/[•*_#]/g, '').replace(/\s+\n/g, '\n').trim(); }
 
   // ---------- Stimme (Ausgabe) ----------
