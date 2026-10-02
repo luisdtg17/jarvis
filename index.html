@@ -129,6 +129,20 @@
   .spark { width: 84px; height: 30px; flex: none; }
   .spark .e { stroke: var(--accent); fill: none; stroke-width: 1.6; }
   .spark .k { stroke: #ff9f6b; fill: none; stroke-width: 1.4; stroke-dasharray: 3 2; }
+  .pipe-k { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-bottom: 10px; }
+  .pipe-k div { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 7px 2px; text-align: center; }
+  .pipe-k b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; }
+  .pipe-k b small { font-size: 11px; color: var(--muted); font-weight: 400; }
+  .pipe-k span { display: block; font-size: 9px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-top: 2px; }
+  .pipe-k div.bad { border-color: #ff7a7a; }
+  .pdots { display: flex; gap: 4px; flex: none; align-self: center; }
+  .pdots i { width: 10px; height: 10px; border-radius: 50%; background: #3a4352; display: block; }
+  .pdots i.ok { background: var(--accent); } .pdots i.offen, .pdots i.entwurf { background: #f6c26b; } .pdots i.fehlt { background: #ff7a7a; } .pdots i.storno { background: #ff7a7a; opacity: .5; }
+  .lg-q { width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 9px 12px; font-size: 15px; margin-bottom: 8px; }
+  .tags { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .tags .tag { margin-left: 0; }
+  .tag.warn { color: #f6c26b; border-color: #6b5a33; } .tag.bad { color: #ff7a7a; border-color: #6b3333; }
+  #lg-seg { margin-bottom: 6px; }
   .legend { font-size: 11px; color: var(--muted); display: flex; gap: 12px; margin-top: 6px; }
   .legend b { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 4px; }
   .mini-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
@@ -176,12 +190,30 @@
     <div class="card" id="card-belege"><h3>Fehlende Belege <em id="n-belege"></em></h3><ul class="list" id="belege"></ul><div class="tip" id="t-belege">Aus dem 22:30-Check (neXus ↔ Excel)</div></div>
     <div class="card"><h3>Kaufland Preis-Check <em id="pc-info"></em></h3><ul class="list" id="preischeck"></ul><div class="tip" id="pc-tip">Gebühr 12 % geschätzt · EK aus neXus</div></div>
     <div class="card"><h3>Preisverlauf · 7 Tage <em id="vl-info"></em></h3><ul class="list" id="verlauf"></ul><div class="legend"><span><b style="background:var(--accent)"></b>dein Preis</span><span><b style="background:#ff9f6b"></b>günstigster Konkurrent</span></div></div>
-    <div class="card"><h3>Ladenhüter <em id="lh-info"></em></h3><ul class="list" id="ladenhueter"></ul><div class="tip">Am längsten im Lager (seit Bestellung) · ab 30 Tagen rot</div></div>
     <div class="card"><h3>Aufgaben <em id="n-aufg"></em></h3><ul class="list" id="aufgaben"></ul></div>
     <div class="card"><h3>Termine · 14 Tage</h3><ul class="list" id="termine"></ul></div>
     <div class="card"><h3>Letzte Verkäufe</h3><ul class="list" id="verkaeufe"></ul></div>
-    <div class="card"><h3>Lager · größte Posten <em id="lagerstand"></em></h3><ul class="list" id="lager"></ul></div>
     <div class="card"><h3>Postfach</h3><ul class="list" id="post"></ul></div>
+  </div>
+</section>
+
+<section class="view" id="v-lager" aria-label="Lager">
+  <div class="scroll">
+    <div class="kpis">
+      <div class="kpi"><span>Im Lager</span><b id="lg-stk">–</b><small id="lg-stk-s"></small></div>
+      <div class="kpi"><span>Lagerwert (EK)</span><b id="lg-wert">–</b><small id="lg-wert-s"></small></div>
+      <div class="kpi"><span>Bestellt</span><b id="lg-best">–</b><small id="lg-best-s"></small></div>
+      <div class="kpi"><span>Zu erledigen</span><b id="lg-todo">–</b><small id="lg-todo-s"></small></div>
+    </div>
+    <div class="card" id="card-pipe"><h3>Bestell-Pipeline <em id="pp-info"></em></h3>
+      <div class="pipe-k" id="pp-k"></div>
+      <ul class="list" id="pipeline"><li class="empty">Lade …</li></ul>
+      <div class="legend"><span><b style="background:var(--accent)"></b>erledigt</span><span><b style="background:#f6c26b"></b>offen / Entwurf</span><span><b style="background:#ff7a7a"></b>hängt</span><span><b style="background:#3a4352"></b>später</span></div></div>
+    <div class="card"><h3>Lagerbestand <em id="lagerstand"></em></h3>
+      <input type="search" id="lg-q" class="lg-q" placeholder="Artikel oder EAN suchen …" autocomplete="off" aria-label="Lager durchsuchen">
+      <div class="seg" id="lg-seg"><button type="button" data-f="alle" aria-pressed="true">Alle</button><button type="button" data-f="IM_LAGER" aria-pressed="false">Im Lager</button><button type="button" data-f="BESTELLT" aria-pressed="false">Bestellt</button><button type="button" data-f="todo" aria-pressed="false">To-do</button></div>
+      <ul class="list" id="lager"></ul><div class="tip" id="lg-tip">Aus neXus (Sync abends 22:30) · Kaufland-Preise live</div></div>
+    <div class="card"><h3>Ladenhüter <em id="lh-info"></em></h3><ul class="list" id="ladenhueter"></ul><div class="tip">Am längsten im Lager (seit Bestellung) · ab 30 Tagen rot</div></div>
   </div>
 </section>
 
@@ -244,6 +276,7 @@
 <nav class="tabs" role="tablist">
   <button type="button" role="tab" data-v="v-chat" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Jarvis</button>
   <button type="button" role="tab" data-v="v-dash" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Übersicht</button>
+  <button type="button" role="tab" data-v="v-lager" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8"/></svg>Lager</button>
   <button type="button" role="tab" data-v="v-trade" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Trading</button>
 </nav>
 <script>
@@ -558,7 +591,7 @@
     document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('on', v.id === id); });
     tabs.forEach(function (b) { b.setAttribute('aria-selected', b.dataset.v === id ? 'true' : 'false'); });
     store('jarvis_tab', id);
-    if (id === 'v-dash') { if (last) render(last, Date.now() - lastLoad > 60000); maybeLoad(); }
+    if (id === 'v-dash' || id === 'v-lager') { if (last) render(last, Date.now() - lastLoad > 60000); maybeLoad(); }
     if (id === 'v-trade') { if (!loadedTrade) { loadedTrade = true; loadTrading(); } if (Date.now() - dLoad > 60000) depotCall(); }
   }
   tabs.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.v); }); });
@@ -676,6 +709,26 @@
       { onPick: function (it) { var m = it.raw; $('t-gewinn').textContent = mNames[+m.monat.slice(5, 7) - 1] + ': ' + eur(m.gewinn, 2) + ' Gewinn bei ' + eur(m.umsatz) + ' Umsatz' + (m.ohne_ek ? ' · ' + m.ohne_ek + ' von ' + (m.mit_ek + m.ohne_ek) + ' Stück ohne EK, nicht mitgerechnet' : ''); } });
     if (gm.length) { var lg0 = gm[gm.length - 1]; $('t-gewinn').textContent = ((d.gewinn && d.gewinn.quelle) || 'Kaufland') + ' · netto, geschätzt' + (lg0.ohne_ek ? ' · ' + lg0.ohne_ek + ' Stück diesen Monat ohne EK' : ''); }
 
+
+    // Bestell-Pipeline
+    var PP = d.pipeline;
+    if (PP) {
+      var STEPS = [['bezahlt', 'Bezahlt'], ['rechnung', 'Rechnung'], ['label', 'Label'], ['versand', 'Versand'], ['nexus', 'neXus'], ['gewinn', 'Gebucht']];
+      var LAB = { ok: 'erledigt', offen: 'offen', entwurf: 'Entwurf', fehlt: 'hängt', warten: 'wartet', spaeter: 'später', storno: 'storniert', '-': '–' };
+      $('pp-info').textContent = PP.anzahl ? (PP.probleme ? PP.probleme + ' hängen' : 'alles im Fluss') : '';
+      $('pp-k').innerHTML = STEPS.map(function (s) {
+        var n = PP.zaehler[s[0]] || 0, bad = PP.liste.some(function (p) { return p.s[s[0]] === 'fehlt'; });
+        return '<div' + (bad ? ' class="bad"' : '') + '><b>' + n + '<small>/' + PP.anzahl + '</small></b><span>' + s[1] + '</span></div>';
+      }).join('');
+      $('pipeline').innerHTML = PP.liste.length ? PP.liste.map(function (p) {
+        var dt = new Date(p.datum);
+        var tipT = STEPS.map(function (s) { return s[1] + ': ' + (LAB[p.s[s[0]]] || p.s[s[0]]); }).join(' · ');
+        var haengt = STEPS.filter(function (s) { return p.s[s[0]] === 'fehlt'; }).map(function (s) { return s[1]; });
+        return '<li><div class="main"><div>' + esc(p.artikel) + '</div><div class="sub">' + esc(p.order_id) + ' · ' + dt.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) + ' · ' + eur(p.betrag, 2) +
+          (p.gewinn != null ? ' · Gewinn ' + eur(p.gewinn, 2) : '') + (haengt.length ? ' · <span style="color:#ff7a7a">hängt: ' + haengt.join(', ') + '</span>' : '') + '</div></div>' +
+          '<div class="pdots" role="img" aria-label="' + esc(tipT) + '" title="' + esc(tipT) + '">' + STEPS.map(function (s) { return '<i class="' + p.s[s[0]] + '"></i>'; }).join('') + '</div></li>';
+      }).join('') : '<li class="empty">Noch keine Bestellungen seit 01.10.</li>';
+    }
     // Monatsabschluss
     renderMA(d);
 
@@ -728,12 +781,8 @@
       return '<li><div class="main"><div>' + esc(o.artikel) + '</div><div class="sub">' + dt.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) + ', ' + dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' · Kaufland</div></div><div class="val">' + eur(o.preis, 2) + '</div></li>';
     }).join('') : '<li class="empty">Noch keine Verkäufe.</li>';
 
-    // Lager
-    var lg = d.lager || {};
-    $('lagerstand').textContent = lg.stand ? 'Stand ' + new Date(lg.stand).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) : '';
-    $('lager').innerHTML = (lg.top || []).length ? lg.top.map(function (p) {
-      return '<li><div class="main"><div>' + esc(p.artikel) + '</div><div class="sub">' + p.anzahl + ' Stück</div></div><div class="val">' + eur(p.wert) + '</div></li>';
-    }).join('') : '<li class="empty">Noch keine Lagerdaten aus neXus.</li>';
+    // Lager (eigener Tab)
+    renderLager(d);
 
     // Postfach
     var m = d.mails || {}, lx = d.lexware || {};
@@ -743,6 +792,45 @@
     briefing(d);
     notify(d);
   }
+
+
+  // ---------- Lager-Tab ----------
+  var lgFilter = store('jarvis_lgf') || 'alle';
+  function renderLager(d) {
+    var lg = d.lager || {}, L = lg.liste || [];
+    var imL = L.filter(function (p) { return p.status === 'IM_LAGER'; }), best = L.filter(function (p) { return p.status === 'BESTELLT'; });
+    var sum = function (a, f) { return a.reduce(function (s, x) { return s + (f(x) || 0); }, 0); };
+    var todo = function (p) { return p.ohne_rechnung > 0 || (p.status === 'IM_LAGER' && p.ohne_listing > 0) || (p.tage != null && p.tage >= 30 && p.status === 'IM_LAGER'); };
+    $('lg-stk').textContent = (lg.stueck != null ? lg.stueck : sum(imL, function (p) { return p.anzahl; })) + ' Stk';
+    $('lg-stk-s').textContent = imL.length + ' Positionen';
+    $('lg-wert').textContent = eur(lg.wert != null ? lg.wert : sum(imL, function (p) { return p.wert; }));
+    $('lg-wert-s').textContent = 'Einkaufspreis brutto';
+    $('lg-best').textContent = sum(best, function (p) { return p.anzahl; }) + ' Stk';
+    $('lg-best-s').textContent = eur(sum(best, function (p) { return p.wert; })) + ' unterwegs';
+    var nTodo = L.filter(todo).length;
+    $('lg-todo').textContent = nTodo;
+    $('lg-todo-s').textContent = 'Listing, EK-Rechnung, Ladenhüter';
+    $('lagerstand').textContent = lg.stand ? 'Stand ' + new Date(lg.stand).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) + ', ' + new Date(lg.stand).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '';
+    $('lg-seg').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.f === lgFilter ? 'true' : 'false'); });
+    var q = ($('lg-q').value || '').trim().toLowerCase();
+    var vis = L.filter(function (p) {
+      if (lgFilter === 'IM_LAGER' || lgFilter === 'BESTELLT') { if (p.status !== lgFilter) return false; }
+      else if (lgFilter === 'todo' && !todo(p)) return false;
+      return !q || (p.artikel + ' ' + p.ean + ' ' + p.haendler).toLowerCase().indexOf(q) >= 0;
+    });
+    $('lager').innerHTML = vis.length ? vis.map(function (p) {
+      var tags = '';
+      if (p.status === 'BESTELLT') tags += '<span class="tag">bestellt</span>';
+      if (p.status === 'IM_LAGER' && p.ohne_listing > 0) tags += '<span class="tag warn">nicht gelistet' + (p.ohne_listing < p.anzahl ? ' (' + p.ohne_listing + ')' : '') + '</span>';
+      if (p.ohne_rechnung > 0) tags += '<span class="tag bad">EK-Rechnung fehlt</span>';
+      if (p.status === 'IM_LAGER' && p.tage != null && p.tage >= 30) tags += '<span class="tag bad">' + p.tage + ' Tage</span>';
+      var kl = p.kl_preis != null ? ' · Kaufland ' + eur(p.kl_preis, 2) + (p.kl_marge != null ? ' (' + p.kl_marge + ' %)' : '') : (p.status === 'IM_LAGER' ? ' · nicht auf Kaufland' : '');
+      return '<li><div class="main"><div>' + esc(p.artikel) + '</div><div class="sub">' + p.anzahl + ' Stk · EK ' + (p.ek ? eur(p.ek, 2) : '–') + kl + (p.haendler ? ' · ' + esc(p.haendler) : '') + (p.tage != null && p.tage < 30 ? ' · ' + p.tage + ' Tage' : '') + '</div>' + (tags ? '<div class="tags">' + tags + '</div>' : '') + '</div><div class="val">' + eur(p.wert) + '</div></li>';
+    }).join('') : '<li class="empty">' + (L.length ? 'Nichts gefunden.' : 'Noch keine Lagerdaten aus neXus.') + '</li>';
+    $('lg-tip').textContent = vis.length + ' von ' + L.length + ' Positionen · aus neXus (Sync abends 22:30) · Kaufland-Preise live';
+  }
+  $('lg-q').addEventListener('input', function () { if (last) renderLager(last); });
+  $('lg-seg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; lgFilter = b.dataset.f; store('jarvis_lgf', lgFilter); if (last) renderLager(last); });
 
   // ---------- Monatsabschluss ----------
   var maWahl = store('jarvis_ma') || 'aktuell';
@@ -904,7 +992,7 @@
     this.dataset.all = this.dataset.all === '1' ? '0' : '1';
     if (last) render(last, false);
   });
-  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && $('v-dash').classList.contains('on')) maybeLoad(); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && ($('v-dash').classList.contains('on') || $('v-lager').classList.contains('on'))) maybeLoad(); });
   window.addEventListener('resize', function () { if (last) render(last, false); });
 
   // ---------- Trading (TradingView-Widgets) ----------
@@ -1012,7 +1100,7 @@
   startTab = startTab ? 'v-' + startTab : (store('jarvis_tab') || 'v-chat');
   if (!document.getElementById(startTab)) startTab = 'v-chat';
   show(startTab);
-  setInterval(function () { if (document.visibilityState === 'visible' && $('v-dash').classList.contains('on')) load(); }, 5 * 60000);
+  setInterval(function () { if (document.visibilityState === 'visible' && ($('v-dash').classList.contains('on') || $('v-lager').classList.contains('on'))) load(); }, 5 * 60000);
 })();
 </script>
 </body>
