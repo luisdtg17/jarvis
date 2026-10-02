@@ -143,6 +143,10 @@
   .sumrow { display: flex; justify-content: space-between; gap: 10px; font-variant-numeric: tabular-nums; margin-bottom: 8px; }
   .sumrow b { font-size: 22px; font-weight: 600; }
   .sumrow > div { text-align: right; font-size: 13px; }
+  li.meld .mtext { color: var(--muted); font-size: 13px; white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  li.meld.open .mtext { -webkit-line-clamp: unset; display: block; }
+  li.meld.neu b::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 6px; vertical-align: middle; }
+  li.meld { cursor: pointer; }
   .sumrow > div:first-child, .sumrow > div:first-child div { text-align: left; }
 </style>
 </head>
@@ -154,7 +158,8 @@
 <section class="view" id="v-dash" aria-label="Übersicht">
   <div class="scroll" id="dash">
     <div class="hello"><div><h2 id="greet">Hallo, Boss</h2><p id="today"></p></div><div class="wx" id="wx"></div></div>
-    <div class="bar-row"><span id="stand">Lade Daten …</span><span><button id="notifBtn" type="button" hidden>Hinweise aus</button> <button id="reload" type="button">Aktualisieren</button></span></div>
+    <div class="bar-row"><span id="stand">Lade Daten …</span><span><button id="notifBtn" type="button" hidden>Push aktivieren</button> <button id="reload" type="button">Aktualisieren</button></span></div>
+    <div class="card"><h3>Mitteilungen <em id="n-meld"></em></h3><ul class="list" id="meldungen"><li class="empty">Lade …</li></ul></div>
     <div class="card brief"><h3>Dein Tag <em id="brief-n"></em></h3><ul id="briefing"><li class="empty">Lade …</li></ul></div>
     <div class="kpis">
       <div class="kpi"><span>Heute</span><b id="k-heute">–</b><small id="k-heute-s"></small></div>
@@ -597,6 +602,7 @@
       last = d; lastLoad = Date.now();
       try { store('jarvis_dash', JSON.stringify(d)); } catch (e) {}
       render(d, false);
+      loadMeldungen();
     } catch (e) {
       $('stand').textContent = 'Keine Verbindung (' + e.message + ')' + (last ? ' – zeige letzten Stand' : '');
     }
@@ -780,33 +786,77 @@
     $('briefing').innerHTML = items.map(function (it) { return '<li><i>' + it[0] + '</i><span>' + esc(it[1]) + '</span></li>'; }).join('');
   }
 
-  // ---------- Hinweise (Benachrichtigungen) ----------
-  var notifOn = store('jarvis_notif') === '1' && 'Notification' in window && Notification.permission === 'granted';
-  function paintNotif() { var b = $('notifBtn'); if (!('Notification' in window)) return; b.hidden = false; b.textContent = notifOn ? 'Hinweise an' : 'Hinweise aus'; b.style.color = notifOn ? 'var(--accent)' : ''; }
-  $('notifBtn').addEventListener('click', async function () {
-    if (notifOn) { notifOn = false; store('jarvis_notif', '0'); paintNotif(); return; }
-    var p = await Notification.requestPermission();
-    notifOn = p === 'granted'; store('jarvis_notif', notifOn ? '1' : '0'); paintNotif();
-    if (!notifOn) $('stand').textContent = 'Hinweise blockiert. In den iPhone-Einstellungen → Mitteilungen → Jarvis erlauben.';
-  });
-  function notify(d) {
-    if (!notifOn) return;
-    var keys = [], texts = [];
-    ((d.preischeck && d.preischeck.liste) || []).forEach(function (x) { if (x.bewertung === 'VERLUST') { keys.push('v:' + x.artikel); texts.push('Verlust: ' + x.artikel.slice(0, 40)); } });
-    (d.aufgaben || []).forEach(function (a) { if (a.ueberfaellig) { keys.push('a:' + a.id); texts.push('Überfällig: ' + a.titel); } });
-    (d.belege || []).forEach(function (b) { if (b.id && b.artikel !== 'Alles erledigt') { keys.push('b:' + b.id); texts.push(b.problem + ': ' + b.artikel.slice(0, 30)); } });
-    var seen = {}; try { seen = JSON.parse(store('jarvis_seen') || '{}'); } catch (e) {}
-    var neu = [];
-    keys.forEach(function (k, i) { if (!seen[k]) neu.push(texts[i]); });
-    var next = {}; keys.forEach(function (k) { next[k] = 1; }); store('jarvis_seen', JSON.stringify(next));
-    if (!neu.length) return;
-    var body = neu.slice(0, 3).join('\n') + (neu.length > 3 ? '\n+' + (neu.length - 3) + ' weitere' : '');
-    try {
-      if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(function (r) { r.showNotification('Jarvis', { body: body, icon: 'icon-192.png', tag: 'jarvis' }); });
-      else new Notification('Jarvis', { body: body });
-    } catch (e) {}
+  // ---------- Push-Mitteilungen ----------
+  var PUSH_URL = 'https://luisdtg16.app.n8n.cloud/webhook/jarvis-push';
+  var pushOn = false;
+  async function pushCall(body) {
+    var res = await fetch(PUSH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ key: KEY }, body)) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
   }
-  paintNotif();
+  function b64ToBytes(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); s += '='.repeat((4 - s.length % 4) % 4); var r = atob(s), a = new Uint8Array(r.length); for (var i = 0; i < r.length; i++) a[i] = r.charCodeAt(i); return a; }
+  function pushSupported() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+  function paintNotif() {
+    var b = $('notifBtn'); b.hidden = false;
+    b.textContent = pushOn ? 'Push an' : 'Push aktivieren';
+    b.style.color = pushOn ? 'var(--accent)' : '';
+    b.style.borderColor = pushOn ? '' : 'var(--accent)';
+  }
+  async function checkPush() {
+    if (!pushSupported()) { paintNotif(); return; }
+    try { var reg = await navigator.serviceWorker.ready; var sub = await reg.pushManager.getSubscription(); pushOn = !!sub && Notification.permission === 'granted'; } catch (e) {}
+    paintNotif();
+  }
+  async function enablePush(forceTest) {
+    var standalone = window.navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+    if (!pushSupported()) {
+      $('stand').textContent = standalone ? 'Push braucht iOS 16.4 oder neuer.' : 'Push geht auf dem iPhone nur in der installierten App: Safari → Teilen → „Zum Home-Bildschirm“, dann dort öffnen.';
+      return;
+    }
+    var perm = await Notification.requestPermission();
+    if (perm !== 'granted') { $('stand').textContent = 'Mitteilungen blockiert. iPhone-Einstellungen → Mitteilungen → Jarvis → Erlauben.'; return; }
+    $('stand').textContent = 'Richte Push ein …';
+    try {
+      var reg = await navigator.serviceWorker.ready;
+      var v = await pushCall({ aktion: 'vapid' });
+      var sub = await reg.pushManager.getSubscription();
+      if (sub && store('jarvis_vapid') && store('jarvis_vapid') !== v.public_key) { await sub.unsubscribe(); sub = null; }
+      if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(v.public_key) });
+      store('jarvis_vapid', v.public_key);
+      var j = sub.toJSON();
+      await pushCall({ aktion: 'abo', endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth, geraet: navigator.userAgent });
+      pushOn = true; paintNotif();
+      if (forceTest !== false) { await pushCall({ aktion: 'test' }); $('stand').textContent = 'Push aktiv. Test-Mitteilung ist unterwegs.'; }
+    } catch (e) { $('stand').textContent = 'Push-Einrichtung fehlgeschlagen (' + e.message + ').'; }
+  }
+  $('notifBtn').addEventListener('click', function () { enablePush(true); });
+  checkPush().then(function () { if (pushOn) enablePush(false); });
+
+  // ---------- Mitteilungen (Verlauf aller Meldungen) ----------
+  async function loadMeldungen() {
+    if (!KEY) return;
+    try { var d = await pushCall({ aktion: 'liste' }); store('jarvis_meld', JSON.stringify(d)); renderMeldungen(d); } catch (e) {}
+  }
+  function renderMeldungen(d) {
+    var M = (d && d.meldungen) || [];
+    var seen = Number(store('jarvis_meld_seen') || 0);
+    var neu = M.filter(function (m) { return m.id > seen; }).length;
+    $('n-meld').textContent = neu ? neu + ' neu' : '';
+    var all = $('meldungen').dataset.all === '1';
+    $('meldungen').innerHTML = M.length ? (all ? M : M.slice(0, 4)).map(function (m) {
+      var t = new Date(m.zeit), heute = new Date().toDateString() === t.toDateString();
+      var zeit = (heute ? '' : t.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) + ', ') + t.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      return '<li class="meld' + (m.id > seen ? ' neu' : '') + '"><div class="main"><div><b>' + esc(m.titel) + '</b> <span class="sub">' + zeit + '</span></div><div class="mtext">' + esc(m.text) + '</div></div></li>';
+    }).join('') + (M.length > 4 ? '<li><button class="chk" style="width:auto;padding:2px 10px;border-radius:999px;color:var(--text);font-size:12px" type="button" id="meld-more">' + (all ? 'Weniger' : 'Alle ' + M.length + ' zeigen') + '</button></li>' : '') : '<li class="empty">Noch keine Mitteilungen.</li>';
+    if (M[0] && $('v-dash').classList.contains('on')) setTimeout(function () { store('jarvis_meld_seen', String(M[0].id)); }, 4000);
+  }
+  $('meldungen').addEventListener('click', function (e) {
+    if (e.target.closest('#meld-more')) { this.dataset.all = this.dataset.all === '1' ? '0' : '1'; try { renderMeldungen(JSON.parse(store('jarvis_meld') || 'null')); } catch (x) {} return; }
+    var li = e.target.closest('li.meld'); if (li) li.classList.toggle('open');
+  });
+  try { var mc = JSON.parse(store('jarvis_meld') || 'null'); if (mc) renderMeldungen(mc); } catch (e) {}
+  if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.typ === 'push') loadMeldungen(); });
+  function notify() {}
   $('belege').addEventListener('click', function (e) {
     var b = e.target.closest('.chk'); if (!b || !b.dataset.bid) return;
     b.closest('li').style.opacity = '.4'; b.style.background = 'var(--accent)';
@@ -933,6 +983,7 @@
   hello();
   try { var c = JSON.parse(store('jarvis_dash') || 'null'); if (c) { last = c; render(c, true); } } catch (e) {}
   var startTab = new URLSearchParams(location.search).get('tab');
+  if (startTab === 'meldungen') startTab = 'dash';
   startTab = startTab ? 'v-' + startTab : (store('jarvis_tab') || 'v-chat');
   if (!document.getElementById(startTab)) startTab = 'v-chat';
   show(startTab);
