@@ -133,6 +133,40 @@
   .tags .tag { margin-left: 0; }
   .tag.warn { color: #f6c26b; border-color: #6b5a33; } .tag.bad { color: #ff7a7a; border-color: #6b3333; }
   #lg-seg { margin-bottom: 6px; }
+  .kat { display: flex; gap: 6px; overflow-x: auto; margin: 0 -13px 10px; padding: 0 13px 2px; scrollbar-width: none; }
+  .kat::-webkit-scrollbar { display: none; }
+  .kat button { flex: none; background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 9px; padding: 6px 11px; font-size: 13px; }
+  .kat button[aria-pressed="true"] { background: #2f6bff; border-color: #2f6bff; color: #fff; }
+  .inv { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .inv div { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 9px 11px; min-width: 0; }
+  .inv span { display: block; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .inv b { display: block; font-size: 19px; margin: 2px 0 1px; font-variant-numeric: tabular-nums; }
+  .inv small { font-size: 11px; color: var(--muted); }
+  .lg-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .lg-bar .seg { margin: 0; flex: 1; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .lg-bar .seg button { white-space: nowrap; padding: 6px 10px; flex: none; }
+  .lg-bar .seg::-webkit-scrollbar { display: none; }
+  .lg-bar select { background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 9px; padding: 6px 8px; font-size: 13px; flex: none; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; list-style: none; margin: 0; padding: 0; }
+  @media (min-width: 560px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .grid .empty { grid-column: 1 / -1; color: var(--muted); font-size: 14px; padding: 8px 0; }
+  .pc { background: #11161e; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+  .pc .im { position: relative; aspect-ratio: 1; background: #fff; display: flex; align-items: center; justify-content: center; }
+  .pc .im img { width: 86%; height: 86%; object-fit: contain; }
+  .pc .im .noimg { width: 42px; height: 42px; stroke: #b8c0cc; fill: none; stroke-width: 1.5; }
+  .pc .st { position: absolute; top: 7px; right: 7px; background: rgba(12,16,22,.86); color: #e8edf3; font-size: 10.5px; font-weight: 600; border-radius: 999px; padding: 3px 8px 3px 6px; display: flex; align-items: center; gap: 4px; }
+  .pc .st i { width: 6px; height: 6px; border-radius: 50%; background: #3ddc84; display: block; }
+  .pc .st.b i { background: #f6c26b; }
+  .pc .n { position: absolute; top: 7px; left: 7px; background: #2f6bff; color: #fff; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 8px; }
+  .pc .bd { padding: 9px 10px 10px; display: flex; flex-direction: column; gap: 3px; flex: 1; }
+  .pc .t { font-size: 13px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; }
+  .pc .m { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pc .p { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-top: auto; padding-top: 6px; border-top: 1px solid var(--line); }
+  .pc .p b { font-size: 15px; font-variant-numeric: tabular-nums; }
+  .pc .p small { font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .pc .kl { font-size: 10.5px; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pc .tags { margin-top: 2px; }
+  .pc .tag { font-size: 10px; padding: 1px 6px; }
   .legend { font-size: 11px; color: var(--muted); display: flex; gap: 12px; margin-top: 6px; }
   .legend b { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 4px; }
   .mini-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
@@ -200,9 +234,12 @@
       <ul class="list" id="pipeline"><li class="empty">Lade …</li></ul>
       <div class="legend"><span><b style="background:var(--accent)"></b>erledigt</span><span><b style="background:#f6c26b"></b>offen / Entwurf</span><span><b style="background:#ff7a7a"></b>hängt</span><span><b style="background:#3a4352"></b>später</span></div></div>
     <div class="card"><h3>Lagerbestand <em id="lagerstand"></em></h3>
-      <input type="search" id="lg-q" class="lg-q" placeholder="Artikel oder EAN suchen …" autocomplete="off" aria-label="Lager durchsuchen">
-      <div class="seg" id="lg-seg"><button type="button" data-f="alle" aria-pressed="true">Alle</button><button type="button" data-f="IM_LAGER" aria-pressed="false">Im Lager</button><button type="button" data-f="BESTELLT" aria-pressed="false">Bestellt</button><button type="button" data-f="todo" aria-pressed="false">To-do</button></div>
-      <ul class="list" id="lager"></ul><div class="tip" id="lg-tip">Aus neXus (Sync abends 22:30) · Kaufland-Preise live</div></div>
+      <div class="kat" id="lg-kat" role="group" aria-label="Kategorien"></div>
+      <div class="inv"><div><span>Inventarwert (brutto)</span><b id="inv-b">–</b><small id="inv-bs"></small></div><div><span>Inventarwert (netto)</span><b id="inv-n">–</b><small id="inv-ns"></small></div></div>
+      <input type="search" id="lg-q" class="lg-q" placeholder="Suchen (Artikel, EAN, Händler …)" autocomplete="off" aria-label="Lager durchsuchen">
+      <div class="lg-bar"><div class="seg" id="lg-seg"><button type="button" data-f="alle" aria-pressed="true">Alle</button><button type="button" data-f="IM_LAGER" aria-pressed="false">Im Lager</button><button type="button" data-f="BESTELLT" aria-pressed="false">Bestellt</button><button type="button" data-f="todo" aria-pressed="false">To-do</button></div>
+        <select id="lg-sort" aria-label="Sortieren"><option value="datum">Lieferdatum</option><option value="wert">Wert</option><option value="name">Name</option></select></div>
+      <ul class="grid" id="lager"></ul><div class="tip" id="lg-tip">Aus neXus (Sync abends 22:30) · Kaufland-Preise live</div></div>
     <div class="card"><h3>Ladenhüter <em id="lh-info"></em></h3><ul class="list" id="ladenhueter"></ul><div class="tip">Am längsten im Lager (seit Bestellung) · ab 30 Tagen rot</div></div>
   </div>
 </section>
@@ -832,7 +869,7 @@
 
 
   // ---------- Lager-Tab ----------
-  var lgFilter = store('jarvis_lgf') || 'alle';
+  var lgFilter = store('jarvis_lgf') || 'alle', lgKat = 'Alle', lgSort = store('jarvis_lgs') || 'datum';
   function renderLager(d) {
     var lg = d.lager || {}, L = lg.liste || [];
     var imL = L.filter(function (p) { return p.status === 'IM_LAGER'; }), best = L.filter(function (p) { return p.status === 'BESTELLT'; });
@@ -849,24 +886,43 @@
     $('lg-todo-s').textContent = 'Listing, EK-Rechnung, Ladenhüter';
     $('lagerstand').textContent = lg.stand ? 'Stand ' + new Date(lg.stand).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) + ', ' + new Date(lg.stand).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '';
     $('lg-seg').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.f === lgFilter ? 'true' : 'false'); });
+    var kats = {}; L.forEach(function (p) { var k = p.kat || 'Sonstiges'; kats[k] = (kats[k] || 0) + p.anzahl; });
+    var kl = Object.keys(kats).sort(function (a, b) { return kats[b] - kats[a]; });
+    if (lgKat !== 'Alle' && !kats[lgKat]) lgKat = 'Alle';
+    $('lg-kat').innerHTML = ['Alle'].concat(kl).map(function (k) { return '<button type="button" data-k="' + esc(k) + '" aria-pressed="' + (k === lgKat) + '">' + esc(k) + '</button>'; }).join('');
     var q = ($('lg-q').value || '').trim().toLowerCase();
     var vis = L.filter(function (p) {
+      if (lgKat !== 'Alle' && (p.kat || 'Sonstiges') !== lgKat) return false;
       if (lgFilter === 'IM_LAGER' || lgFilter === 'BESTELLT') { if (p.status !== lgFilter) return false; }
       else if (lgFilter === 'todo' && !todo(p)) return false;
-      return !q || (p.artikel + ' ' + p.ean + ' ' + p.haendler).toLowerCase().indexOf(q) >= 0;
+      return !q || (p.artikel + ' ' + p.ean + ' ' + p.haendler + ' ' + (p.kat || '')).toLowerCase().indexOf(q) >= 0;
     });
+    $('lg-sort').value = lgSort;
+    vis.sort(lgSort === 'wert' ? function (a, b) { return b.wert - a.wert; } : lgSort === 'name' ? function (a, b) { return a.artikel.localeCompare(b.artikel, 'de'); } : function (a, b) { return String(b.ld || b.bd || '').localeCompare(String(a.ld || a.bd || '')); });
+    var stk = sum(vis, function (p) { return p.anzahl; }), wb = sum(vis, function (p) { return p.wert; }), wn = sum(vis, function (p) { return p.wert_netto || (p.wert / 1.19); });
+    $('inv-b').textContent = eur(wb, 2); $('inv-bs').textContent = 'Ø ' + eur(stk ? wb / stk : 0, 2) + ' · ' + stk + ' Artikel';
+    $('inv-n').textContent = eur(wn, 2); $('inv-ns').textContent = 'Ø ' + eur(stk ? wn / stk : 0, 2) + ' · ' + stk + ' Artikel';
+    var dt = function (x) { return x ? x.slice(8, 10) + '.' + x.slice(5, 7) + '.' : ''; };
+    var box = '<svg class="noimg" viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8"/></svg>';
     $('lager').innerHTML = vis.length ? vis.map(function (p) {
       var tags = '';
-      if (p.status === 'BESTELLT') tags += '<span class="tag">bestellt</span>';
-      if (p.status === 'IM_LAGER' && p.ohne_listing > 0) tags += '<span class="tag warn">nicht gelistet' + (p.ohne_listing < p.anzahl ? ' (' + p.ohne_listing + ')' : '') + '</span>';
+      if (p.status === 'IM_LAGER' && p.ohne_listing > 0) tags += '<span class="tag warn">nicht gelistet</span>';
       if (p.ohne_rechnung > 0) tags += '<span class="tag bad">EK-Rechnung fehlt</span>';
       if (p.status === 'IM_LAGER' && p.tage != null && p.tage >= 30) tags += '<span class="tag bad">' + p.tage + ' Tage</span>';
-      var kl = p.kl_preis != null ? ' · Kaufland ' + eur(p.kl_preis, 2) + (p.kl_marge != null ? ' (' + p.kl_marge + ' %)' : '') : (p.status === 'IM_LAGER' ? ' · nicht auf Kaufland' : '');
-      return '<li><div class="main"><div>' + esc(p.artikel) + '</div><div class="sub">' + p.anzahl + ' Stk · EK ' + (p.ek ? eur(p.ek, 2) : '–') + kl + (p.haendler ? ' · ' + esc(p.haendler) : '') + (p.tage != null && p.tage < 30 ? ' · ' + p.tage + ' Tage' : '') + '</div>' + (tags ? '<div class="tags">' + tags + '</div>' : '') + '</div><div class="val">' + eur(p.wert) + '</div></li>';
+      var bestellt = p.status === 'BESTELLT';
+      var img = /^https?:\/\//.test(p.bild || '') ? '<img loading="lazy" referrerpolicy="no-referrer" alt="" src="' + esc(p.bild) + '" onerror="this.outerHTML=\'' + box.replace(/"/g, '&quot;') + '\'">' : box;
+      var klt = p.kl_preis != null ? 'Kaufland ' + eur(p.kl_preis, 2) + (p.kl_marge != null ? ' · ' + p.kl_marge + ' %' : '') : '';
+      var ekn = p.ekn != null ? p.ekn : (p.ek ? p.ek / 1.19 : null);
+      return '<li class="pc"><div class="im">' + img + '<span class="st' + (bestellt ? ' b' : '') + '"><i></i>' + (bestellt ? 'Bestellt' : 'Im Lager') + '</span>' + (p.anzahl > 1 ? '<span class="n">' + p.anzahl + '×</span>' : '') + '</div>' +
+        '<div class="bd"><div class="t">' + esc(p.artikel) + '</div><div class="m">' + esc(p.haendler || '–') + (p.ld || p.bd ? ' · ' + dt(p.ld || p.bd) : '') + '</div>' +
+        (klt ? '<div class="kl">' + klt + '</div>' : '') + (tags ? '<div class="tags">' + tags + '</div>' : '') +
+        '<div class="p"><b>' + (ekn != null ? eur(ekn, 2) : '–') + '</b><small>' + (p.anzahl > 1 ? 'Σ ' + eur(p.wert_netto || p.wert / 1.19, 2) : 'netto') + '</small></div></div></li>';
     }).join('') : '<li class="empty">' + (L.length ? 'Nichts gefunden.' : 'Noch keine Lagerdaten aus neXus.') + '</li>';
-    $('lg-tip').textContent = vis.length + ' von ' + L.length + ' Positionen · aus neXus (Sync abends 22:30) · Kaufland-Preise live';
+    $('lg-tip').textContent = vis.length + ' von ' + L.length + ' Positionen · Preis = EK netto wie in neXus · aus neXus (Sync abends 22:30) · Kaufland-Preise live';
   }
   $('lg-q').addEventListener('input', function () { if (last) renderLager(last); });
+  $('lg-kat').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; lgKat = b.dataset.k; if (last) renderLager(last); });
+  $('lg-sort').addEventListener('change', function () { lgSort = this.value; store('jarvis_lgs', lgSort); if (last) renderLager(last); });
   $('lg-seg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; lgFilter = b.dataset.f; store('jarvis_lgf', lgFilter); if (last) renderLager(last); });
 
   // ---------- Monatsabschluss ----------
