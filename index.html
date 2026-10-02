@@ -137,6 +137,7 @@
     </div>
     <div class="card"><h3>Kaufland · 30 Tage <em id="sum30"></em></h3><svg class="chart" id="c-tage" role="img" aria-label="Kaufland-Umsatz der letzten 30 Tage"></svg><div class="tip" id="t-tage">Tippe auf einen Balken</div></div>
     <div class="card"><h3>Umsatz pro Monat <em id="sumJahr"></em></h3><svg class="chart" id="c-monate" role="img" aria-label="Rechnungsumsatz pro Monat laut Lexware"></svg><div class="tip" id="t-monate">Alle Verkaufsrechnungen aus Lexware, brutto</div></div>
+    <div class="card"><h3>Kaufland Preis-Check <em id="pc-info"></em></h3><ul class="list" id="preischeck"></ul><div class="tip" id="pc-tip">Gebühr 12 % geschätzt · EK aus neXus</div></div>
     <div class="card"><h3>Aufgaben <em id="n-aufg"></em></h3><ul class="list" id="aufgaben"></ul></div>
     <div class="card"><h3>Termine · 14 Tage</h3><ul class="list" id="termine"></ul></div>
     <div class="card"><h3>Letzte Verkäufe</h3><ul class="list" id="verkaeufe"></ul></div>
@@ -581,6 +582,23 @@
     bars($('c-monate'), ms.map(function (m) { return { v: m.umsatz, raw: m, label: mNames[+m.monat.slice(5, 7) - 1] }; }),
       { onPick: function (it) { $('t-monate').textContent = mNames[+it.raw.monat.slice(5, 7) - 1] + ' ' + it.raw.monat.slice(0, 4) + ': ' + eur(it.raw.umsatz, 2) + ' (Rechnungen brutto)'; } });
 
+    // Preis-Check
+    var pc = d.preischeck || { liste: [] };
+    var pl = pc.liste || [];
+    var nProb = pl.filter(function (x) { return /VERLUST|knapp/.test(x.bewertung); }).length;
+    $('pc-info').textContent = pc.anzahl ? (nProb ? nProb + ' prüfen' : 'alles ok') : '';
+    var COL = { 'VERLUST': '#ff7a7a', 'zu knapp': '#ff9f6b', 'knapp': '#f6c26b', 'ok': 'var(--accent)' };
+    var showAll = $('preischeck').dataset.all === '1';
+    var vis = showAll ? pl : pl.slice(0, 6);
+    $('preischeck').innerHTML = pl.length ? vis.map(function (x) {
+      var luft = /Luft/.test(x.bewertung);
+      var lab = luft ? 'viel Luft' : x.bewertung;
+      var col = luft ? 'var(--speak)' : (COL[x.bewertung] || 'var(--muted)');
+      var hint = (/VERLUST|knapp/.test(x.bewertung) && x.vorschlag) ? ' · für 15 %: ' + eur(x.vorschlag, 2) : '';
+      return '<li><div class="main"><div>' + esc(x.artikel) + '</div><div class="sub">' + eur(x.preis, 2) + ' · EK ' + eur(x.ek, 2) + ' · ' + x.bestand + ' Stk' + hint + '</div></div><div class="val" style="text-align:right"><span style="color:' + col + '">' + esc(lab) + '</span><div class="sub">' + (x.gewinn >= 0 ? '+' : '') + eur(x.gewinn, 2) + ' · ' + x.marge + ' %</div></div></li>';
+    }).join('') + (pl.length > 6 ? '<li><button class="chk" style="width:auto;padding:2px 10px;border-radius:999px;color:var(--text);font-size:12px" type="button" id="pc-more">' + (showAll ? 'Weniger' : 'Alle ' + pl.length + ' zeigen') + '</button></li>' : '') : '<li class="empty">Keine Daten von Kaufland.</li>';
+    $('pc-tip').textContent = 'Gebühr 12 % geschätzt · EK aus neXus' + (pc.ohne_ek ? ' · ' + pc.ohne_ek + ' Angebote ohne EK' : '');
+
     // Aufgaben
     var A = d.aufgaben || [];
     $('n-aufg').textContent = A.length ? A.length + ' offen' : '';
@@ -623,6 +641,11 @@
     load({ erledigt_id: Number(b.dataset.id) });
   });
   $('reload').addEventListener('click', function () { load(); });
+  $('preischeck').addEventListener('click', function (e) {
+    if (!e.target.closest('#pc-more')) return;
+    this.dataset.all = this.dataset.all === '1' ? '0' : '1';
+    if (last) render(last, false);
+  });
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && $('v-dash').classList.contains('on')) maybeLoad(); });
   window.addEventListener('resize', function () { if (last) render(last, false); });
 
