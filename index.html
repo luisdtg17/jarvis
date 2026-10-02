@@ -118,6 +118,32 @@
   .seg button[aria-pressed="true"] { color: var(--bg); background: var(--accent); border-color: var(--accent); }
   .tv { min-height: 120px; }
   .note { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+
+  /* ---------- Briefing, Verlauf, Depot ---------- */
+  .brief { border-color: #24414a; background: linear-gradient(180deg, #0f1a1f, var(--panel)); }
+  .brief ul { list-style: none; margin: 0; padding: 0; }
+  .brief li { display: flex; gap: 10px; padding: 6px 0; font-size: 14px; align-items: baseline; }
+  .brief li i { font-style: normal; width: 18px; flex: none; text-align: center; }
+  .brief li button { background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  .pos, ul.list .pos { color: #5fd38d; } .neg, ul.list .neg { color: #ff7a7a; }
+  .spark { width: 84px; height: 30px; flex: none; }
+  .spark .e { stroke: var(--accent); fill: none; stroke-width: 1.6; }
+  .spark .k { stroke: #ff9f6b; fill: none; stroke-width: 1.4; stroke-dasharray: 3 2; }
+  .legend { font-size: 11px; color: var(--muted); display: flex; gap: 12px; margin-top: 6px; }
+  .legend b { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 4px; }
+  .mini-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+  .mini-form input, .mini-form select { width: 100%; min-width: 0; background: #0c1016; border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 9px 10px; font-size: 16px; }
+  .mini-form .full { grid-column: 1 / -1; }
+  .mini-form button { grid-column: 1 / -1; background: var(--accent); color: #04231f; border: 0; border-radius: 10px; padding: 10px; font-size: 15px; font-weight: 600; }
+  .mini-form button:disabled { opacity: .5; }
+  details.add summary { cursor: pointer; color: var(--accent); font-size: 13px; margin-top: 8px; list-style: none; }
+  details.add summary::-webkit-details-marker { display: none; }
+  .del { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; font-size: 12px; padding: 3px 8px; flex: none; }
+  .del.sure { color: #ff7a7a; border-color: #ff7a7a; }
+  .sumrow { display: flex; justify-content: space-between; gap: 10px; font-variant-numeric: tabular-nums; margin-bottom: 8px; }
+  .sumrow b { font-size: 22px; font-weight: 600; }
+  .sumrow > div { text-align: right; font-size: 13px; }
+  .sumrow > div:first-child, .sumrow > div:first-child div { text-align: left; }
 </style>
 </head>
 <body>
@@ -128,7 +154,8 @@
 <section class="view" id="v-dash" aria-label="Übersicht">
   <div class="scroll" id="dash">
     <div class="hello"><div><h2 id="greet">Hallo, Boss</h2><p id="today"></p></div><div class="wx" id="wx"></div></div>
-    <div class="bar-row"><span id="stand">Lade Daten …</span><button id="reload" type="button">Aktualisieren</button></div>
+    <div class="bar-row"><span id="stand">Lade Daten …</span><span><button id="notifBtn" type="button" hidden>Hinweise aus</button> <button id="reload" type="button">Aktualisieren</button></span></div>
+    <div class="card brief"><h3>Dein Tag <em id="brief-n"></em></h3><ul id="briefing"><li class="empty">Lade …</li></ul></div>
     <div class="kpis">
       <div class="kpi"><span>Heute</span><b id="k-heute">–</b><small id="k-heute-s"></small></div>
       <div class="kpi"><span>Letzte 7 Tage</span><b id="k-woche">–</b><small id="k-woche-s"></small></div>
@@ -136,8 +163,12 @@
       <div class="kpi"><span>Lagerwert (EK)</span><b id="k-lager">–</b><small id="k-lager-s"></small></div>
     </div>
     <div class="card"><h3>Kaufland · 30 Tage <em id="sum30"></em></h3><svg class="chart" id="c-tage" role="img" aria-label="Kaufland-Umsatz der letzten 30 Tage"></svg><div class="tip" id="t-tage">Tippe auf einen Balken</div></div>
+    <div class="card"><h3>Gewinn pro Monat <em id="sumGewinn"></em></h3><svg class="chart" id="c-gewinn" role="img" aria-label="Geschätzter Gewinn pro Monat auf Kaufland"></svg><div class="tip" id="t-gewinn">Kaufland, netto nach Gebühren und EK · geschätzt</div></div>
     <div class="card"><h3>Umsatz pro Monat <em id="sumJahr"></em></h3><svg class="chart" id="c-monate" role="img" aria-label="Rechnungsumsatz pro Monat laut Lexware"></svg><div class="tip" id="t-monate">Alle Verkaufsrechnungen aus Lexware, brutto</div></div>
+    <div class="card" id="card-belege"><h3>Fehlende Belege <em id="n-belege"></em></h3><ul class="list" id="belege"></ul><div class="tip" id="t-belege">Aus dem 22:30-Check (neXus ↔ Excel)</div></div>
     <div class="card"><h3>Kaufland Preis-Check <em id="pc-info"></em></h3><ul class="list" id="preischeck"></ul><div class="tip" id="pc-tip">Gebühr 12 % geschätzt · EK aus neXus</div></div>
+    <div class="card"><h3>Preisverlauf · 7 Tage <em id="vl-info"></em></h3><ul class="list" id="verlauf"></ul><div class="legend"><span><b style="background:var(--accent)"></b>dein Preis</span><span><b style="background:#ff9f6b"></b>günstigster Konkurrent</span></div></div>
+    <div class="card"><h3>Ladenhüter <em id="lh-info"></em></h3><ul class="list" id="ladenhueter"></ul><div class="tip">Am längsten im Lager (seit Bestellung) · ab 30 Tagen rot</div></div>
     <div class="card"><h3>Aufgaben <em id="n-aufg"></em></h3><ul class="list" id="aufgaben"></ul></div>
     <div class="card"><h3>Termine · 14 Tage</h3><ul class="list" id="termine"></ul></div>
     <div class="card"><h3>Letzte Verkäufe</h3><ul class="list" id="verkaeufe"></ul></div>
@@ -148,6 +179,36 @@
 
 <section class="view" id="v-trade" aria-label="Trading">
   <div class="scroll">
+    <div class="card"><h3>Mein Depot <em id="dp-stand"></em></h3>
+      <div class="sumrow"><div style="text-align:left"><b id="dp-wert">–</b><div class="sub" style="color:var(--muted);font-size:12px">Depotwert</div></div><div><span id="dp-gv"></span><div id="dp-heute" style="color:var(--muted);font-size:12px"></div></div></div>
+      <ul class="list" id="depot"></ul>
+      <details class="add"><summary>+ Position oder Watchlist-Wert hinzufügen</summary>
+        <form class="mini-form" id="f-pos" autocomplete="off">
+          <input class="full" name="isin" placeholder="ISIN, Kürzel oder Name (z. B. IE00BK5BQT80)" required aria-label="ISIN, Kürzel oder Name">
+          <input name="stueck" inputmode="decimal" placeholder="Stück (0 = nur beobachten)" aria-label="Stückzahl">
+          <input name="kaufkurs" inputmode="decimal" placeholder="Ø Kaufkurs in €" aria-label="Durchschnittlicher Kaufkurs">
+          <button type="submit">Speichern</button>
+        </form>
+        <p class="note" style="margin:8px 0 0">Trade Republic hat keine offizielle Schnittstelle, deshalb trägst du deine Positionen hier einmal selbst ein. Kurse kommen live von TradingView.</p>
+      </details>
+    </div>
+    <div class="card"><h3>Watchlist</h3><ul class="list" id="watch"></ul></div>
+    <div class="card"><h3>Trade-Tagebuch <em id="tr-sum"></em></h3>
+      <ul class="list" id="trades"></ul>
+      <details class="add"><summary>+ Trade eintragen</summary>
+        <form class="mini-form" id="f-trade" autocomplete="off">
+          <input class="full" name="wert" placeholder="Wert (z. B. DAX, Tesla, BTC)" required aria-label="Wert">
+          <input name="datum" type="date" aria-label="Datum">
+          <select name="richtung" aria-label="Richtung"><option>Long</option><option>Short</option></select>
+          <input name="einstieg" inputmode="decimal" placeholder="Einstieg €" required aria-label="Einstiegskurs">
+          <input name="ausstieg" inputmode="decimal" placeholder="Ausstieg € (leer = offen)" aria-label="Ausstiegskurs">
+          <input name="stueck" inputmode="decimal" placeholder="Stück" required aria-label="Stückzahl">
+          <input name="gebuehren" inputmode="decimal" placeholder="Gebühren €" aria-label="Gebühren">
+          <input class="full" name="notiz" placeholder="Notiz: warum rein, was gelernt?" aria-label="Notiz">
+          <button type="submit">Trade speichern</button>
+        </form>
+      </details>
+    </div>
     <p class="note">Live-Marktdaten von TradingView: was sich gerade bewegt. Das sind keine Kauf- oder Verkaufsempfehlungen, die Entscheidung bleibt bei dir.</p>
     <div class="tv" id="tv-tape"></div>
     <div class="card"><h3>Top-Mover heute</h3>
@@ -490,7 +551,7 @@
     tabs.forEach(function (b) { b.setAttribute('aria-selected', b.dataset.v === id ? 'true' : 'false'); });
     store('jarvis_tab', id);
     if (id === 'v-dash') { if (last) render(last, Date.now() - lastLoad > 60000); maybeLoad(); }
-    if (id === 'v-trade' && !loadedTrade) { loadedTrade = true; loadTrading(); }
+    if (id === 'v-trade') { if (!loadedTrade) { loadedTrade = true; loadTrading(); } if (Date.now() - dLoad > 60000) depotCall(); }
   }
   tabs.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.v); }); });
 
@@ -550,7 +611,7 @@
     $('k-heute').textContent = eur(v.heute && v.heute.umsatz, 2);
     $('k-heute-s').textContent = (v.heute ? v.heute.stueck : 0) + ' Verkäufe · Kaufland';
     $('k-woche').textContent = eur(v.woche && v.woche.umsatz);
-    $('k-woche-s').textContent = (v.woche ? v.woche.stueck : 0) + ' Verkäufe · Kaufland';
+    $('k-woche-s').textContent = (v.woche ? v.woche.stueck : 0) + ' Verkäufe' + (v.woche && v.woche.gewinn ? ' · ca. ' + eur(v.woche.gewinn) + ' Gewinn' : ' · Kaufland');
     var lm = (d.lexware && d.lexware.monate) || [];
     $('k-monat').textContent = eur(lm.length ? lm[lm.length - 1].umsatz : 0);
     $('k-lager').textContent = eur(d.lager && d.lager.wert);
@@ -599,6 +660,39 @@
     }).join('') + (pl.length > 6 ? '<li><button class="chk" style="width:auto;padding:2px 10px;border-radius:999px;color:var(--text);font-size:12px" type="button" id="pc-more">' + (showAll ? 'Weniger' : 'Alle ' + pl.length + ' zeigen') + '</button></li>' : '') : '<li class="empty">Keine Daten von Kaufland.</li>';
     $('pc-tip').textContent = 'Gebühr 12 % geschätzt · EK aus neXus' + (pc.ohne_ek ? ' · ' + pc.ohne_ek + ' Angebote ohne EK' : '');
 
+    // Gewinn pro Monat
+    var gm = (d.gewinn && d.gewinn.monate) || [];
+    $('sumGewinn').textContent = gm.length ? eur(gm.reduce(function (a, x) { return a + x.gewinn; }, 0)) : '';
+    bars($('c-gewinn'), gm.map(function (m) { return { v: Math.max(0, m.gewinn), raw: m, label: mNames[+m.monat.slice(5, 7) - 1] }; }),
+      { onPick: function (it) { var m = it.raw; $('t-gewinn').textContent = mNames[+m.monat.slice(5, 7) - 1] + ': ' + eur(m.gewinn, 2) + ' Gewinn bei ' + eur(m.umsatz) + ' Umsatz' + (m.ohne_ek ? ' · ' + m.ohne_ek + ' von ' + (m.mit_ek + m.ohne_ek) + ' Stück ohne EK, nicht mitgerechnet' : ''); } });
+    if (gm.length) { var lg0 = gm[gm.length - 1]; $('t-gewinn').textContent = 'Kaufland, netto nach Gebühren und EK · geschätzt' + (lg0.ohne_ek ? ' · ' + lg0.ohne_ek + ' Stück diesen Monat ohne EK' : ''); }
+
+    // Fehlende Belege
+    var BL = d.belege || [], OL = d.ohne_listing || [];
+    var blOffen = BL.filter(function (b) { return b.artikel !== 'Alles erledigt'; });
+    $('n-belege').textContent = blOffen.length ? blOffen.length + ' offen' : 'alles da';
+    $('belege').innerHTML = (blOffen.length ? blOffen.map(function (b) {
+      return '<li>' + (b.id ? '<button class="chk" type="button" data-bid="' + b.id + '" aria-label="Erledigt: ' + esc(b.artikel) + '"></button>' : '') + '<div class="main"><div>' + esc(b.artikel) + '</div><div class="sub">' + esc(b.problem) + '</div></div></li>';
+    }).join('') : '<li class="empty">Keine fehlenden Belege oder Rechnungen. ✅</li>') +
+      (OL.length ? '<li><div class="main"><div>Noch nicht gelistet</div><div class="sub">' + OL.map(function (o) { return esc(o.artikel) + ' (' + o.anzahl + ')'; }).join(', ') + '</div></div></li>' : '');
+    $('t-belege').textContent = 'Aus dem 22:30-Check (neXus ↔ Excel)' + (blOffen[0] && blOffen[0].datum ? ' · Stand ' + new Date(blOffen[0].datum + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) : '');
+
+    // Preisverlauf
+    var VL = d.verlauf || [];
+    var vlShowAll = $('verlauf').dataset.all === '1';
+    $('vl-info').textContent = VL.length ? VL.filter(function (x) { return x.diff > 0; }).length + ' über Konkurrenz' : '';
+    $('verlauf').innerHTML = VL.length ? (vlShowAll ? VL : VL.slice(0, 6)).map(function (x) {
+      return '<li>' + spark(x.punkte) + '<div class="main"><div>' + esc(x.artikel) + '</div><div class="sub">du ' + eur(x.eigen, 2) + (x.konk != null ? ' · Konkurrenz ' + eur(x.konk, 2) + (x.verkaeufer ? ' (' + esc(x.verkaeufer) + ')' : '') : ' · keine Konkurrenz') + '</div></div>' +
+        (x.diff != null ? '<div class="val ' + (x.diff > 0 ? 'neg' : 'pos') + '">' + (x.diff > 0 ? '+' : '') + eur(x.diff, 2) + '</div>' : '') + '</li>';
+    }).join('') + (VL.length > 6 ? '<li><button class="chk" style="width:auto;padding:2px 10px;border-radius:999px;color:var(--text);font-size:12px" type="button" id="vl-more">' + (vlShowAll ? 'Weniger' : 'Alle ' + VL.length + ' zeigen') + '</button></li>' : '') : '<li class="empty">Noch keine Markt-Schnappschüsse (9, 13 und 17 Uhr).</li>';
+
+    // Ladenhüter
+    var LH = d.ladenhueter || { liste: [] };
+    $('lh-info').textContent = LH.anzahl ? LH.anzahl + ' · ' + eur(LH.kapital) + ' gebunden' : 'keine';
+    $('ladenhueter').innerHTML = (LH.liste || []).length ? LH.liste.map(function (p) {
+      return '<li><div class="main"><div>' + esc(p.artikel) + '</div><div class="sub">' + p.anzahl + ' Stück · ' + eur(p.kapital) + ' gebunden</div></div><div class="val' + (p.tage >= 30 ? ' neg' : '') + '">' + p.tage + ' Tage</div></li>';
+    }).join('') : '<li class="empty">Keine Lagerdaten.</li>';
+
     // Aufgaben
     var A = d.aufgaben || [];
     $('n-aufg').textContent = A.length ? A.length + ' offen' : '';
@@ -633,7 +727,96 @@
     var m = d.mails || {}, lx = d.lexware || {};
     $('post').innerHTML = '<li><div class="main"><div>Gmail-Posteingang</div><div class="sub">wird abends um 21:45 zum Sortieren angeboten</div></div><div class="val">' + (m.gesamt != null ? m.gesamt.toLocaleString('de-DE') + ' Mails' : '–') + '</div></li>' +
       '<li><div class="main"><div>Offene Rechnungen (Lexware)</div><div class="sub">noch nicht bezahlt</div></div><div class="val">' + (lx.offen_anzahl || 0) + (lx.offen_anzahl ? ' · ' + eur(lx.offen_summe, 2) : '') + '</div></li>';
+
+    briefing(d);
+    notify(d);
   }
+
+  // ---------- Mini-Verlauf (SVG) ----------
+  function spark(pts) {
+    pts = pts || [];
+    var vals = [];
+    pts.forEach(function (p) { if (p[1] != null) vals.push(p[1]); if (p[2] != null) vals.push(p[2]); });
+    if (!vals.length) return '<svg class="spark" aria-hidden="true"></svg>';
+    var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), W = 84, H = 30, n = pts.length;
+    if (mx - mn < 0.01) { mx += 1; mn -= 1; }
+    function line(idx) {
+      var s = '';
+      pts.forEach(function (p, i) {
+        if (p[idx] == null) return;
+        var x = n === 1 ? W / 2 : 2 + (W - 4) * i / (n - 1), y = 3 + (H - 6) * (1 - (p[idx] - mn) / (mx - mn));
+        s += (s ? ' L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+      });
+      if (n === 1 && s) { var y0 = s.split(' ')[1]; s = 'M2 ' + y0 + ' L' + (W - 2) + ' ' + y0; }
+      return s;
+    }
+    return '<svg class="spark" viewBox="0 0 84 30" aria-hidden="true"><path class="k" d="' + line(2) + '"/><path class="e" d="' + line(1) + '"/></svg>';
+  }
+
+  // ---------- Morgen-Briefing ----------
+  function briefing(d) {
+    var items = [], heute = new Date().toLocaleDateString('sv-SE');
+    var T = (d.termine || []).filter(function (e) { return String(e.start).slice(0, 10) === heute; });
+    if (T.length) items.push(['📅', T.length + (T.length === 1 ? ' Termin' : ' Termine') + ' heute: ' + T.slice(0, 2).map(function (e) { return (e.ganztags ? '' : new Date(e.start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' ') + e.titel; }).join(', '), 'card-termine']);
+    else items.push(['📅', 'Heute keine Termine.']);
+    var A = d.aufgaben || [];
+    var ueber = A.filter(function (a) { return a.ueberfaellig; }).length, faellig = A.filter(function (a) { return a.faellig === heute; }).length;
+    if (ueber || faellig) items.push(['✅', (ueber ? ueber + ' überfällig' : '') + (ueber && faellig ? ', ' : '') + (faellig ? faellig + ' heute fällig' : '') + ': ' + A.filter(function (a) { return a.ueberfaellig || a.faellig === heute; }).slice(0, 2).map(function (a) { return a.titel; }).join(', ')]);
+    var pl = (d.preischeck && d.preischeck.liste) || [];
+    var verl = pl.filter(function (x) { return x.bewertung === 'VERLUST'; }), knapp = pl.filter(function (x) { return /knapp/.test(x.bewertung); });
+    if (verl.length || knapp.length) items.push(['⚠️', (verl.length ? verl.length + ' Angebot' + (verl.length > 1 ? 'e' : '') + ' mit Verlust' : '') + (verl.length && knapp.length ? ', ' : '') + (knapp.length ? knapp.length + ' knapp kalkuliert' : '') + (verl[0] ? ' (' + verl[0].artikel.slice(0, 30) + ')' : '')]);
+    var VL = (d.verlauf || []).filter(function (x) { return x.diff != null && x.diff > 0; });
+    if (VL.length) items.push(['🏷️', VL.length + ' Angebote teurer als die Konkurrenz, am meisten: ' + VL[0].artikel.slice(0, 28) + ' (+' + eur(VL[0].diff, 2) + ')']);
+    var LH = d.ladenhueter || {};
+    if (LH.anzahl) items.push(['📦', LH.anzahl + ' Ladenhüter über 30 Tage, ' + eur(LH.kapital) + ' gebunden']);
+    var bl = (d.belege || []).filter(function (b) { return b.artikel !== 'Alles erledigt'; });
+    if (bl.length) items.push(['🧾', bl.length + (bl.length === 1 ? ' fehlender Beleg' : ' fehlende Belege/Rechnungen') + ': ' + bl[0].artikel.slice(0, 30)]);
+    var v = d.verkauf || {};
+    if (v.heute && v.heute.stueck) items.push(['💶', 'Heute schon ' + v.heute.stueck + ' Verkäufe, ' + eur(v.heute.umsatz, 2)]);
+    else if (v.letzte && v.letzte[0]) { var lz = v.letzte.filter(function (o) { return o.status === 'need_to_be_sent'; }).length; if (lz) items.push(['📮', lz + ' Bestellung' + (lz > 1 ? 'en' : '') + ' noch versenden']); }
+    var w = d.wetter && d.wetter.tage && d.wetter.tage[0];
+    if (w && w.regen >= 60) items.push(['☔', 'Regen wahrscheinlich (' + w.regen + ' %), Pakete trocken halten.']);
+    $('brief-n').textContent = '';
+    $('briefing').innerHTML = items.map(function (it) { return '<li><i>' + it[0] + '</i><span>' + esc(it[1]) + '</span></li>'; }).join('');
+  }
+
+  // ---------- Hinweise (Benachrichtigungen) ----------
+  var notifOn = store('jarvis_notif') === '1' && 'Notification' in window && Notification.permission === 'granted';
+  function paintNotif() { var b = $('notifBtn'); if (!('Notification' in window)) return; b.hidden = false; b.textContent = notifOn ? 'Hinweise an' : 'Hinweise aus'; b.style.color = notifOn ? 'var(--accent)' : ''; }
+  $('notifBtn').addEventListener('click', async function () {
+    if (notifOn) { notifOn = false; store('jarvis_notif', '0'); paintNotif(); return; }
+    var p = await Notification.requestPermission();
+    notifOn = p === 'granted'; store('jarvis_notif', notifOn ? '1' : '0'); paintNotif();
+    if (!notifOn) $('stand').textContent = 'Hinweise blockiert. In den iPhone-Einstellungen → Mitteilungen → Jarvis erlauben.';
+  });
+  function notify(d) {
+    if (!notifOn) return;
+    var keys = [], texts = [];
+    ((d.preischeck && d.preischeck.liste) || []).forEach(function (x) { if (x.bewertung === 'VERLUST') { keys.push('v:' + x.artikel); texts.push('Verlust: ' + x.artikel.slice(0, 40)); } });
+    (d.aufgaben || []).forEach(function (a) { if (a.ueberfaellig) { keys.push('a:' + a.id); texts.push('Überfällig: ' + a.titel); } });
+    (d.belege || []).forEach(function (b) { if (b.id && b.artikel !== 'Alles erledigt') { keys.push('b:' + b.id); texts.push(b.problem + ': ' + b.artikel.slice(0, 30)); } });
+    var seen = {}; try { seen = JSON.parse(store('jarvis_seen') || '{}'); } catch (e) {}
+    var neu = [];
+    keys.forEach(function (k, i) { if (!seen[k]) neu.push(texts[i]); });
+    var next = {}; keys.forEach(function (k) { next[k] = 1; }); store('jarvis_seen', JSON.stringify(next));
+    if (!neu.length) return;
+    var body = neu.slice(0, 3).join('\n') + (neu.length > 3 ? '\n+' + (neu.length - 3) + ' weitere' : '');
+    try {
+      if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(function (r) { r.showNotification('Jarvis', { body: body, icon: 'icon-192.png', tag: 'jarvis' }); });
+      else new Notification('Jarvis', { body: body });
+    } catch (e) {}
+  }
+  paintNotif();
+  $('belege').addEventListener('click', function (e) {
+    var b = e.target.closest('.chk'); if (!b || !b.dataset.bid) return;
+    b.closest('li').style.opacity = '.4'; b.style.background = 'var(--accent)';
+    load({ beleg_id: Number(b.dataset.bid) });
+  });
+  $('verlauf').addEventListener('click', function (e) {
+    if (!e.target.closest('#vl-more')) return;
+    this.dataset.all = this.dataset.all === '1' ? '0' : '1';
+    if (last) render(last, false);
+  });
 
   $('aufgaben').addEventListener('click', function (e) {
     var b = e.target.closest('.chk'); if (!b) return;
@@ -680,7 +863,73 @@
     hot(b.dataset.ex);
   });
 
+  // ---------- Depot, Watchlist, Trade-Tagebuch ----------
+  var DEPOT_URL = 'https://luisdtg16.app.n8n.cloud/webhook/jarvis-depot';
+  var dLast = null, dLoading = false, dLoad = 0;
+  var pct = function (x) { return x == null ? '' : (x > 0 ? '+' : '') + x.toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' %'; };
+  var cls = function (x) { return x > 0 ? 'pos' : x < 0 ? 'neg' : ''; };
+  async function depotCall(body) {
+    if (!KEY) { $('dp-stand').textContent = 'Link mit Schlüssel nötig'; return; }
+    if (dLoading && !body) return; dLoading = true;
+    $('dp-stand').textContent = 'lädt …';
+    try {
+      var res = await fetch(DEPOT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ key: KEY, aktion: 'liste' }, body || {})) });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var d = await res.json(); dLast = d; dLoad = Date.now();
+      store('jarvis_depot', JSON.stringify(d));
+      renderDepot(d);
+      if (d.meldung) $('dp-stand').textContent = d.meldung;
+    } catch (e) { $('dp-stand').textContent = 'Keine Verbindung (' + e.message + ')'; }
+    dLoading = false;
+  }
+  function delBtn(kind, id) { return '<button class="del" type="button" data-kind="' + kind + '" data-id="' + id + '" aria-label="Löschen">✕</button>'; }
+  function renderDepot(d) {
+    var dp = d.depot || {}, P = dp.positionen || [];
+    $('dp-stand').textContent = 'Stand ' + new Date(d.stand).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    $('dp-wert').textContent = P.length ? eur(dp.wert, 2) : '–';
+    $('dp-gv').innerHTML = P.length ? '<span class="' + cls(dp.gv) + '">' + (dp.gv > 0 ? '+' : '') + eur(dp.gv, 2) + ' (' + pct(dp.gv_prozent) + ')</span>' : '';
+    $('dp-heute').innerHTML = P.length ? 'heute <span class="' + cls(dp.heute) + '">' + (dp.heute > 0 ? '+' : '') + eur(dp.heute, 2) + '</span>' : '';
+    $('depot').innerHTML = P.length ? P.map(function (p) {
+      return '<li><div class="main"><div>' + esc(p.name) + '</div><div class="sub">' + p.stueck.toLocaleString('de-DE') + ' Stk · Kauf ' + eur(p.kaufkurs, 2) + ' · jetzt ' + (p.preis != null ? eur(p.preis, 2) : 'kein Kurs') + ' <span class="' + cls(p.tag_prozent) + '">' + pct(p.tag_prozent) + '</span></div></div><div class="val" style="text-align:right">' + (p.wert != null ? eur(p.wert, 2) : '–') + '<div class="sub ' + cls(p.gv) + '">' + (p.gv != null ? (p.gv > 0 ? '+' : '') + eur(p.gv, 2) : '') + '</div></div>' + delBtn('pos', p.id) + '</li>';
+    }).join('') : '<li class="empty">Noch keine Positionen. Unten hinzufügen.</li>';
+    var W = d.watchlist || [];
+    $('watch').innerHTML = W.length ? W.map(function (p) {
+      return '<li><div class="main"><div>' + esc(p.name) + '</div><div class="sub">' + esc(p.symbol || 'kein Kürzel gefunden') + '</div></div><div class="val" style="text-align:right">' + (p.preis != null ? eur(p.preis, 2) : '–') + '<div class="sub ' + cls(p.tag_prozent) + '">' + pct(p.tag_prozent) + '</div></div>' + delBtn('pos', p.id) + '</li>';
+    }).join('') : '<li class="empty">Leer. Füge oben einen Wert mit Stück 0 hinzu.</li>';
+    var TR = d.trades || { liste: [] };
+    $('tr-sum').innerHTML = TR.anzahl ? '<span class="' + cls(TR.gesamt) + '">' + (TR.gesamt > 0 ? '+' : '') + eur(TR.gesamt, 2) + '</span> · ' + TR.gewinner + '/' + TR.anzahl + ' im Plus' : '';
+    $('trades').innerHTML = (TR.liste || []).length ? TR.liste.map(function (t) {
+      var dt = t.datum ? new Date(t.datum + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) : '';
+      return '<li><div class="main"><div>' + esc(t.wert) + ' <span class="tag">' + t.richtung + '</span></div><div class="sub">' + dt + ' · ' + t.stueck.toLocaleString('de-DE') + ' Stk · ' + eur(t.einstieg, 2) + ' → ' + (t.ausstieg != null ? eur(t.ausstieg, 2) : 'offen') + (t.notiz ? ' · ' + esc(t.notiz) : '') + '</div></div><div class="val ' + cls(t.gv) + '">' + (t.gv != null ? (t.gv > 0 ? '+' : '') + eur(t.gv, 2) : 'offen') + '</div>' + delBtn('trade', t.id) + '</li>';
+    }).join('') : '<li class="empty">Noch keine Trades eingetragen.</li>';
+  }
+  function formData(f) { var o = {}; new FormData(f).forEach(function (v, k) { o[k] = String(v).trim(); }); return o; }
+  $('f-pos').addEventListener('submit', async function (e) {
+    e.preventDefault(); var f = this, o = formData(f), btn = f.querySelector('button');
+    var q = o.isin; delete o.isin;
+    if (/^[A-Z]{2}[A-Z0-9]{9}\d$/i.test(q)) o.isin = q.toUpperCase(); else if (/:/.test(q)) o.symbol = q; else o.name = q;
+    btn.disabled = true; btn.textContent = 'Suche Kurs …';
+    await depotCall(Object.assign({ aktion: 'pos_add' }, o));
+    btn.disabled = false; btn.textContent = 'Speichern'; f.reset();
+  });
+  $('f-trade').addEventListener('submit', async function (e) {
+    e.preventDefault(); var f = this, o = formData(f), btn = f.querySelector('button');
+    btn.disabled = true;
+    await depotCall(Object.assign({ aktion: 'trade_add' }, o));
+    btn.disabled = false; f.reset(); f.datum.value = new Date().toLocaleDateString('sv-SE');
+  });
+  $('f-trade').datum.value = new Date().toLocaleDateString('sv-SE');
+  document.getElementById('v-trade').addEventListener('click', function (e) {
+    var b = e.target.closest('.del'); if (!b) return;
+    if (!b.classList.contains('sure')) { b.classList.add('sure'); b.textContent = 'Löschen?'; setTimeout(function () { b.classList.remove('sure'); b.textContent = '✕'; }, 3000); return; }
+    b.closest('li').style.opacity = '.4';
+    depotCall({ aktion: b.dataset.kind === 'pos' ? 'pos_del' : 'trade_del', id: Number(b.dataset.id) });
+  });
+  try { var dc = JSON.parse(store('jarvis_depot') || 'null'); if (dc) renderDepot(dc); } catch (e) {}
+  setInterval(function () { if (document.visibilityState === 'visible' && $('v-trade').classList.contains('on')) depotCall(); }, 2 * 60000);
+
   // ---------- Start ----------
+  if ('serviceWorker' in navigator) { try { navigator.serviceWorker.register('sw.js'); } catch (e) {} }
   hello();
   try { var c = JSON.parse(store('jarvis_dash') || 'null'); if (c) { last = c; render(c, true); } } catch (e) {}
   var startTab = new URLSearchParams(location.search).get('tab');
