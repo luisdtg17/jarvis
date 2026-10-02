@@ -62,6 +62,62 @@
   input { flex: 1; min-width: 0; background: var(--panel); border: 1px solid var(--line); color: var(--text);
     border-radius: 12px; padding: 11px 13px; font-size: 16px; outline: none; }
   button.send { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 0 15px; font-size: 15px; }
+
+  /* ---------- Ansichten & Navigation ---------- */
+  body { padding-bottom: 0; }
+  .view { flex: 1; min-height: 0; display: none; flex-direction: column; }
+  .view.on { display: flex; }
+  .scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 0 18px; -webkit-overflow-scrolling: touch; }
+  nav.tabs { display: flex; border-top: 1px solid var(--line); margin: 0 -16px; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); background: var(--bg); }
+  nav.tabs button { flex: 1; background: none; border: 0; color: var(--muted); font-size: 11px; letter-spacing: .04em; padding: 6px 0 2px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  nav.tabs button svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  nav.tabs button[aria-selected="true"] { color: var(--accent); }
+
+  /* ---------- Übersicht ---------- */
+  .hello { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin: 2px 0 14px; }
+  .hello h2 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+  .hello p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  .wx { text-align: right; font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .wx b { display: block; color: var(--text); font-size: 20px; font-weight: 600; }
+  .kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 13px; min-width: 0; }
+  .kpi span { display: block; font-size: 12px; color: var(--muted); }
+  .kpi b { display: block; font-size: 21px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi small { font-size: 12px; color: var(--muted); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 13px 13px 12px; margin-bottom: 12px; }
+  .card h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .card h3 em { font-style: normal; text-transform: none; letter-spacing: 0; color: var(--text); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .chart { width: 100%; height: 150px; display: block; }
+  .chart .bar { fill: var(--accent); }
+  .chart .bar.zero { fill: var(--line); }
+  .chart .bar.alt { fill: var(--speak); }
+  .chart text { fill: var(--muted); font-size: 10px; }
+  .chart .grid { stroke: var(--line); stroke-width: 1; }
+  .tip { font-size: 12px; color: var(--muted); min-height: 16px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  ul.list { list-style: none; margin: 0; padding: 0; }
+  ul.list li { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  ul.list li:first-child { border-top: 0; padding-top: 2px; }
+  ul.list .main { flex: 1; min-width: 0; }
+  ul.list .main div { overflow: hidden; text-overflow: ellipsis; }
+  ul.list .sub { color: var(--muted); font-size: 12px; }
+  ul.list .val { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .chk { width: 22px; height: 22px; flex: none; border-radius: 7px; border: 1.5px solid #3a4656; background: none; margin-top: 1px; padding: 0; }
+  .chk:active { background: var(--accent); }
+  .late { color: #ff8a7a; }
+  .tag { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; margin-left: 6px; }
+  .empty { color: var(--muted); font-size: 13px; }
+  .daybadge { flex: none; width: 42px; text-align: center; border-radius: 9px; background: #151b24; padding: 4px 0; line-height: 1.1; }
+  .daybadge b { display: block; font-size: 16px; }
+  .daybadge span { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+  .bar-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 12px; margin: -4px 0 12px; }
+  .bar-row button { background: var(--panel); border: 1px solid var(--line); color: var(--text); border-radius: 999px; padding: 5px 12px; font-size: 12px; }
+
+  /* ---------- Trading ---------- */
+  .seg { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .seg button { background: var(--panel); border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 6px 12px; font-size: 13px; }
+  .seg button[aria-pressed="true"] { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+  .tv { min-height: 120px; }
+  .note { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
 </style>
 </head>
 <body>
@@ -69,6 +125,41 @@
   <h1>JARVIS</h1>
   <div class="voice"><button id="standbyBtn" type="button" aria-pressed="false">Standby aus</button><button id="voiceBtn" type="button">iPhone · gratis</button></div>
 </header>
+<section class="view" id="v-dash" aria-label="Übersicht">
+  <div class="scroll" id="dash">
+    <div class="hello"><div><h2 id="greet">Hallo, Boss</h2><p id="today"></p></div><div class="wx" id="wx"></div></div>
+    <div class="bar-row"><span id="stand">Lade Daten …</span><button id="reload" type="button">Aktualisieren</button></div>
+    <div class="kpis">
+      <div class="kpi"><span>Heute</span><b id="k-heute">–</b><small id="k-heute-s"></small></div>
+      <div class="kpi"><span>Letzte 7 Tage</span><b id="k-woche">–</b><small id="k-woche-s"></small></div>
+      <div class="kpi"><span>Rechnungen diesen Monat</span><b id="k-monat">–</b><small>alle Kanäle · Lexware</small></div>
+      <div class="kpi"><span>Lagerwert (EK)</span><b id="k-lager">–</b><small id="k-lager-s"></small></div>
+    </div>
+    <div class="card"><h3>Kaufland · 30 Tage <em id="sum30"></em></h3><svg class="chart" id="c-tage" role="img" aria-label="Kaufland-Umsatz der letzten 30 Tage"></svg><div class="tip" id="t-tage">Tippe auf einen Balken</div></div>
+    <div class="card"><h3>Umsatz pro Monat <em id="sumJahr"></em></h3><svg class="chart" id="c-monate" role="img" aria-label="Rechnungsumsatz pro Monat laut Lexware"></svg><div class="tip" id="t-monate">Alle Verkaufsrechnungen aus Lexware, brutto</div></div>
+    <div class="card"><h3>Aufgaben <em id="n-aufg"></em></h3><ul class="list" id="aufgaben"></ul></div>
+    <div class="card"><h3>Termine · 14 Tage</h3><ul class="list" id="termine"></ul></div>
+    <div class="card"><h3>Letzte Verkäufe</h3><ul class="list" id="verkaeufe"></ul></div>
+    <div class="card"><h3>Lager · größte Posten <em id="lagerstand"></em></h3><ul class="list" id="lager"></ul></div>
+    <div class="card"><h3>Postfach</h3><ul class="list" id="post"></ul></div>
+  </div>
+</section>
+
+<section class="view" id="v-trade" aria-label="Trading">
+  <div class="scroll">
+    <p class="note">Live-Marktdaten von TradingView: was sich gerade bewegt. Das sind keine Kauf- oder Verkaufsempfehlungen, die Entscheidung bleibt bei dir.</p>
+    <div class="tv" id="tv-tape"></div>
+    <div class="card"><h3>Top-Mover heute</h3>
+      <div class="seg" id="seg-hot"><button type="button" data-ex="XETR" aria-pressed="true">Deutschland</button><button type="button" data-ex="US" aria-pressed="false">USA</button></div>
+      <div class="tv" id="tv-hot"></div>
+    </div>
+    <div class="card"><h3>Märkte</h3><div class="tv" id="tv-overview"></div></div>
+    <div class="card"><h3>Krypto</h3><div class="tv" id="tv-crypto"></div></div>
+    <div class="card"><h3>Wichtige Termine (Wirtschaft)</h3><div class="tv" id="tv-events"></div></div>
+  </div>
+</section>
+
+<section class="view on" id="v-chat" aria-label="Jarvis">
 <div id="log"><div class="msg sys">Tippe auf den Kreis und sprich. Nochmal tippen beendet das Gespräch.</div></div>
 <div id="stage">
   <button id="orb" type="button" aria-label="Gespräch starten oder beenden"></button>
@@ -78,6 +169,13 @@
   <input id="text" placeholder="Oder hier schreiben …" enterkeyhint="send" aria-label="Nachricht an Jarvis">
   <button class="send" type="submit">Senden</button>
 </form>
+</section>
+
+<nav class="tabs" role="tablist">
+  <button type="button" role="tab" data-v="v-chat" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Jarvis</button>
+  <button type="button" role="tab" data-v="v-dash" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Übersicht</button>
+  <button type="button" role="tab" data-v="v-trade" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Trading</button>
+</nav>
 <script>
 (function () {
   var ENDPOINT = 'https://luisdtg16.app.n8n.cloud/webhook/jarvis-talk';
@@ -371,6 +469,202 @@
   });
 
   if (!KEY) add('sys', 'Bitte den vollständigen Jarvis-Link mit Schlüssel einmal öffnen.');
+})();
+</script>
+<script>
+(function () {
+  var DATA_URL = 'https://luisdtg16.app.n8n.cloud/webhook/jarvis-daten';
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  var KEY = new URLSearchParams(location.search).get('key') || store('jarvis_key') || '';
+  var $ = function (id) { return document.getElementById(id); };
+  var eur = function (x, d) { return (Number(x) || 0).toLocaleString('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: d == null ? 0 : d }); };
+  var esc = function (s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
+  var WT = { 0: ['☀️', 'klar'], 1: ['🌤️', 'überwiegend klar'], 2: ['⛅', 'bewölkt'], 3: ['☁️', 'bedeckt'], 45: ['🌫️', 'Nebel'], 48: ['🌫️', 'Nebel'], 51: ['🌦️', 'Niesel'], 53: ['🌦️', 'Niesel'], 55: ['🌦️', 'Niesel'], 61: ['🌧️', 'Regen'], 63: ['🌧️', 'Regen'], 65: ['🌧️', 'starker Regen'], 71: ['🌨️', 'Schnee'], 73: ['🌨️', 'Schnee'], 75: ['❄️', 'starker Schnee'], 80: ['🌦️', 'Schauer'], 81: ['🌧️', 'Schauer'], 82: ['⛈️', 'heftige Schauer'], 95: ['⛈️', 'Gewitter'], 96: ['⛈️', 'Gewitter'], 99: ['⛈️', 'Gewitter'] };
+
+  // ---------- Tabs ----------
+  var tabs = document.querySelectorAll('nav.tabs button');
+  var loadedTrade = false;
+  function show(id) {
+    document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('on', v.id === id); });
+    tabs.forEach(function (b) { b.setAttribute('aria-selected', b.dataset.v === id ? 'true' : 'false'); });
+    store('jarvis_tab', id);
+    if (id === 'v-dash') { if (last) render(last, Date.now() - lastLoad > 60000); maybeLoad(); }
+    if (id === 'v-trade' && !loadedTrade) { loadedTrade = true; loadTrading(); }
+  }
+  tabs.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.v); }); });
+
+  // ---------- Begrüßung ----------
+  function hello() {
+    var h = new Date().getHours();
+    $('greet').textContent = (h < 5 ? 'Noch wach, Boss?' : h < 11 ? 'Guten Morgen, Boss' : h < 17 ? 'Hallo, Boss' : h < 22 ? 'Guten Abend, Boss' : 'Gute Nacht, Boss');
+    $('today').textContent = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  // ---------- Balkendiagramm (SVG) ----------
+  function bars(svg, items, opts) {
+    var W = svg.clientWidth || 320, H = 150, padB = 18, padT = 8;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    var max = Math.max.apply(null, items.map(function (i) { return i.v; }).concat([1]));
+    var n = items.length, gap = n > 20 ? 2 : 6, bw = Math.max(2, (W - gap * (n - 1)) / n);
+    var html = '<line class="grid" x1="0" x2="' + W + '" y1="' + (H - padB) + '" y2="' + (H - padB) + '"/>';
+    items.forEach(function (it, i) {
+      var h = it.v > 0 ? Math.max(2, (H - padB - padT) * it.v / max) : 2;
+      var x = i * (bw + gap), y = H - padB - h;
+      html += '<rect class="bar' + (it.v > 0 ? '' : ' zero') + (opts.alt && it.hi ? ' alt' : '') + '" data-i="' + i + '" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="' + Math.min(3, bw / 2) + '"/>';
+      if (it.label) {
+        var edge = n > 12 && i === n - 1 ? 'end' : (n > 12 && i === 0 ? 'start' : 'middle');
+        var tx = edge === 'end' ? x + bw : edge === 'start' ? x : x + bw / 2;
+        html += '<text x="' + tx.toFixed(1) + '" y="' + (H - 4) + '" text-anchor="' + edge + '">' + esc(it.label) + '</text>';
+      }
+    });
+    svg.innerHTML = html;
+    svg.onclick = function (e) { var i = e.target.getAttribute && e.target.getAttribute('data-i'); if (i != null) opts.onPick(items[+i]); };
+  }
+
+  // ---------- Daten ----------
+  var last = null, loading = false, lastLoad = 0;
+  function maybeLoad() { if (Date.now() - lastLoad > 60000) load(); }
+  async function load(extra) {
+    if (!KEY) { $('stand').textContent = 'Bitte den Jarvis-Link mit Schlüssel einmal öffnen.'; return; }
+    if (loading) return; loading = true;
+    $('stand').textContent = 'Aktualisiere …';
+    try {
+      var res = await fetch(DATA_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ key: KEY }, extra || {})) });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var d = await res.json();
+      last = d; lastLoad = Date.now();
+      try { store('jarvis_dash', JSON.stringify(d)); } catch (e) {}
+      render(d, false);
+    } catch (e) {
+      $('stand').textContent = 'Keine Verbindung (' + e.message + ')' + (last ? ' – zeige letzten Stand' : '');
+    }
+    loading = false;
+  }
+
+  function render(d, cached) {
+    hello();
+    var t = new Date(d.stand);
+    $('stand').textContent = (cached ? 'Letzter Stand ' : 'Stand ') + t.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + (cached ? ' · lade neu …' : '');
+    var v = d.verkauf || {};
+    $('k-heute').textContent = eur(v.heute && v.heute.umsatz, 2);
+    $('k-heute-s').textContent = (v.heute ? v.heute.stueck : 0) + ' Verkäufe · Kaufland';
+    $('k-woche').textContent = eur(v.woche && v.woche.umsatz);
+    $('k-woche-s').textContent = (v.woche ? v.woche.stueck : 0) + ' Verkäufe · Kaufland';
+    var lm = (d.lexware && d.lexware.monate) || [];
+    $('k-monat').textContent = eur(lm.length ? lm[lm.length - 1].umsatz : 0);
+    $('k-lager').textContent = eur(d.lager && d.lager.wert);
+    $('k-lager-s').textContent = (d.lager ? d.lager.stueck : 0) + ' Stück' + (d.lager && d.lager.bestellt ? ' · ' + d.lager.bestellt + ' bestellt' : '');
+
+    // Wetter
+    if (d.wetter) {
+      var w = WT[d.wetter.code] || ['', ''];
+      var mo = d.wetter.tage && d.wetter.tage[0];
+      $('wx').innerHTML = '<b>' + w[0] + ' ' + Math.round(d.wetter.temp) + '°</b>' + esc(w[1]) + (mo ? ' · ' + Math.round(mo.min) + '–' + Math.round(mo.max) + '° · ' + mo.regen + ' % Regen' : '');
+    }
+
+    // 30 Tage
+    var tage = v.tage || [];
+    $('sum30').textContent = eur(tage.reduce(function (a, x) { return a + x.umsatz; }, 0));
+    bars($('c-tage'), tage.map(function (x, i) {
+      var dt = new Date(x.datum + 'T12:00:00');
+      return { v: x.umsatz, raw: x, label: ((tage.length - 1 - i) % 7 === 0) ? dt.getDate() + '.' + (dt.getMonth() + 1) + '.' : '' };
+    }), { onPick: function (it) {
+      var dt = new Date(it.raw.datum + 'T12:00:00');
+      $('t-tage').textContent = dt.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) + ': ' + eur(it.raw.umsatz, 2) + ' · ' + it.raw.stueck + ' Stück' + (it.raw.netto ? ' · Auszahlung ' + eur(it.raw.netto, 2) : '');
+    } });
+
+    // Monate (ab erstem Monat mit Umsatz)
+    var first = lm.findIndex(function (m) { return m.umsatz > 0; });
+    var ms = first < 0 ? lm.slice(-6) : lm.slice(Math.min(first, Math.max(0, lm.length - 6)));
+    $('sumJahr').textContent = eur(ms.reduce(function (a, x) { return a + x.umsatz; }, 0));
+    var mNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+    bars($('c-monate'), ms.map(function (m) { return { v: m.umsatz, raw: m, label: mNames[+m.monat.slice(5, 7) - 1] }; }),
+      { onPick: function (it) { $('t-monate').textContent = mNames[+it.raw.monat.slice(5, 7) - 1] + ' ' + it.raw.monat.slice(0, 4) + ': ' + eur(it.raw.umsatz, 2) + ' (Rechnungen brutto)'; } });
+
+    // Aufgaben
+    var A = d.aufgaben || [];
+    $('n-aufg').textContent = A.length ? A.length + ' offen' : '';
+    $('aufgaben').innerHTML = A.length ? A.map(function (a) {
+      var f = a.faellig ? new Date(a.faellig + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) : '';
+      return '<li><button class="chk" type="button" data-id="' + a.id + '" aria-label="Als erledigt markieren: ' + esc(a.titel) + '"></button><div class="main"><div>' + esc(a.titel) + (a.kategorie ? '<span class="tag">' + esc(a.kategorie) + '</span>' : '') + '</div>' + (f ? '<div class="sub' + (a.ueberfaellig ? ' late' : '') + '">' + (a.ueberfaellig ? 'überfällig seit ' : 'fällig ') + f + '</div>' : '') + '</div></li>';
+    }).join('') : '<li class="empty">Nichts offen. Sehr gut, Boss.</li>';
+
+    // Termine
+    var T = d.termine || [];
+    $('termine').innerHTML = T.length ? T.slice(0, 10).map(function (e) {
+      var s = new Date(e.start);
+      var zeit = e.ganztags ? 'ganztägig' : s.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
+      return '<li><div class="daybadge"><span>' + s.toLocaleDateString('de-DE', { weekday: 'short' }) + '</span><b>' + s.getDate() + '</b></div><div class="main"><div>' + esc(e.titel) + '</div><div class="sub">' + zeit + (e.ort ? ' · ' + esc(e.ort) : '') + '</div></div></li>';
+    }).join('') : '<li class="empty">Keine Termine in den nächsten 14 Tagen.</li>';
+
+    // Verkäufe
+    var L = v.letzte || [];
+    $('verkaeufe').innerHTML = L.length ? L.map(function (o) {
+      var dt = new Date(o.datum);
+      return '<li><div class="main"><div>' + esc(o.artikel) + '</div><div class="sub">' + dt.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) + ', ' + dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' · Kaufland</div></div><div class="val">' + eur(o.preis, 2) + '</div></li>';
+    }).join('') : '<li class="empty">Noch keine Verkäufe.</li>';
+
+    // Lager
+    var lg = d.lager || {};
+    $('lagerstand').textContent = lg.stand ? 'Stand ' + new Date(lg.stand).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) : '';
+    $('lager').innerHTML = (lg.top || []).length ? lg.top.map(function (p) {
+      return '<li><div class="main"><div>' + esc(p.artikel) + '</div><div class="sub">' + p.anzahl + ' Stück</div></div><div class="val">' + eur(p.wert) + '</div></li>';
+    }).join('') : '<li class="empty">Noch keine Lagerdaten aus neXus.</li>';
+
+    // Postfach
+    var m = d.mails || {}, lx = d.lexware || {};
+    $('post').innerHTML = '<li><div class="main"><div>Gmail-Posteingang</div><div class="sub">wird abends um 21:45 zum Sortieren angeboten</div></div><div class="val">' + (m.gesamt != null ? m.gesamt.toLocaleString('de-DE') + ' Mails' : '–') + '</div></li>' +
+      '<li><div class="main"><div>Offene Rechnungen (Lexware)</div><div class="sub">noch nicht bezahlt</div></div><div class="val">' + (lx.offen_anzahl || 0) + (lx.offen_anzahl ? ' · ' + eur(lx.offen_summe, 2) : '') + '</div></li>';
+  }
+
+  $('aufgaben').addEventListener('click', function (e) {
+    var b = e.target.closest('.chk'); if (!b) return;
+    var li = b.closest('li'); li.style.opacity = '.4'; b.style.background = 'var(--accent)';
+    load({ erledigt_id: Number(b.dataset.id) });
+  });
+  $('reload').addEventListener('click', function () { load(); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && $('v-dash').classList.contains('on')) maybeLoad(); });
+  window.addEventListener('resize', function () { if (last) render(last, false); });
+
+  // ---------- Trading (TradingView-Widgets) ----------
+  function widget(id, name, cfg) {
+    var box = $(id); box.innerHTML = '';
+    var c = document.createElement('div'); c.className = 'tradingview-widget-container';
+    var w = document.createElement('div'); w.className = 'tradingview-widget-container__widget'; c.appendChild(w);
+    var s = document.createElement('script'); s.type = 'text/javascript'; s.async = true;
+    s.src = 'https://s3.tradingview.com/external-embedding/embed-widget-' + name + '.js';
+    s.textContent = JSON.stringify(Object.assign({ colorTheme: 'dark', isTransparent: true, locale: 'de_DE' }, cfg));
+    c.appendChild(s); box.appendChild(c);
+  }
+  function hot(ex) {
+    widget('tv-hot', 'hotlists', { exchange: ex, dateRange: '1D', showChart: true, width: '100%', height: 520, showSymbolLogo: true, showFloatingTooltip: false });
+  }
+  function loadTrading() {
+    widget('tv-tape', 'ticker-tape', { symbols: [
+      { proName: 'XETR:DAX', title: 'DAX' }, { proName: 'FOREXCOM:SPXUSD', title: 'S&P 500' }, { proName: 'FOREXCOM:NSXUSD', title: 'Nasdaq 100' },
+      { proName: 'BITSTAMP:BTCUSD', title: 'Bitcoin' }, { proName: 'FX_IDC:EURUSD', title: 'EUR/USD' }, { proName: 'OANDA:XAUUSD', title: 'Gold' }],
+      showSymbolLogo: true, displayMode: 'adaptive' });
+    hot('XETR');
+    widget('tv-overview', 'market-overview', { dateRange: '1D', showChart: true, width: '100%', height: 460, showSymbolLogo: true, showFloatingTooltip: false, tabs: [
+      { title: 'Indizes', symbols: [{ s: 'XETR:DAX', d: 'DAX' }, { s: 'FOREXCOM:SPXUSD', d: 'S&P 500' }, { s: 'FOREXCOM:NSXUSD', d: 'Nasdaq 100' }, { s: 'FOREXCOM:DJI', d: 'Dow Jones' }, { s: 'INDEX:SX5E', d: 'Euro Stoxx 50' }] },
+      { title: 'Rohstoffe & Devisen', symbols: [{ s: 'OANDA:XAUUSD', d: 'Gold' }, { s: 'TVC:USOIL', d: 'Öl (WTI)' }, { s: 'FX_IDC:EURUSD', d: 'EUR/USD' }] }] });
+    widget('tv-crypto', 'screener', { defaultColumn: 'overview', screener_type: 'crypto_mkt', displayCurrency: 'EUR', width: '100%', height: 480 });
+    widget('tv-events', 'events', { width: '100%', height: 480, importanceFilter: '0,1', countryFilter: 'de,eu,us' });
+  }
+  $('seg-hot').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    this.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    hot(b.dataset.ex);
+  });
+
+  // ---------- Start ----------
+  hello();
+  try { var c = JSON.parse(store('jarvis_dash') || 'null'); if (c) { last = c; render(c, true); } } catch (e) {}
+  var startTab = new URLSearchParams(location.search).get('tab');
+  startTab = startTab ? 'v-' + startTab : (store('jarvis_tab') || 'v-chat');
+  if (!document.getElementById(startTab)) startTab = 'v-chat';
+  show(startTab);
+  setInterval(function () { if (document.visibilityState === 'visible' && $('v-dash').classList.contains('on')) load(); }, 5 * 60000);
 })();
 </script>
 </body>
