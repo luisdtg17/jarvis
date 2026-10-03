@@ -177,9 +177,9 @@
   .ziel { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
   .ziel b { font-size: 20px; font-variant-numeric: tabular-nums; }
   .ziel small { color: var(--muted); font-size: 12px; }
-  .bar { height: 10px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; margin: 8px 0 6px; position: relative; }
-  .bar i { display: block; height: 100%; background: linear-gradient(90deg, #2f6bff, var(--accent)); border-radius: 999px; }
-  .bar u { position: absolute; top: -2px; bottom: -2px; width: 2px; background: #f6c26b; }
+  div.bar { height: 10px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; margin: 8px 0 6px; position: relative; }
+  div.bar i { display: block; height: 100%; background: linear-gradient(90deg, #2f6bff, var(--accent)); border-radius: 999px; }
+  div.bar u { position: absolute; top: -2px; bottom: -2px; width: 2px; background: #f6c26b; }
   .ziel-form { display: flex; gap: 8px; margin-top: 8px; } .ziel-form input { flex: 1; } .ziel-form button, .btn { background: var(--accent); color: #04120f; border: 0; border-radius: 10px; padding: 9px 14px; font-size: 14px; font-weight: 600; }
   .btn.ghost { background: var(--bg); color: var(--text); border: 1px solid var(--line); font-weight: 500; }
   .rows { list-style: none; margin: 0; padding: 0; }
@@ -247,6 +247,77 @@
   li.meld.neu b::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 6px; vertical-align: middle; }
   li.meld { cursor: pointer; }
   .sumrow > div:first-child, .sumrow > div:first-child div { text-align: left; }
+  /* ---------- Jarvis-HUD ---------- */
+  #v-chat { position: relative; --hud: #5fb4ff; }
+  #v-chat::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .55;
+    background-image: linear-gradient(rgba(95,180,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(95,180,255,.07) 1px, transparent 1px);
+    background-size: 26px 26px; -webkit-mask-image: radial-gradient(75% 60% at 50% 45%, #000 30%, transparent 85%); mask-image: radial-gradient(75% 60% at 50% 45%, #000 30%, transparent 85%); }
+  #v-chat > .hud-cn { position: absolute; width: 16px; height: 16px; border: 0 solid rgba(95,180,255,.55); pointer-events: none; z-index: 1; }
+  .hud-cn.tl { top: 0; left: 0; border-top-width: 1.5px; border-left-width: 1.5px; } .hud-cn.tr { top: 0; right: 0; border-top-width: 1.5px; border-right-width: 1.5px; }
+  .hud-cn.bl { bottom: 62px; left: 0; border-bottom-width: 1.5px; border-left-width: 1.5px; } .hud-cn.br { bottom: 62px; right: 0; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+  .mono, .hud-top, .hud-fin, .hud-tools, #hudwin .hw-h { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  .hud-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 8px 6px 0; }
+  #hud-l { display: grid; gap: 3px; cursor: pointer; }
+  #hud-l div { display: flex; gap: 8px; align-items: baseline; font-size: 11px; }
+  #hud-l span { color: rgba(95,180,255,.7); width: 52px; letter-spacing: .08em; font-size: 9.5px; }
+  #hud-l b { font-weight: 600; color: #dceaff; font-variant-numeric: tabular-nums; } #hud-l b.r { color: #ff8a7a; }
+  .hud-r { text-align: right; }
+  #hud-clock { display: block; font-size: 22px; font-weight: 600; color: #e6f1ff; letter-spacing: .04em; text-shadow: 0 0 12px rgba(95,180,255,.55); font-variant-numeric: tabular-nums; }
+  .hud-r span { display: block; font-size: 9.5px; color: rgba(95,180,255,.75); letter-spacing: .1em; }
+  #v-chat #stage { padding: 0 0 4px; }
+  #v-chat #orb { width: min(70vw, 300px); height: min(70vw, 300px); }
+  #v-chat #status { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(95,180,255,.85); }
+  .hud-fin { position: relative; margin: 0 auto 8px; width: min(100%, 420px); border: 1px solid rgba(95,180,255,.35); background: linear-gradient(180deg, rgba(20,45,90,.35), rgba(8,14,26,.6)); border-radius: 6px; padding: 8px 11px 7px; cursor: pointer; box-shadow: 0 0 18px rgba(60,140,255,.12) inset; }
+  .hud-fin::before, .hud-fin::after { content: ""; position: absolute; width: 10px; height: 10px; border: 0 solid var(--hud); }
+  .hud-fin::before { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; } .hud-fin::after { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
+  .hf-a span, .hf-b span, .hf-c span { font-size: 9px; letter-spacing: .1em; color: rgba(95,180,255,.8); }
+  .hf-a { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .hf-a span { flex-basis: 100%; }
+  .hf-a b { font-size: 24px; color: #fff; text-shadow: 0 0 14px rgba(95,180,255,.5); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .hf-a small { color: var(--muted); font-size: 12px; }
+  .hf-b { position: absolute; right: 11px; top: 8px; display: flex; gap: 14px; text-align: right; }
+  .hf-b b { display: block; font-size: 13px; color: #dceaff; font-variant-numeric: tabular-nums; }
+  .hf-bar { height: 4px; background: rgba(95,180,255,.12); border-radius: 2px; margin: 6px 0 4px; overflow: hidden; }
+  .hf-bar i { display: block; height: 100%; background: linear-gradient(90deg, #2f6bff, #7fd0ff); box-shadow: 0 0 8px #5fb4ff; }
+  .hf-c { display: flex; justify-content: space-between; }
+  .hud-tools { display: flex; gap: 7px; overflow-x: auto; padding: 2px 1px 8px; scrollbar-width: none; margin: 0 -2px; }
+  .hud-tools::-webkit-scrollbar { display: none; }
+  .hud-tools button { flex: 1 0 58px; min-width: 58px; position: relative; background: rgba(12,22,40,.7); border: 1px solid rgba(95,180,255,.28); color: #cfe3ff; border-radius: 8px; padding: 7px 2px 5px; font-size: 9.5px; letter-spacing: .06em; display: flex; flex-direction: column; align-items: center; gap: 3px; font-family: inherit; }
+  .hud-tools button:active { background: rgba(95,180,255,.18); }
+  .hud-tools svg { width: 19px; height: 19px; stroke: var(--hud); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px rgba(95,180,255,.6)); }
+  .hud-tools sup { position: absolute; top: 3px; right: 5px; font-size: 9px; color: #ff9b8a; font-weight: 700; }
+  #v-chat #log { min-height: 48px; }
+  #hudwin { position: fixed; inset: 0; z-index: 45; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  #hudwin[hidden] { display: none; }
+  #hudwin .hw-bg { position: absolute; inset: 0; background: rgba(2,6,14,.72); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+  #hudwin .hw { position: relative; width: min(100%, 520px); max-height: 76vh; display: flex; flex-direction: column; background: linear-gradient(180deg, rgba(14,28,52,.97), rgba(7,11,20,.98)); border: 1px solid rgba(95,180,255,.45); border-radius: 8px; box-shadow: 0 0 40px rgba(60,140,255,.25); animation: hwIn .18s ease; }
+  #hudwin .hw::before, #hudwin .hw::after { content: ""; position: absolute; width: 14px; height: 14px; border: 0 solid #7fc4ff; }
+  #hudwin .hw::before { top: -2px; left: -2px; border-top-width: 2px; border-left-width: 2px; } #hudwin .hw::after { bottom: -2px; right: -2px; border-bottom-width: 2px; border-right-width: 2px; }
+  @keyframes hwIn { from { transform: scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+  #hudwin .hw-h { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid rgba(95,180,255,.2); color: #9fd0ff; font-size: 12px; letter-spacing: .14em; }
+  #hudwin .hw-h button { background: none; border: 1px solid rgba(95,180,255,.35); color: #cfe3ff; border-radius: 6px; width: 30px; height: 28px; font-size: 18px; line-height: 1; }
+  #hw-body { overflow-y: auto; padding: 8px 12px 4px; }
+  #hw-body h5 { margin: 12px 0 4px; font-size: 11px; color: #9fd0ff; letter-spacing: .06em; font-weight: 600; }
+  #hw-body .wi { flex: none; width: 20px; text-align: center; }
+  #hw-body .go { color: var(--muted); align-self: center; }
+  #hw-body li[data-i] { cursor: pointer; }
+  .wk { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 4px 0 6px; }
+  .wk div { border: 1px solid rgba(95,180,255,.22); border-radius: 6px; padding: 6px 8px; background: rgba(95,180,255,.05); min-width: 0; }
+  .wk span { display: block; font-size: 9px; letter-spacing: .1em; color: rgba(95,180,255,.8); font-family: ui-monospace, Menlo, monospace; }
+  .wk b { font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #hw-go { margin: 6px 12px 12px; background: rgba(95,180,255,.12); border: 1px solid rgba(95,180,255,.4); color: #dceaff; border-radius: 8px; padding: 10px; font-size: 14px; }
+  .ab-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .ab-top .seg { margin: 0; flex-wrap: nowrap; }
+  .ab-nav { display: flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }
+  .ab-nav button { background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 8px; width: 30px; height: 30px; font-size: 17px; line-height: 1; }
+  .ab-nav button:disabled { opacity: .3; }
+  .ab-k summary { cursor: pointer; list-style: none; } .ab-k summary::-webkit-details-marker { display: none; }
+  .ab-k div { font-size: 12px; display: flex; justify-content: space-between; gap: 10px; padding-top: 3px; } .ab-k i { font-style: normal; }
+  .rows li > span { min-width: 0; flex: 1; }
+  .ab-h { margin: 14px 0 4px; font-size: 13px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; display: flex; justify-content: space-between; }
+  .ab-h span { text-transform: none; letter-spacing: 0; }
+  .ab-up { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .ab-up .btn { cursor: pointer; } .ab-up span { font-size: 12px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -311,17 +382,25 @@
       <div class="kpi"><span>Gewinn diesen Monat</span><b id="k-gew">–</b><small id="k-gew-s"></small></div>
       <div class="kpi"><span>Rechnungen diesen Monat</span><b id="k-monat">–</b><small>alle Kanäle · Lexware</small></div>
     </div>
+    <div class="card" id="card-ab"><h3>Abschluss <em id="ab-sum"></em></h3>
+      <div class="ab-top"><div class="seg" id="ab-seg"><button type="button" data-a="monat" aria-pressed="true">Monat</button><button type="button" data-a="quartal" aria-pressed="false">Quartal</button></div>
+        <div class="ab-nav"><button type="button" id="ab-prev" aria-label="Zeitraum zurück">‹</button><b id="ab-per">–</b><button type="button" id="ab-next" aria-label="Zeitraum weiter">›</button></div></div>
+      <ul class="rows" id="ab-rows"></ul>
+      <svg class="chart" id="c-ab" role="img" aria-label="Gewinn je Zeitraum aus der Excel"></svg>
+      <div class="tip" id="t-ab"></div>
+      <div class="ab-h">Gewinn pro Artikel <span id="ab-n"></span></div>
+      <ul class="list" id="ab-art"></ul>
+      <div class="ab-up"><label class="btn">📄 Excel hochladen<input type="file" id="ab-file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple hidden></label><span id="ab-stand"></span></div>
+      <div class="tip" id="ab-msg">Reselling-Excel und Kosten-Excel – du kannst beide auf einmal auswählen.</div></div>
     <div class="card"><h3>Geld-Überblick</h3><ul class="rows" id="geld"></ul><div class="tip">Bankkonten sind nicht verbunden – das hier ist dein Geschäftsgeld laut Lager, Kaufland und Gewinn.</div></div>
-    <div class="card" id="card-ust"><h3>Umsatzsteuer <em id="ust-frist"></em></h3><div class="seg" id="ust-seg"><button type="button" data-u="vormonat" aria-pressed="true">Voranmeldung</button><button type="button" data-u="aktuell" aria-pressed="false">Laufender Monat</button></div><ul class="rows" id="ust"></ul><div class="tip" id="ust-tip"></div></div>
-    <div class="card"><h3>Monatsabschluss <em id="ma-gewinn"></em></h3>
+    <div class="card" id="card-ust"><h3>Umsatzsteuer <em id="ust-frist"></em></h3><div class="seg" id="ust-seg"><button type="button" data-u="vormonat" aria-pressed="true">Voranmeldung</button><button type="button" data-u="aktuell" aria-pressed="false">Laufendes Quartal</button></div><ul class="rows" id="ust"></ul><div class="tip" id="ust-tip"></div></div>
+    <div class="card"><h3>Gewinn verteilen <em id="ma-gewinn"></em></h3>
       <div class="seg" id="ma-seg"><button type="button" data-m="vormonat" aria-pressed="false">Vormonat</button><button type="button" data-m="aktuell" aria-pressed="true">Dieser Monat</button></div>
       <ul class="list" id="ma-konten"></ul><div class="tip" id="ma-tip"></div></div>
     <div class="card" id="card-belege"><h3>Belege <em id="n-belege"></em></h3>
       <div style="display:flex;gap:8px;margin-bottom:10px"><label class="btn" style="flex:1;text-align:center;cursor:pointer">📷 Beleg fotografieren<input type="file" id="beleg-file" accept="image/*,application/pdf" capture="environment" hidden></label></div>
       <div id="beleg-up"></div>
       <ul class="list" id="belege"></ul><div class="tip" id="t-belege">Aus dem 22:30-Check (neXus ↔ Excel)</div></div>
-    <div class="card"><h3>Gewinn pro Monat <em id="sumGewinn"></em></h3><svg class="chart" id="c-gewinn" role="img" aria-label="Geschätzter Gewinn pro Monat auf Kaufland"></svg><div class="tip" id="t-gewinn">Kaufland, netto nach Gebühren und EK · geschätzt</div></div>
-    <div class="card"><h3>Umsatz pro Monat <em id="sumJahr"></em></h3><svg class="chart" id="c-monate" role="img" aria-label="Rechnungsumsatz pro Monat laut Lexware"></svg><div class="tip" id="t-monate">Alle Verkaufsrechnungen aus Lexware, brutto</div></div>
     <div class="card"><h3>Kaufland · 30 Tage <em id="sum30"></em></h3><svg class="chart" id="c-tage" role="img" aria-label="Kaufland-Umsatz der letzten 30 Tage"></svg><div class="tip" id="t-tage">Tippe auf einen Balken</div></div>
   </div>
 </section>
@@ -380,17 +459,33 @@
     <div class="card"><h3>Ladenhüter <em id="lh-info"></em></h3><ul class="list" id="ladenhueter"></ul><div class="tip">Am längsten im Lager (seit Bestellung) · ab 30 Tagen rot</div></div>
 </div>
 <section class="view on" id="v-chat" aria-label="Jarvis">
-<div id="log"><div class="msg sys">Tippe auf den Kreis und sprich. Nochmal tippen beendet das Gespräch.</div></div>
+<i class="hud-cn tl"></i><i class="hud-cn tr"></i><i class="hud-cn bl"></i><i class="hud-cn br"></i>
+<div class="hud-top">
+  <div id="hud-l" role="button" tabindex="0" aria-label="Heute zu tun öffnen"></div>
+  <div class="hud-r"><b id="hud-clock">--:--:--</b><span id="hud-date"></span><span id="hud-sync">SYNC –</span></div>
+</div>
 <div id="stage">
   <button id="orb" type="button" aria-label="Gespräch starten oder beenden"><canvas id="orbc" aria-hidden="true"></canvas></button>
   <div id="status">Bereit</div>
 </div>
+<div class="hud-fin" id="hud-fin" role="button" tabindex="0" aria-label="Geld-Fenster öffnen"></div>
+<div class="hud-tools" id="hud-tools">
+  <button type="button" data-w="todo"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>TO-DO<sup></sup></button>
+  <button type="button" data-w="lager"><svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8"/></svg>LAGER<sup></sup></button>
+  <button type="button" data-w="geld"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>GELD</button>
+  <button type="button" data-w="verkauf"><svg viewBox="0 0 24 24"><path d="M3 4h2l2.5 11h11L21 7H6.5M9 20h.01M17 20h.01"/></svg>VERKAUF</button>
+  <button type="button" data-w="steuer"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></svg>STEUER</button>
+  <button type="button" data-w="termine"><svg viewBox="0 0 24 24"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/></svg>TERMINE</button>
+  <button type="button" data-tab="v-einkauf"><svg viewBox="0 0 24 24"><path d="M4 6v12M7 6v12M10 6v12M14 6v12M17 6v12M20 6v12"/></svg>SCAN</button>
+</div>
+<div id="log"><div class="msg sys">Tippe auf den Kreis und sprich. Nochmal tippen beendet das Gespräch.</div></div>
 <form id="form" autocomplete="off">
   <input id="text" placeholder="Oder hier schreiben …" enterkeyhint="send" aria-label="Nachricht an Jarvis">
   <button class="send" type="submit">Senden</button>
 </form>
 </section>
 
+<div id="hudwin" hidden><div class="hw-bg" data-close="1"></div><div class="hw" role="dialog" aria-modal="true" aria-labelledby="hw-t"><div class="hw-h"><span id="hw-t"></span><button type="button" data-close="1" aria-label="Schließen">×</button></div><div id="hw-body"></div><button type="button" id="hw-go">Im Tab öffnen ›</button></div></div>
 <div id="sheet" hidden><div class="sh-bg" data-close="1"></div><div class="sh" role="dialog" aria-modal="true" aria-label="Artikel-Details"><button type="button" class="sh-x" data-close="1" aria-label="Schließen">×</button><div id="sh-body"></div></div></div>
 <nav class="tabs" role="tablist">
   <button type="button" role="tab" data-v="v-chat" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Jarvis</button>
@@ -433,7 +528,9 @@
   function add(cls, txt) {
     var el = document.createElement('div');
     el.className = 'msg ' + cls; el.textContent = txt;
-    log.appendChild(el); log.scrollTop = log.scrollHeight; return el;
+    log.appendChild(el); log.scrollTop = log.scrollHeight;
+    if (cls === 'me') { try { window.dispatchEvent(new CustomEvent('jarvis-frage', { detail: txt })); } catch (e) {} }
+    return el;
   }
   function setState(s, label) { state = s; orb.className = (s === 'idle') ? '' : s; statusEl.textContent = label; }
 
@@ -844,7 +941,8 @@
     tabs.forEach(function (b) { b.setAttribute('aria-selected', b.dataset.v === id ? 'true' : 'false'); });
     store('jarvis_tab', id);
     if (id !== 'v-einkauf' && typeof scanStop === 'function' && (scanStream || zxReader)) scanStop();
-    if (id === 'v-dash' || id === 'v-lager' || id === 'v-geld') { if (last) render(last, Date.now() - lastLoad > 60000); maybeLoad(); }
+    if (id === 'v-dash' || id === 'v-lager' || id === 'v-geld' || id === 'v-chat') { if (last) render(last, Date.now() - lastLoad > 60000); maybeLoad(); }
+    if (id !== 'v-chat' && typeof hudZu === 'function') hudZu();
     if (id === 'v-trade') { if (!loadedTrade) { loadedTrade = true; loadTrading(); } if (Date.now() - dLoad > 60000) depotCall(); }
   }
   tabs.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.v); }); });
@@ -933,13 +1031,7 @@
       $('t-tage').textContent = dt.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) + ': ' + eur(it.raw.umsatz, 2) + ' · ' + it.raw.stueck + ' Stück' + (it.raw.netto ? ' · Auszahlung ' + eur(it.raw.netto, 2) : '');
     } });
 
-    // Monate (ab erstem Monat mit Umsatz)
-    var first = lm.findIndex(function (m) { return m.umsatz > 0; });
-    var ms = first < 0 ? lm.slice(-6) : lm.slice(Math.min(first, Math.max(0, lm.length - 6)));
-    $('sumJahr').textContent = eur(ms.reduce(function (a, x) { return a + x.umsatz; }, 0));
     var mNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
-    bars($('c-monate'), ms.map(function (m) { return { v: m.umsatz, raw: m, label: mNames[+m.monat.slice(5, 7) - 1] }; }),
-      { onPick: function (it) { $('t-monate').textContent = mNames[+it.raw.monat.slice(5, 7) - 1] + ' ' + it.raw.monat.slice(0, 4) + ': ' + eur(it.raw.umsatz, 2) + ' (Rechnungen brutto)'; } });
 
     // Preis-Check
     var pc = d.preischeck || { liste: [] };
@@ -957,14 +1049,6 @@
       return '<li><div class="main"><div>' + esc(x.artikel) + '</div><div class="sub">' + eur(x.preis, 2) + ' · EK ' + eur(x.ek, 2) + ' · ' + x.bestand + ' Stk' + hint + '</div></div><div class="val" style="text-align:right"><span style="color:' + col + '">' + esc(lab) + '</span><div class="sub">' + (x.gewinn >= 0 ? '+' : '') + eur(x.gewinn, 2) + ' · ' + x.marge + ' %</div></div></li>';
     }).join('') + (pl.length > 6 ? '<li><button class="chk" style="width:auto;padding:2px 10px;border-radius:999px;color:var(--text);font-size:12px" type="button" id="pc-more">' + (showAll ? 'Weniger' : 'Alle ' + pl.length + ' zeigen') + '</button></li>' : '') : '<li class="empty">Keine Daten von Kaufland.</li>';
     $('pc-tip').textContent = 'Gebühr 12 % geschätzt · EK aus neXus' + (pc.ohne_ek ? ' · ' + pc.ohne_ek + ' Angebote ohne EK' : '');
-
-    // Gewinn pro Monat
-    var gm = (d.gewinn && d.gewinn.monate) || [];
-    $('sumGewinn').textContent = gm.length ? eur(gm.reduce(function (a, x) { return a + x.gewinn; }, 0)) : '';
-    bars($('c-gewinn'), gm.map(function (m) { return { v: Math.max(0, m.gewinn), raw: m, label: mNames[+m.monat.slice(5, 7) - 1] }; }),
-      { onPick: function (it) { var m = it.raw; $('t-gewinn').textContent = mNames[+m.monat.slice(5, 7) - 1] + ': ' + eur(m.gewinn, 2) + ' Gewinn bei ' + eur(m.umsatz) + ' Umsatz' + (m.ohne_ek ? ' · ' + m.ohne_ek + ' von ' + (m.mit_ek + m.ohne_ek) + ' Stück ohne EK, nicht mitgerechnet' : ''); } });
-    if (gm.length) { var lg0 = gm[gm.length - 1]; $('t-gewinn').textContent = ((d.gewinn && d.gewinn.quelle) || 'Kaufland') + ' · netto, geschätzt' + (lg0.ohne_ek ? ' · ' + lg0.ohne_ek + ' Stück diesen Monat ohne EK' : ''); }
-
 
     // Bestell-Pipeline
     var PP = d.pipeline;
@@ -1046,7 +1130,7 @@
       '<li><div class="main"><div>Offene Rechnungen (Lexware)</div><div class="sub">noch nicht bezahlt</div></div><div class="val">' + (lx.offen_anzahl || 0) + (lx.offen_anzahl ? ' · ' + eur(lx.offen_summe, 2) : '') + '</div></li>';
 
     briefing(d);
-    renderTodo(d); renderZiel(d); renderGeld(d);
+    renderTodo(d); renderZiel(d); renderGeld(d); renderAbschluss(d); renderHud(d);
     notify(d);
   }
 
@@ -1257,7 +1341,11 @@
     });
     // 5. Umsatzsteuer
     var tag = new Date().getDate();
-    if (g.ust && g.ust.vormonat && tag <= 10) { var u = g.ust.vormonat; T.push({ k: 'ust' + u.monat, ic: '🧮', c: tag >= 7 ? 'rot' : 'gelb', t: 'Umsatzsteuer-Voranmeldung bis ' + dm(g.ust.frist), s: 'Schätzung ' + monatName(u.monat) + ': ' + (u.zahllast >= 0 ? 'Zahllast ca. ' + eur(u.zahllast) : 'Erstattung ca. ' + eur(-u.zahllast)), go: { tab: 'v-geld', el: 'card-ust' } }); }
+    var qMon = new Date().getMonth() % 3 === 0;
+    if (g.ust && g.ust.vormonat && tag <= 10 && (qMon || !g.ust.quartal)) { var u = g.ust.vormonat; T.push({ k: 'ust' + u.monat, ic: '🧮', c: tag >= 7 ? 'rot' : 'gelb', t: 'Umsatzsteuer-Voranmeldung ' + (u.label ? u.label.split(' ')[0] + ' ' : '') + 'bis ' + dm(g.ust.frist), s: 'Schätzung ' + (u.label || monatName(u.monat)) + ': ' + (u.zahllast >= 0 ? 'Zahllast ca. ' + eur(u.zahllast) : 'Erstattung ca. ' + eur(-u.zahllast)), go: { tab: 'v-geld', el: 'card-ust' } }); }
+    // 5b. Excel-Abschluss am Monatsanfang
+    var ersterM = heuteStr().slice(0, 8) + '01';
+    if (tag <= 7 && (!d.abschluss || String(d.abschluss.stand || '') < ersterM)) { var vmD = new Date(); vmD.setDate(1); vmD.setMonth(vmD.getMonth() - 1); T.push({ k: 'abs' + ersterM, ic: '📊', c: tag >= 4 ? 'rot' : 'gelb', t: (qMon ? 'Quartalsabschluss Q' + Math.ceil((vmD.getMonth() + 1) / 3) : 'Abschluss ' + monatName(vmD.toLocaleDateString('sv-SE').slice(0, 7))) + ': Excel hochladen', s: 'Fertige Reselling-Excel + laufende Kosten · für den echten Gewinn', go: { tab: 'v-geld', el: 'card-ab' } }); }
     // 6. Belege
     var bl = (d.belege || []).filter(function (b) { return b.artikel !== 'Alles erledigt'; });
     if (bl.length) T.push({ k: 'bel' + bl.length, ic: '🧾', c: 'gelb', t: bl.length + (bl.length === 1 ? ' Beleg/Rechnung fehlt' : ' Belege/Rechnungen fehlen'), s: kurz(bl[0].artikel, 30) + (bl.length > 1 ? ' + ' + (bl.length - 1) + ' weitere' : ''), go: { tab: 'v-geld', el: 'card-belege' } });
@@ -1270,6 +1358,7 @@
     (d.aufgaben || []).slice(0, 6).forEach(function (a) {
       T.push({ k: 'auf' + a.id, auf: a.id, ic: '✅', c: a.ueberfaellig ? 'rot' : (a.faellig && a.faellig <= heute ? 'gelb' : ''), t: a.titel, s: a.faellig ? (a.ueberfaellig ? 'überfällig seit ' : 'fällig ') + dm(a.faellig) : (a.kategorie || 'Aufgabe') });
     });
+    todoList = T;
     var done = doneSet();
     var offen = T.filter(function (x) { return done.indexOf(x.k) < 0; }).length;
     $('n-todo').textContent = T.length ? (offen ? offen + ' offen' : 'alles erledigt ✅') : '';
@@ -1310,6 +1399,309 @@
   $('ziel').addEventListener('submit', function (e) { e.preventDefault(); var v = Number(String(e.target.z.value).replace(',', '.')); if (v > 0) { store('jarvis_ziel', String(v)); if (last) renderZiel(last); } });
   $('ziel').addEventListener('click', function (e) { if (e.target.id === 'ziel-edit') { e.preventDefault(); store('jarvis_ziel', ''); if (last) renderZiel(last); } });
 
+  // ---------- Excel-Abschluss: .xlsx lesen (ohne Fremd-Bibliothek) ----------
+  async function xlsxRows(buf) {
+    var dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength), e = buf.length - 22;
+    while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+    if (e < 0) throw new Error('Das ist keine .xlsx-Datei');
+    var n = dv.getUint16(e + 10, true), p = dv.getUint32(e + 16, true), files = {}, td = new TextDecoder();
+    for (var i = 0; i < n; i++) {
+      var nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true);
+      files[td.decode(buf.subarray(p + 46, p + 46 + nl))] = { m: dv.getUint16(p + 10, true), cs: dv.getUint32(p + 20, true), off: dv.getUint32(p + 42, true) };
+      p += 46 + nl + xl + cl;
+    }
+    async function rd(name) {
+      var f = files[name]; if (!f) return '';
+      var s = f.off + 30 + dv.getUint16(f.off + 26, true) + dv.getUint16(f.off + 28, true), data = buf.subarray(s, s + f.cs);
+      if (f.m === 0) return td.decode(data);
+      return await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+    }
+    function ent(s) { return s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#(\d+);/g, function (m, c) { return String.fromCharCode(+c); }).replace(/&amp;/g, '&'); }
+    function txt(x) { var o = '', m, re = /<t\b[^>]*>([\s\S]*?)<\/t>/g; while ((m = re.exec(x))) o += m[1]; return ent(o); }
+    var ss = [], m, re = /<si>([\s\S]*?)<\/si>/g, sst = await rd('xl/sharedStrings.xml');
+    while ((m = re.exec(sst))) ss.push(txt(m[1]));
+    var wb = await rd('xl/workbook.xml'), rels = await rd('xl/_rels/workbook.xml.rels');
+    var rid = (/<sheet\b[^>]*r:id="([^"]+)"/.exec(wb) || [])[1], tgt = 'worksheets/sheet1.xml';
+    if (rid) { var rm = new RegExp('<Relationship\\b[^>]*Id="' + rid + '"[^>]*Target="([^"]+)"').exec(rels) || new RegExp('<Relationship\\b[^>]*Target="([^"]+)"[^>]*Id="' + rid + '"').exec(rels); if (rm) tgt = rm[1]; }
+    var sh = await rd(tgt.charAt(0) === '/' ? tgt.slice(1) : 'xl/' + tgt);
+    var rows = [], cre = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+    while ((m = cre.exec(sh))) {
+      var a = m[1], body = m[2] || '', ref = (/\br="([A-Z]+)(\d+)"/.exec(a)) || null; if (!ref) continue;
+      var col = 0; for (var k = 0; k < ref[1].length; k++) col = col * 26 + ref[1].charCodeAt(k) - 64;
+      var t = (/\bt="(\w+)"/.exec(a) || [])[1], v = (/<v>([\s\S]*?)<\/v>/.exec(body) || [])[1], val = null;
+      if (t === 's') val = ss[+v]; else if (t === 'inlineStr') val = txt(body); else if (t === 'str' || t === 'e') val = v == null ? null : ent(v); else if (t === 'b') val = v === '1'; else if (v != null) val = Number(v);
+      var r = +ref[2] - 1; (rows[r] = rows[r] || [])[col - 1] = val;
+    }
+    for (var j = 0; j < rows.length; j++) rows[j] = rows[j] || [];
+    return rows;
+  }
+  function abNum(x) { if (typeof x === 'number') return isFinite(x) ? x : null; if (typeof x === 'string' && /^\s*-?[\d.]*,?\d+\s*€?\s*$/.test(x)) { var n = Number(x.replace(/[€\s]/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.')); return isFinite(n) ? n : null; } return null; }
+  function abDatum(x, jahr) {
+    if (typeof x === 'number' && x > 30000 && x < 80000) return new Date(Math.round((x - 25569) * 864e5)).toISOString().slice(0, 10);
+    if (typeof x === 'string') { var m = /^\s*(\d{1,2})\.(\d{1,2})\.(\d{2,4})?\s*$/.exec(x); if (m) { var y = m[3] ? (m[3].length === 2 ? '20' + m[3] : m[3]) : String(jahr || new Date().getFullYear()); return y + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); } }
+    return null;
+  }
+  function abKopf(rows, muss) {
+    for (var i = 0; i < Math.min(rows.length, 15); i++) {
+      var h = rows[i].map(function (c) { return String(c == null ? '' : c).trim().toLowerCase(); });
+      if (muss.every(function (w) { return h.indexOf(w) >= 0; })) return { i: i, h: h };
+    }
+    return null;
+  }
+  function abAuswerten(rows) {
+    var r2 = function (x) { return Math.round(x * 100) / 100; };
+    var K = abKopf(rows, ['artikel', 'verkauft am', 'gewinn']);
+    if (K) {
+      var h = K.h, ix = function (w, ab) { return h.indexOf(w, ab || 0); };
+      var cVk = ix('verkauft am'), c = { art: ix('artikel'), kauf: ix('gekauft am'), ek: ix('retail netto'), vk: cVk, vs: ix('versand', cVk), geb: ix('gebühren'), um: ix('resell netto'), gw: ix('gewinn'), pf: ix('verkaufsplattform') };
+      var g = {}, n = 0, ohneDatum = 0;
+      for (var i = K.i + 1; i < rows.length; i++) {
+        var r = rows[i], art = String(r[c.art] == null ? '' : r[c.art]).trim(); if (!art) continue;
+        var kd = abDatum(r[c.kauf]), d = abDatum(r[c.vk], kd ? kd.slice(0, 4) : null);
+        if (!d) { if (r[c.vk] != null && String(r[c.vk]).trim() && !/retour|eigen|^-$|alter/i.test(String(r[c.vk]))) ohneDatum++; continue; }
+        var mo = d.slice(0, 7), key = mo + '|' + art.toLowerCase().replace(/\s+/g, ' ');
+        var x = g[key] = g[key] || { typ: 'verkauf', monat: mo, artikel: art, anzahl: 0, umsatz_netto: 0, ek_netto: 0, gebuehren: 0, gewinn: 0, pf: {}, ohne_gewinn: 0 };
+        var gw = typeof r[c.gw] === 'number' && isFinite(r[c.gw]) ? r[c.gw] : null;
+        x.anzahl++; x.umsatz_netto += abNum(r[c.um]) || 0; x.ek_netto += abNum(r[c.ek]) || 0;
+        x.gebuehren += (c.vs >= 0 ? abNum(r[c.vs]) || 0 : 0) + (c.geb >= 0 ? abNum(r[c.geb]) || 0 : 0);
+        if (gw == null) x.ohne_gewinn++; else x.gewinn += gw;
+        if (c.pf >= 0 && r[c.pf]) x.pf[String(r[c.pf]).trim()] = 1;
+        n++;
+      }
+      var out = Object.keys(g).map(function (k) { var x = g[k]; x.plattform = Object.keys(x.pf).join(', '); delete x.pf; ['umsatz_netto', 'ek_netto', 'gebuehren', 'gewinn'].forEach(function (f) { x[f] = r2(x[f]); }); return x; });
+      return { art: 'verkauf', zeilen: out, stueck: n, ohne_datum: ohneDatum };
+    }
+    K = abKopf(rows, ['ek netto', 'dauer']);
+    if (K) {
+      var h2 = K.h, c2 = { d: h2.indexOf('datum kauf'), br: h2.indexOf('ek brutto'), ne: h2.indexOf('ek netto'), vw: h2.findIndex(function (x) { return x.indexOf('verwendung') === 0; }), du: h2.indexOf('dauer') };
+      var g2 = {}, laufend = false;
+      for (var i2 = K.i + 1; i2 < rows.length; i2++) {
+        var q = rows[i2], n0 = String(q[0] == null ? '' : q[0]).trim();
+        if (/laufende kosten/i.test(n0)) laufend = true;
+        var bt = abNum(q[c2.ne]); if (bt == null && abNum(q[c2.br]) != null) bt = abNum(q[c2.br]) / 1.19;
+        if (!bt) continue;
+        var name = (n0 && !/laufende kosten/i.test(n0)) ? n0 : String(q[c2.vw] == null ? '' : q[c2.vw]).trim() || n0 || 'Kosten';
+        var du = String(q[c2.du] == null ? '' : q[c2.du]), dt = abDatum(q[c2.d]), mo2;
+        if (/monat/i.test(du)) mo2 = 'monatlich'; else if (dt) mo2 = dt.slice(0, 7); else continue;
+        var k2 = mo2 + '|' + name.toLowerCase();
+        var y = g2[k2] = g2[k2] || { typ: 'kosten', monat: mo2, artikel: name, anzahl: 0, gewinn: 0 };
+        y.anzahl++; y.gewinn = r2(y.gewinn + bt);
+      }
+      return { art: 'kosten', zeilen: Object.keys(g2).map(function (k) { return g2[k]; }) };
+    }
+    throw new Error('Unbekannte Tabelle – erwartet Reselling-Excel (Spalten Artikel, verkauft am, Gewinn) oder Kosten-Excel (EK Netto, Dauer)');
+  }
+  // ---------- Abschluss aus Excel (Monat / Quartal) ----------
+  var AB_URL = 'https://luisdtg16.app.n8n.cloud/webhook/jarvis-abschluss';
+  var abSicht = store('jarvis_abs') || 'monat', abWahl = null, abAlle = false;
+  var MN = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+  function abQ(m) { return m.slice(0, 4) + '-Q' + Math.ceil(+m.slice(5, 7) / 3); }
+  function abLabel(p) { return /Q/.test(p) ? 'Q' + p.slice(-1) + ' ' + p.slice(0, 4) : monatName(p) + ' ' + p.slice(0, 4); }
+  function abMonate(p) { if (!/Q/.test(p)) return [p]; var q = +p.slice(-1), y = p.slice(0, 4); return [1, 2, 3].map(function (i) { return y + '-' + ('0' + (q * 3 - 3 + i)).slice(-2); }); }
+  function abPerioden(A) {
+    var ms = {}; (A.v || []).forEach(function (r) { if (/^\d{4}-\d{2}$/.test(r[0])) ms[r[0]] = 1; });
+    var m = Object.keys(ms).sort();
+    if (abSicht === 'quartal') { var q = {}; m.forEach(function (x) { q[abQ(x)] = 1; }); return Object.keys(q).sort(); }
+    return m;
+  }
+  function abDaten(A, p) {
+    var mon = abMonate(p), erst = ((A.v || []).map(function (r) { return r[0]; }).filter(function (x) { return /^\d{4}-\d{2}$/.test(x); }).sort()[0]) || '9999';
+    var jetzt = heuteStr().slice(0, 7);
+    var s = { stueck: 0, um: 0, ek: 0, geb: 0, gw: 0, ohne: 0, art: {}, kosten: [], kSum: 0 };
+    (A.v || []).forEach(function (r) {
+      if (mon.indexOf(r[0]) < 0) return;
+      s.stueck += r[2]; s.um += r[3]; s.ek += r[4]; s.geb += r[5]; s.gw += r[6]; s.ohne += r[8];
+      var k = String(r[1]).toLowerCase().replace(/\s+/g, ' ');
+      var a = s.art[k] = s.art[k] || { n: r[1], st: 0, um: 0, ek: 0, geb: 0, gw: 0, ohne: 0, pf: {} };
+      a.st += r[2]; a.um += r[3]; a.ek += r[4]; a.geb += r[5]; a.gw += r[6]; a.ohne += r[8];
+      String(r[7] || '').split(', ').forEach(function (x) { if (x) a.pf[x.toLowerCase()] = x; });
+    });
+    var anzM = mon.filter(function (x) { return x >= erst && x <= jetzt; }).length;
+    var kk = {};
+    (A.k || []).forEach(function (r) {
+      var b = 0;
+      if (r[0] === 'monatlich') b = r[2] * anzM; else if (mon.indexOf(r[0]) >= 0) b = r[2];
+      if (!b) return;
+      var k = String(r[1]).toLowerCase(); kk[k] = kk[k] || { n: r[1], b: 0, lf: r[0] === 'monatlich' }; kk[k].b += b;
+    });
+    s.kosten = Object.keys(kk).map(function (k) { return kk[k]; }).sort(function (a, b) { return b.b - a.b; });
+    s.kSum = s.kosten.reduce(function (t, x) { return t + x.b; }, 0);
+    s.netto = s.gw - s.kSum;
+    s.offen = mon[mon.length - 1] >= String(A.stand || '').slice(0, 7);
+    return s;
+  }
+  function renderAbschluss(d) {
+    var A = d.abschluss;
+    $('ab-seg').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.a === abSicht ? 'true' : 'false'); });
+    if (!A || !(A.v || []).length) {
+      $('ab-per').textContent = '–'; $('ab-sum').textContent = '';
+      $('ab-rows').innerHTML = '<li><span>Noch keine Excel hochgeladen</span><b>–</b></li>';
+      $('ab-art').innerHTML = ''; $('c-ab').innerHTML = ''; $('t-ab').textContent = 'Lade am Monatsende deine fertige Reselling-Excel und die Kosten-Excel hoch – dann steht hier Umsatz, Ausgaben und Gewinn pro Artikel.';
+      $('ab-stand').textContent = ''; return;
+    }
+    var P = abPerioden(A);
+    var jetzt = heuteStr().slice(0, 7), jetztP = abSicht === 'quartal' ? abQ(jetzt) : jetzt;
+    if (!abWahl || P.indexOf(abWahl) < 0) { var fertig = P.filter(function (p) { return p < jetztP; }); abWahl = fertig.length ? fertig[fertig.length - 1] : P[P.length - 1]; }
+    var i = P.indexOf(abWahl), s = abDaten(A, abWahl);
+    $('ab-prev').disabled = i <= 0; $('ab-next').disabled = i >= P.length - 1;
+    $('ab-per').textContent = abLabel(abWahl) + (s.offen ? ' · läuft noch' : '');
+    $('ab-sum').textContent = eur(s.netto, 2);
+    $('ab-rows').innerHTML =
+      '<li><span>Einnahmen (Verkäufe netto) · ' + s.stueck + ' Stk</span><b>' + eur(s.um, 2) + '</b></li>' +
+      '<li><span>Wareneinsatz (EK netto)</span><b>− ' + eur(s.ek, 2) + '</b></li>' +
+      '<li><span>Gebühren &amp; Versand</span><b>− ' + eur(s.geb, 2) + '</b></li>' +
+      '<li><span>Gewinn aus Verkäufen</span><b>' + eur(s.gw, 2) + '</b></li>' +
+      '<li><span>' + (s.kosten.length ? '<details class="ab-k"><summary>Laufende Kosten (' + s.kosten.length + ') ▾</summary>' + s.kosten.map(function (k) { return '<div>' + esc(k.n) + (k.lf ? ' · monatlich' : '') + ' <i>' + eur(k.b, 2) + '</i></div>'; }).join('') + '</details>' : 'Laufende Kosten') + '</span><b>− ' + eur(s.kSum, 2) + '</b></li>' +
+      '<li class="sum"><span>Gewinn ' + esc(abLabel(abWahl)) + '</span><b' + (s.netto < 0 ? ' class="late"' : '') + '>' + eur(s.netto, 2) + '</b></li>';
+    var tip = 'Aus deiner Excel · netto · Stand ' + String(A.stand || '').slice(8, 10) + '.' + String(A.stand || '').slice(5, 7) + '.';
+    if (s.ohne) tip += ' · ⚠️ ' + s.ohne + ' Verkauf' + (s.ohne > 1 ? 'e' : '') + ' ohne Gewinn-Zahl (nicht mitgerechnet)';
+    $('t-ab').textContent = tip;
+    // Balken: alle Perioden, gewählte hervorgehoben
+    bars($('c-ab'), P.slice(-6).map(function (p) { var x = abDaten(A, p); return { v: Math.max(0, x.netto), raw: p, hi: p === abWahl, label: /Q/.test(p) ? 'Q' + p.slice(-1) : MN[+p.slice(5, 7) - 1] }; }),
+      { alt: true, onPick: function (it) { abWahl = it.raw; abAlle = false; renderAbschluss(d); } });
+    // Gewinn pro Artikel
+    var arts = Object.keys(s.art).map(function (k) { return s.art[k]; }).sort(function (a, b) { return b.gw - a.gw; });
+    $('ab-n').textContent = arts.length ? arts.length + ' Artikel' : '';
+    var vis = abAlle ? arts : arts.slice(0, 8);
+    $('ab-art').innerHTML = arts.length ? vis.map(function (a) {
+      var pf = Object.keys(a.pf).map(function (k) { return a.pf[k]; }).join(', ');
+      return '<li><div class="main"><div>' + esc(a.n) + '</div><div class="sub">' + a.st + '× · Umsatz ' + eur(a.um) + ' · EK ' + eur(a.ek) + (a.geb ? ' · Geb. ' + eur(a.geb) : '') + (pf ? ' · ' + esc(pf) : '') + '</div></div><div class="val" style="color:' + (a.gw < 0 ? '#ff7a7a' : a.gw > 0 ? '#3ddc84' : 'var(--muted)') + '">' + (a.gw > 0 ? '+' : '') + eur(a.gw, 2) + (a.ohne ? '<div class="sub">' + a.ohne + '× Gewinn fehlt</div>' : '') + '</div></li>';
+    }).join('') + (arts.length > 8 ? '<li><button class="chk" style="width:auto;padding:2px 10px;border-radius:999px;color:var(--text);font-size:12px" type="button" id="ab-more">' + (abAlle ? 'Weniger' : 'Alle ' + arts.length + ' zeigen') + '</button></li>' : '') : '<li class="empty">Keine Verkäufe in diesem Zeitraum.</li>';
+    $('ab-stand').textContent = 'zuletzt ' + String(A.stand || '').slice(8, 10) + '.' + String(A.stand || '').slice(5, 7) + '. ' + String(A.stand || '').slice(11, 16);
+  }
+  $('ab-seg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; abSicht = b.dataset.a; store('jarvis_abs', abSicht); abWahl = null; abAlle = false; if (last) renderAbschluss(last); });
+  $('ab-prev').addEventListener('click', function () { if (!last || !last.abschluss) return; var P = abPerioden(last.abschluss), i = P.indexOf(abWahl); if (i > 0) { abWahl = P[i - 1]; abAlle = false; renderAbschluss(last); } });
+  $('ab-next').addEventListener('click', function () { if (!last || !last.abschluss) return; var P = abPerioden(last.abschluss), i = P.indexOf(abWahl); if (i < P.length - 1) { abWahl = P[i + 1]; abAlle = false; renderAbschluss(last); } });
+  $('ab-art').addEventListener('click', function (e) { if (e.target.id === 'ab-more') { abAlle = !abAlle; if (last) renderAbschluss(last); } });
+  $('ab-file').addEventListener('change', async function () {
+    var fs = Array.prototype.slice.call(this.files || []); this.value = '';
+    if (!fs.length) return;
+    var msg = $('ab-msg'), rows = [], info = [];
+    msg.textContent = 'Lese Excel …';
+    try {
+      for (var i = 0; i < fs.length; i++) {
+        var r = abAuswerten(await xlsxRows(new Uint8Array(await fs[i].arrayBuffer())));
+        rows = rows.concat(r.zeilen);
+        info.push(r.art === 'verkauf' ? 'Reselling: ' + r.stueck + ' Verkäufe in ' + r.zeilen.length + ' Artikel-Zeilen' : 'Kosten: ' + r.zeilen.length + ' Posten');
+      }
+      if (!rows.length) throw new Error('Keine Zeilen gefunden');
+      msg.textContent = 'Sende an Jarvis …';
+      var res = await fetch(AB_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: KEY, rows: rows }) });
+      var j = await res.json().catch(function () { return {}; });
+      if (!res.ok || !j.ok) throw new Error('Server ' + res.status);
+      msg.textContent = '✅ Übernommen – ' + info.join(' · ');
+      abWahl = null; lastLoad = 0; load();
+    } catch (e) { msg.textContent = '❌ ' + e.message; }
+  });
+
+  // ---------- Jarvis-HUD + Tool-Fenster ----------
+  var todoList = [];
+  function doGo(go) {
+    if (!go) return;
+    if (go.sheet) { openSheet(go.sheet); return; }
+    if (go.tab) { show(go.tab); if (go.q != null) { $('lg-q').value = go.q; if (last) renderLager(last); } if (go.el) setTimeout(function () { var el = $(go.el); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80); }
+  }
+  function hudTick() {
+    if (!$('v-chat').classList.contains('on') || document.visibilityState !== 'visible') return;
+    var n = new Date();
+    $('hud-clock').textContent = n.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    $('hud-date').textContent = n.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+  }
+  setInterval(hudTick, 1000); hudTick();
+  function renderHud(d) {
+    var v = d.verkauf || {}, g = d.geld || {}, ma = (d.monatsabschluss && d.monatsabschluss.aktuell) || {};
+    var done = doneSet(), offen = todoList.filter(function (x) { return done.indexOf(x.k) < 0; }).length;
+    var rot = todoList.filter(function (x) { return x.c === 'rot' && done.indexOf(x.k) < 0; }).length;
+    $('hud-l').innerHTML = '<div><span>HEUTE</span><b>' + eur(v.heute && v.heute.umsatz, 2) + '</b></div><div><span>7 TAGE</span><b>' + eur(v.woche && v.woche.umsatz) + '</b></div><div><span>TO-DO</span><b' + (rot ? ' class="r"' : '') + '>' + offen + ' offen</b></div>';
+    $('hud-sync').textContent = 'SYNC ' + new Date(d.stand).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    var ziel = Number(store('jarvis_ziel')) || 0, gw = Number(ma.gewinn) || 0;
+    var now = new Date(), tage = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    var pct = ziel ? Math.max(0, Math.min(100, gw / ziel * 100)) : now.getDate() / tage * 100;
+    var u = g.ust && g.ust.vormonat;
+    $('hud-fin').innerHTML = '<div class="hf-a"><span>GEWINN ' + (ma.monat ? monatName(ma.monat).toUpperCase() : '') + ' · GESCHÄTZT</span><b>' + eur(gw) + '</b>' + (ziel ? '<small>/ ' + eur(ziel) + '</small>' : '') + '</div>' +
+      '<div class="hf-b"><div><span>LAGER</span><b>' + eur(g.lager_ek) + '</b></div><div><span>' + (u ? 'UST ' + esc((u.label || '').split(' ')[0]) : 'UST') + '</span><b>' + (u ? eur(Math.abs(u.zahllast)) : '–') + '</b></div></div>' +
+      '<div class="hf-bar"><i style="width:' + pct.toFixed(1) + '%"></i></div><div class="hf-c"><span>' + (ziel ? 'MONATSZIEL ' + Math.round(pct) + ' %' : 'MONAT ' + Math.round(pct) + ' % VORBEI') + '</span><span>' + (v.heute ? v.heute.stueck : 0) + ' VERKÄUFE HEUTE</span></div>';
+    var badge = { todo: offen, lager: ((d.preischeck && d.preischeck.liste) || []).filter(function (x) { return x.bewertung === 'VERLUST'; }).length + ((d.lager && d.lager.liste) || []).filter(function (p) { return p.rueckgabe_tage != null && p.rueckgabe_tage >= 0 && p.rueckgabe_tage <= 7; }).length };
+    $('hud-tools').querySelectorAll('button[data-w]').forEach(function (b) { var n = badge[b.dataset.w]; var s = b.querySelector('sup'); if (s) s.textContent = n ? n : ''; });
+    if (!$('hudwin').hidden && hudOffen) hudFenster(hudOffen);
+  }
+  var hudOffen = null;
+  function wli(ic, t, s, val, i) { return '<li' + (i != null ? ' data-i="' + i + '"' : '') + '><span class="wi">' + ic + '</span><div class="main"><div>' + esc(t) + '</div>' + (s ? '<div class="sub">' + esc(s) + '</div>' : '') + '</div>' + (val != null ? '<div class="val">' + val + '</div>' : '') + (i != null ? '<span class="go">›</span>' : '') + '</li>'; }
+  var winGo = [];
+  function hudFenster(w) {
+    var d = last;
+    hudOffen = w; winGo = [];
+    var T = { todo: 'HEUTE ZU TUN', lager: 'LAGER-STATUS', geld: 'GELD', verkauf: 'VERKÄUFE', steuer: 'UMSATZSTEUER', termine: 'TERMINE' }[w] || w.toUpperCase();
+    var tab = { todo: 'v-dash', lager: 'v-lager', geld: 'v-geld', verkauf: 'v-dash', steuer: 'v-geld', termine: 'v-dash' }[w];
+    var h = '';
+    function push(go) { winGo.push(go); return winGo.length - 1; }
+    if (!d) h = '<p class="empty">Noch keine Daten – einen Moment, Boss.</p>';
+    else if (w === 'todo') {
+      var done = doneSet(), L = todoList.filter(function (x) { return done.indexOf(x.k) < 0; });
+      h = L.length ? '<ul class="list">' + L.map(function (x) { return wli(x.ic, x.t, x.s, null, x.go ? push(x.go) : null); }).join('') + '</ul>' : '<p class="empty">Nichts offen – stark, Boss. ✅</p>';
+    } else if (w === 'lager') {
+      var LL = (d.lager && d.lager.liste) || [], g = d.geld || {};
+      var vl = ((d.preischeck && d.preischeck.liste) || []).filter(function (x) { return x.bewertung === 'VERLUST'; });
+      var rg = LL.filter(function (p) { return p.rueckgabe_tage != null && p.rueckgabe_tage >= 0 && p.rueckgabe_tage <= 14; }).sort(function (a, b) { return a.rueckgabe_tage - b.rueckgabe_tage; });
+      var lf = LL.filter(function (p) { return p.kl_luft != null && p.kl_luft >= 1; });
+      var lh = LL.filter(function (p) { return p.status === 'IM_LAGER' && p.tage != null && p.tage >= 60; }).sort(function (a, b) { return b.tage - a.tage; });
+      h = '<div class="wk"><div><span>IM LAGER</span><b>' + (g.lager_stueck || 0) + ' Stk</b></div><div><span>WERT EK</span><b>' + eur(g.lager_ek) + '</b></div><div><span>UNTERWEGS</span><b>' + eur(g.bestellt_ek) + '</b></div></div>';
+      var sec = function (titel, arr, f) { return arr.length ? '<h5>' + titel + ' · ' + arr.length + '</h5><ul class="list">' + arr.slice(0, 5).map(f).join('') + '</ul>' : ''; };
+      h += sec('⚠️ Preis unter EK', vl, function (x) { return wli('⚠️', kurz(x.artikel, 40), 'Kaufland ' + eur(x.preis, 2) + ' · EK ' + eur(x.ek, 2), '<span class="late">' + eur(x.gewinn, 2) + '</span>', push({ tab: 'v-lager', q: kurz(x.artikel, 14) })); });
+      h += sec('↩️ Rückgabe bald', rg, function (p) { return wli('↩️', kurz(p.artikel, 40), (p.rueckgabe_geschaetzt ? 'ca. ' : '') + 'bis ' + dm(p.rueckgabe_bis) + ' · ' + p.anzahl + ' Stk', p.rueckgabe_tage === 0 ? 'heute' : p.rueckgabe_tage + ' T', push({ sheet: p })); });
+      h += sec('💰 Preis erhöhen möglich', lf, function (p) { return wli('💰', kurz(p.artikel, 40), 'bis ca. ' + eur(p.kl_ziel, 2), '+' + eur(p.kl_luft, 2), push({ sheet: p })); });
+      h += sec('🐌 Ladenhüter ≥ 60 Tage', lh, function (p) { return wli('🐌', kurz(p.artikel, 40), p.tage + ' Tage · ' + eur(p.wert) + ' gebunden', null, push({ sheet: p })); });
+      if (!vl.length && !rg.length && !lf.length && !lh.length) h += '<p class="empty">Keine Warnungen im Lager. ✅</p>';
+    } else if (w === 'geld') {
+      var g2 = d.geld || {}, ma = (d.monatsabschluss && d.monatsabschluss.aktuell) || {}, A = d.abschluss, ab = '';
+      if (A && (A.v || []).length) { var vm = new Date(); vm.setDate(1); vm.setMonth(vm.getMonth() - 1); var vk = vm.toLocaleDateString('sv-SE').slice(0, 7); var sx = abDaten(A, vk); ab = '<li><span>Abschluss ' + monatName(vk) + ' (Excel)</span><b>' + eur(sx.netto, 2) + '</b></li><li><span>Einnahmen ' + monatName(vk) + ' netto</span><b>' + eur(sx.um) + '</b></li>'; }
+      h = '<ul class="rows"><li class="sum"><span>Gewinn ' + (ma.monat ? monatName(ma.monat) : '') + ' (geschätzt)</span><b>' + eur(ma.gewinn || 0) + '</b></li>' + ab +
+        '<li><span>Im Lager gebunden (EK)</span><b>' + eur(g2.lager_ek) + '</b></li><li><span>Kaufland, noch offen</span><b>' + eur(g2.kaufland_offen) + '</b></li><li><span>Steuer-Rücklage → Fyrst</span><b>' + eur(g2.ruecklage_monat) + '</b></li></ul>';
+    } else if (w === 'steuer') {
+      var us = d.geld && d.geld.ust;
+      if (!us || !us.vormonat) h = '<p class="empty">Keine Lexware-Daten.</p>';
+      else { var a = us.vormonat, b = us.aktuell; h = '<div class="wk"><div><span>VORANMELDUNG</span><b>' + esc(a.label || '') + '</b></div><div><span>FÄLLIG</span><b>' + dm(us.frist) + '</b></div><div><span>' + (a.zahllast >= 0 ? 'ZAHLLAST' : 'ERSTATTUNG') + '</span><b>' + eur(Math.abs(a.zahllast)) + '</b></div></div><ul class="rows"><li><span>Umsatzsteuer</span><b>' + eur(a.ust, 2) + '</b></li><li><span>Vorsteuer</span><b>− ' + eur(a.vorsteuer, 2) + '</b></li>' + (b ? '<li><span>Laufend ' + esc(b.label || '') + '</span><b>' + eur(b.zahllast, 2) + '</b></li>' : '') + '</ul><div class="tip">Grobe Schätzung aus Lexware – die echte Meldung machst du in Lexware/ELSTER.</div>'; }
+    } else if (w === 'verkauf') {
+      var v = d.verkauf || {}, L2 = v.letzte || [];
+      h = '<div class="wk"><div><span>HEUTE</span><b>' + eur(v.heute && v.heute.umsatz) + '</b></div><div><span>7 TAGE</span><b>' + eur(v.woche && v.woche.umsatz) + '</b></div><div><span>STÜCK 7T</span><b>' + (v.woche ? v.woche.stueck : 0) + '</b></div></div>' +
+        (L2.length ? '<ul class="list">' + L2.slice(0, 6).map(function (o) { var dt = new Date(o.datum); return wli('🛒', kurz(o.artikel, 40), dt.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) + ', ' + dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + (o.zu_guenstig >= 1 ? ' · zu günstig (+' + eur(o.zu_guenstig, 2) + ')' : ''), eur(o.preis, 2)); }).join('') + '</ul>' : '<p class="empty">Noch keine Verkäufe.</p>');
+    } else if (w === 'termine') {
+      var TT = d.termine || [];
+      h = TT.length ? '<ul class="list">' + TT.slice(0, 8).map(function (e) { var s = new Date(e.start); return wli('📅', e.titel, s.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) + (e.ganztags ? ' · ganztägig' : ' · ' + s.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })) + (e.ort ? ' · ' + e.ort : '')); }).join('') + '</ul>' : '<p class="empty">Keine Termine in den nächsten 14 Tagen.</p>';
+    }
+    $('hw-t').textContent = '▸ ' + T;
+    $('hw-body').innerHTML = h;
+    $('hw-go').dataset.tab = tab || ''; $('hw-go').hidden = !tab;
+    $('hudwin').hidden = false;
+  }
+  function hudZu() { $('hudwin').hidden = true; hudOffen = null; }
+  $('hudwin').addEventListener('click', function (e) {
+    if (e.target.closest('[data-close]')) { hudZu(); return; }
+    if (e.target.id === 'hw-go') { var t = e.target.dataset.tab; hudZu(); if (t) show(t); return; }
+    var li = e.target.closest('li[data-i]'); if (li) { var go = winGo[+li.dataset.i]; hudZu(); doGo(go); }
+  });
+  $('hud-tools').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.tab) { show(b.dataset.tab); return; }
+    hudFenster(b.dataset.w);
+  });
+  $('hud-fin').addEventListener('click', function () { hudFenster('geld'); });
+  $('hud-l').addEventListener('click', function () { hudFenster('todo'); });
+  // Fragen öffnen Fenster: „zeig Lager“, „wie viel Gewinn …“, „was muss ich heute machen“
+  function hudIntent(t) {
+    t = String(t || '').toLowerCase();
+    var w = /aufgab|to-?do|zu tun|was steht an|was (soll|muss) ich/.test(t) ? 'todo'
+      : /steuer|\bust\b|finanzamt|voranmeldung/.test(t) ? 'steuer'
+      : /rückgab|ruckgab|retour|lager|bestand|ladenhüter/.test(t) ? 'lager'
+      : /gewinn|umsatz|\bgeld\b|abschluss|kosten|finanz/.test(t) ? 'geld'
+      : /verkauf|verkäufe|verkauft|bestellung/.test(t) ? 'verkauf'
+      : /termin|kalender/.test(t) ? 'termine' : null;
+    if (!w) return;
+    var explizit = /zeig|öffne|offne|mach .*auf|übersicht|wie (viel|steht|läuft|sieht)|was (ist|steht|gibt|hab)|status|check|fenster/.test(t) || t.trim().split(/\s+/).length <= 3;
+    if (explizit) hudFenster(w);
+  }
+  window.addEventListener('jarvis-frage', function (e) { try { hudIntent(e.detail); } catch (x) {} });
+
   // ---------- Geld-Überblick + USt ----------
   var ustSicht = 'vormonat';
   function renderGeld(d) {
@@ -1319,13 +1711,12 @@
       ['Bestellt, unterwegs', eur(g.bestellt_ek)],
       ['Kaufland, noch nicht abgeschlossen', eur(g.kaufland_offen) + ' · ' + (g.kaufland_offen_anzahl || 0) + ' Best.'],
       ['Steuer-Rücklage diesen Monat → Fyrst', eur(g.ruecklage_monat)]
-    ].map(function (r) { return '<li><span>' + r[0] + '</span><b>' + r[1] + '</b></li>'; }).join('') +
-      '<li class="sum"><span>Gewinn ' + (ma.monat ? monatName(ma.monat) : '') + ' (geschätzt)</span><b>' + eur(ma.gewinn || 0) + '</b></li>';
+    ].map(function (r) { return '<li><span>' + r[0] + '</span><b>' + r[1] + '</b></li>'; }).join('');
     var u = g.ust && g.ust[ustSicht];
     $('ust-seg').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.u === ustSicht ? 'true' : 'false'); });
-    $('ust-frist').textContent = g.ust ? 'fällig ' + dm(g.ust.frist) : '';
+    $('ust-frist').textContent = g.ust ? (g.ust.vormonat && g.ust.vormonat.label ? g.ust.vormonat.label + ' · ' : '') + 'fällig ' + dm(g.ust.frist) : '';
     if (!u) { $('ust').innerHTML = '<li><span>Keine Lexware-Daten</span><b>–</b></li>'; $('ust-tip').textContent = ''; return; }
-    $('ust').innerHTML = '<li><span>' + monatName(u.monat) + ': Umsatz brutto (' + u.belege_verkauf + ' Rechn.)</span><b>' + eur(u.umsatz_brutto, 2) + '</b></li>' +
+    $('ust').innerHTML = '<li><span>' + (u.label || monatName(u.monat)) + ': Umsatz brutto (' + u.belege_verkauf + ' Rechn.)</span><b>' + eur(u.umsatz_brutto, 2) + '</b></li>' +
       '<li><span>Umsatzsteuer 19 %</span><b>' + eur(u.ust, 2) + '</b></li>' +
       '<li><span>Vorsteuer aus ' + u.belege_einkauf + ' Einkaufsbelegen</span><b>− ' + eur(u.vorsteuer, 2) + '</b></li>' +
       '<li class="sum"><span>' + (u.zahllast >= 0 ? 'Zahllast (an Finanzamt)' : 'Erstattung (vom Finanzamt)') + '</span><b>' + eur(Math.abs(u.zahllast), 2) + '</b></li>';
@@ -1662,7 +2053,7 @@
   startTab = startTab ? 'v-' + startTab : (store('jarvis_tab') || 'v-chat');
   if (!document.getElementById(startTab)) startTab = 'v-chat';
   show(startTab);
-  setInterval(function () { if (document.visibilityState === 'visible' && ($('v-dash').classList.contains('on') || $('v-lager').classList.contains('on') || $('v-geld').classList.contains('on'))) load(); }, 5 * 60000);
+  setInterval(function () { if (document.visibilityState === 'visible' && ($('v-chat').classList.contains('on') || $('v-dash').classList.contains('on') || $('v-lager').classList.contains('on') || $('v-geld').classList.contains('on'))) load(); }, 5 * 60000);
 })();
 </script>
 </body>
