@@ -109,6 +109,28 @@
   .tv { min-height: 120px; }
   .note { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
 
+  /* ---------- Depot-Diagramme ---------- */
+  #dp-charts { margin: 10px 0 4px; }
+  #dp-charts .seg { margin: 0 0 6px; }
+  #c-dp-verlauf .ln { fill: none; stroke: var(--accent); stroke-width: 2; }
+  #c-dp-verlauf .ein { fill: none; stroke: #ff9f6b; stroke-width: 1.4; stroke-dasharray: 4 3; }
+  #c-dp-verlauf .ar { fill: url(#dpg); }
+  #c-dp-verlauf .pt { fill: var(--accent); }
+  .dp-split { display: flex; gap: 12px; align-items: center; margin-top: 10px; }
+  .dp-split svg { width: 112px; height: 112px; flex: none; }
+  .dp-split ul { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 0; font-size: 12.5px; }
+  .dp-split li { display: flex; gap: 6px; align-items: center; padding: 2px 0; }
+  .dp-split li i { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+  .dp-split li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dp-split li b { font-weight: 500; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .dp-gv { margin-top: 12px; }
+  .dp-gv .r { display: grid; grid-template-columns: minmax(0, 38%) 1fr auto; gap: 8px; align-items: center; font-size: 12.5px; padding: 3px 0; }
+  .dp-gv .r span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dp-gv .r .b { height: 10px; border-radius: 5px; position: relative; background: var(--line); }
+  .dp-gv .r .b i { position: absolute; top: 0; bottom: 0; border-radius: 5px; }
+  .dp-gv .r b { font-weight: 600; font-variant-numeric: tabular-nums; min-width: 70px; text-align: right; }
+  .dp-h { font-size: 11px; letter-spacing: .08em; color: var(--muted); margin: 12px 0 4px; text-transform: uppercase; }
+
   /* ---------- Briefing, Verlauf, Depot ---------- */
   .brief { border-color: #24414a; background: linear-gradient(180deg, #0f1a1f, var(--panel)); }
   .brief ul { list-style: none; margin: 0; padding: 0; }
@@ -430,6 +452,15 @@
   <div class="scroll">
     <div class="card"><h3>Mein Depot <em id="dp-stand"></em></h3>
       <div class="sumrow"><div style="text-align:left"><b id="dp-wert">–</b><div class="sub" style="color:var(--muted);font-size:12px">Depotwert</div></div><div><span id="dp-gv"></span><div id="dp-heute" style="color:var(--muted);font-size:12px"></div></div></div>
+      <div id="dp-charts" hidden>
+        <div class="seg" id="dp-seg"><button type="button" data-t="30" aria-pressed="false">30 T</button><button type="button" data-t="90" aria-pressed="false">3 M</button><button type="button" data-t="365" aria-pressed="false">1 J</button><button type="button" data-t="0" aria-pressed="true">Alles</button></div>
+        <svg class="chart" id="c-dp-verlauf" role="img" aria-label="Depotwert im Verlauf"></svg>
+        <div class="tip" id="t-dp">Tippe ins Diagramm für einen Tag</div>
+        <div class="dp-h">Aufteilung</div>
+        <div class="dp-split"><svg id="c-dp-pie" viewBox="0 0 120 120" role="img" aria-label="Aufteilung des Depots"></svg><ul id="dp-leg"></ul></div>
+        <div class="dp-h">Gewinn / Verlust je Position</div>
+        <div class="dp-gv" id="dp-gvl"></div>
+      </div>
       <ul class="list" id="depot"></ul>
       <details class="add"><summary>+ Position oder Watchlist-Wert hinzufügen</summary>
         <form class="mini-form" id="f-pos" autocomplete="off">
@@ -936,6 +967,17 @@
     }
   });
 
+  // Standby ist immer an: beim Öffnen automatisch, beim ersten Tippen werden Mikro & Ton freigeschaltet
+  function standbyAuto() { if (standby || !KEY) return; standby = true; paintStandby(); keepScreenOn(); if (!active) armStandby(); }
+  setTimeout(standbyAuto, 900);
+  document.addEventListener('pointerdown', function (e) {
+    if (!standby || active || e.target === standbyBtn) return;
+    unlockAudio(); keepScreenOn();
+    if (!clapAn) startClap();
+    if (!wakeRec) startWake();
+  }, true);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') standbyAuto(); });
+
   function stopAll() {
     active = false;
     try { if (rec) rec.abort(); } catch (e) {}
@@ -995,7 +1037,7 @@
     if (id !== 'v-einkauf' && typeof scanStop === 'function' && (scanStream || zxReader)) scanStop();
     if (id === 'v-dash' || id === 'v-lager' || id === 'v-geld' || id === 'v-chat') { if (last) render(last, Date.now() - lastLoad > 60000); maybeLoad(); }
     if (id !== 'v-chat' && typeof hudZu === 'function') hudZu();
-    if (id === 'v-trade') { if (!loadedTrade) { loadedTrade = true; loadTrading(); } if (Date.now() - dLoad > 60000) depotCall(); }
+    if (id === 'v-trade') { if (!loadedTrade) { loadedTrade = true; loadTrading(); } if (Date.now() - dLoad > 60000) depotCall(); if (dLast) setTimeout(function () { try { dpCharts(dLast); } catch (e) {} }, 60); }
   }
   tabs.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.v); }); });
 
@@ -2104,11 +2146,95 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       var d = await res.json(); dLast = d; dLoad = Date.now();
       store('jarvis_depot', JSON.stringify(d));
+      dpVerlaufMerken(d.depot);
       renderDepot(d);
       if (d.meldung) $('dp-stand').textContent = d.meldung;
     } catch (e) { $('dp-stand').textContent = 'Keine Verbindung (' + e.message + ')'; }
     dLoading = false;
   }
+  // ---------- Depot-Diagramme ----------
+  var DP_FARB = ['#4fd1c5', '#5f8bff', '#f6c26b', '#ff7a9c', '#a78bfa', '#5fd38d', '#ff9f6b', '#7fc4ff', '#e4e47a', '#c08bff'];
+  var dpTage = Number(store('jarvis_dp_tage') || 0);
+  function dpVerlaufMerken(dp) {
+    if (!dp || !(dp.wert > 0)) return;
+    var h; try { h = JSON.parse(store('jarvis_depot_hist') || '{}'); } catch (e) { h = {}; }
+    var heute = new Date().toLocaleDateString('sv-SE');
+    h[heute] = { w: Math.round(dp.wert * 100) / 100, e: Math.round((dp.wert - (dp.gv || 0)) * 100) / 100 };
+    var k = Object.keys(h).sort(); while (k.length > 800) delete h[k.shift()];
+    store('jarvis_depot_hist', JSON.stringify(h));
+  }
+  function dpVerlauf() {
+    var svg = $('c-dp-verlauf'), h; try { h = JSON.parse(store('jarvis_depot_hist') || '{}'); } catch (e) { h = {}; }
+    var k = Object.keys(h).sort();
+    if (dpTage) { var ab = new Date(Date.now() - dpTage * 864e5).toLocaleDateString('sv-SE'); k = k.filter(function (d) { return d >= ab; }); }
+    var W = svg.clientWidth || 340, H = 150, pl = 4, pr = 4, pt = 14, pb = 18;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    if (k.length < 2) {
+      svg.innerHTML = '<text x="' + W / 2 + '" y="70" text-anchor="middle">Der Verlauf startet heute –</text><text x="' + W / 2 + '" y="86" text-anchor="middle">ab morgen siehst du hier eine Kurve.</text>';
+      svg.onclick = null; return;
+    }
+    var P = k.map(function (d) { return { d: d, w: h[d].w, e: h[d].e }; });
+    var vals = []; P.forEach(function (p) { vals.push(p.w); if (p.e) vals.push(p.e); });
+    var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), sp = (mx - mn) || mx * 0.05 || 1; mn -= sp * 0.1; mx += sp * 0.1;
+    var t0 = new Date(P[0].d).getTime(), t1 = new Date(P[P.length - 1].d).getTime();
+    var X = function (p) { return pl + (W - pl - pr) * (new Date(p.d).getTime() - t0) / ((t1 - t0) || 1); };
+    var Y = function (v) { return pt + (H - pt - pb) * (1 - (v - mn) / (mx - mn)); };
+    var lw = P.map(function (p, i) { return (i ? 'L' : 'M') + X(p).toFixed(1) + ' ' + Y(p.w).toFixed(1); }).join('');
+    var le = P.filter(function (p) { return p.e; }).map(function (p, i) { return (i ? 'L' : 'M') + X(p).toFixed(1) + ' ' + Y(p.e).toFixed(1); }).join('');
+    var ar = lw + 'L' + X(P[P.length - 1]).toFixed(1) + ' ' + (H - pb) + 'L' + X(P[0]).toFixed(1) + ' ' + (H - pb) + 'Z';
+    var dt = function (d) { return new Date(d + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }); };
+    var ende = P[P.length - 1], gut = ende.w >= P[0].w;
+    var html = '<defs><linearGradient id="dpg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + (gut ? '#4fd1c5' : '#ff7a7a') + '" stop-opacity=".35"/><stop offset="1" stop-color="' + (gut ? '#4fd1c5' : '#ff7a7a') + '" stop-opacity="0"/></linearGradient></defs>' +
+      '<line class="grid" x1="0" x2="' + W + '" y1="' + (H - pb) + '" y2="' + (H - pb) + '"/>' +
+      '<path class="ar" d="' + ar + '"/>' + (le ? '<path class="ein" d="' + le + '"/>' : '') + '<path class="ln" d="' + lw + '" style="stroke:' + (gut ? 'var(--accent)' : '#ff7a7a') + '"/>' +
+      '<circle class="pt" cx="' + X(ende).toFixed(1) + '" cy="' + Y(ende.w).toFixed(1) + '" r="3.5"/>' +
+      '<text x="' + pl + '" y="' + (H - 4) + '">' + dt(P[0].d) + '</text><text x="' + (W - pr) + '" y="' + (H - 4) + '" text-anchor="end">' + dt(ende.d) + '</text>' +
+      '<text x="' + pl + '" y="10">' + eur(Math.max.apply(null, P.map(function (p) { return p.w; }))) + ' max</text>' +
+      '<text x="' + (W - pr) + '" y="10" text-anchor="end">— Wert  ┅ eingezahlt</text>' +
+      '<line id="dp-cur" class="grid" x1="0" x2="0" y1="' + pt + '" y2="' + (H - pb) + '" style="display:none"/>';
+    svg.innerHTML = html;
+    var diff = ende.w - P[0].w;
+    $('t-dp').innerHTML = 'Im Zeitraum <span class="' + cls(diff) + '">' + (diff > 0 ? '+' : '') + eur(diff, 2) + '</span> · tippe ins Diagramm';
+    svg.onclick = function (ev) {
+      var r = svg.getBoundingClientRect(), x = (ev.clientX - r.left) * W / r.width, best = P[0];
+      P.forEach(function (p) { if (Math.abs(X(p) - x) < Math.abs(X(best) - x)) best = p; });
+      var c = $('dp-cur'); c.setAttribute('x1', X(best)); c.setAttribute('x2', X(best)); c.style.display = '';
+      var g = best.e ? best.w - best.e : null;
+      $('t-dp').innerHTML = dt(best.d) + ': <b>' + eur(best.w, 2) + '</b>' + (g != null ? ' · <span class="' + cls(g) + '">' + (g > 0 ? '+' : '') + eur(g, 2) + '</span> G/V' : '');
+    };
+  }
+  function dpCharts(d) {
+    var dp = (d && d.depot) || {}, P = (dp.positionen || []).filter(function (p) { return p.wert > 0; });
+    $('dp-charts').hidden = !P.length; if (!P.length) return;
+    dpVerlauf();
+    P = P.slice().sort(function (a, b) { return b.wert - a.wert; });
+    var sum = P.reduce(function (a, p) { return a + p.wert; }, 0), a0 = -Math.PI / 2, svg = '', leg = '';
+    P.forEach(function (p, i) {
+      var f = DP_FARB[i % DP_FARB.length], anteil = p.wert / sum, a1 = a0 + anteil * Math.PI * 2;
+      if (P.length === 1) svg += '<circle cx="60" cy="60" r="44" fill="none" stroke="' + f + '" stroke-width="22"/>';
+      else {
+        var big = anteil > 0.5 ? 1 : 0, r = 44;
+        svg += '<path d="M' + (60 + r * Math.cos(a0)).toFixed(2) + ' ' + (60 + r * Math.sin(a0)).toFixed(2) + ' A' + r + ' ' + r + ' 0 ' + big + ' 1 ' + (60 + r * Math.cos(a1)).toFixed(2) + ' ' + (60 + r * Math.sin(a1)).toFixed(2) + '" fill="none" stroke="' + f + '" stroke-width="22"/>';
+      }
+      a0 = a1;
+      leg += '<li><i style="background:' + f + '"></i><span>' + esc(p.name) + '</span><b>' + Math.round(anteil * 100) + ' %</b></li>';
+    });
+    svg += '<text x="60" y="58" text-anchor="middle" style="fill:var(--text,#e6edf3);font-size:13px;font-weight:600">' + eur(sum) + '</text><text x="60" y="73" text-anchor="middle" style="fill:var(--muted);font-size:9px">' + P.length + ' Positionen</text>';
+    $('c-dp-pie').innerHTML = svg; $('dp-leg').innerHTML = leg;
+    var G = P.filter(function (p) { return p.gv != null; }).sort(function (a, b) { return b.gv - a.gv; });
+    var mx = Math.max.apply(null, G.map(function (p) { return Math.abs(p.gv); }).concat([0.01]));
+    $('dp-gvl').innerHTML = G.map(function (p) {
+      var w = Math.abs(p.gv) / mx * 50, pos = p.gv >= 0;
+      return '<div class="r"><span>' + esc(p.name) + '</span><div class="b"><i style="' + (pos ? 'left:50%' : 'right:50%') + ';width:' + w.toFixed(1) + '%;background:' + (pos ? '#5fd38d' : '#ff7a7a') + '"></i></div><b class="' + cls(p.gv) + '">' + (p.gv > 0 ? '+' : '') + eur(p.gv, 2) + '</b></div>';
+    }).join('');
+  }
+  document.getElementById('dp-seg').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    dpTage = Number(b.dataset.t); store('jarvis_dp_tage', String(dpTage));
+    this.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    dpVerlauf();
+  });
+  document.querySelectorAll('#dp-seg button').forEach(function (x) { x.setAttribute('aria-pressed', Number(x.dataset.t) === dpTage ? 'true' : 'false'); });
   function delBtn(kind, id) { return '<button class="del" type="button" data-kind="' + kind + '" data-id="' + id + '" aria-label="Löschen">✕</button>'; }
   function renderDepot(d) {
     var dp = d.depot || {}, P = dp.positionen || [];
@@ -2119,6 +2245,7 @@
     $('depot').innerHTML = P.length ? P.map(function (p) {
       return '<li><div class="main"><div>' + esc(p.name) + '</div><div class="sub">' + p.stueck.toLocaleString('de-DE') + ' Stk · Kauf ' + eur(p.kaufkurs, 2) + ' · jetzt ' + (p.preis != null ? eur(p.preis, 2) : 'kein Kurs') + ' <span class="' + cls(p.tag_prozent) + '">' + pct(p.tag_prozent) + '</span></div></div><div class="val" style="text-align:right">' + (p.wert != null ? eur(p.wert, 2) : '–') + '<div class="sub ' + cls(p.gv) + '">' + (p.gv != null ? (p.gv > 0 ? '+' : '') + eur(p.gv, 2) : '') + '</div></div>' + delBtn('pos', p.id) + '</li>';
     }).join('') : '<li class="empty">Noch keine Positionen. Unten hinzufügen.</li>';
+    try { dpCharts(d); } catch (e) {}
     var W = d.watchlist || [];
     $('watch').innerHTML = W.length ? W.map(function (p) {
       return '<li><div class="main"><div>' + esc(p.name) + '</div><div class="sub">' + esc(p.symbol || 'kein Kürzel gefunden') + '</div></div><div class="val" style="text-align:right">' + (p.preis != null ? eur(p.preis, 2) : '–') + '<div class="sub ' + cls(p.tag_prozent) + '">' + pct(p.tag_prozent) + '</div></div>' + delBtn('pos', p.id) + '</li>';
@@ -2152,7 +2279,7 @@
     b.closest('li').style.opacity = '.4';
     depotCall({ aktion: b.dataset.kind === 'pos' ? 'pos_del' : 'trade_del', id: Number(b.dataset.id) });
   });
-  try { var dc = JSON.parse(store('jarvis_depot') || 'null'); if (dc) renderDepot(dc); } catch (e) {}
+  try { var dc = JSON.parse(store('jarvis_depot') || 'null'); if (dc) { dLast = dc; renderDepot(dc); } } catch (e) {}
   setInterval(function () { if (document.visibilityState === 'visible' && $('v-trade').classList.contains('on')) depotCall(); }, 2 * 60000);
 
   // ---------- Start ----------
