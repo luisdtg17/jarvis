@@ -318,6 +318,27 @@
   .ab-h span { text-transform: none; letter-spacing: 0; }
   .ab-up { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
   .ab-up .btn { cursor: pointer; } .ab-up span { font-size: 12px; color: var(--muted); }
+  /* ---------- Claude-Aufträge im Jarvis-Tab ---------- */
+  #auftraege { display: flex; flex-direction: column; gap: 6px; max-height: 28vh; overflow-y: auto; margin-bottom: 4px; }
+  #v-chat > * { flex-shrink: 0; }
+  #v-chat > #log { flex: 1 1 auto; min-height: 56px; }
+  #v-chat.hat-af > #log { min-height: 0; }
+  #v-chat.hat-af .af .t small { max-height: 4.6em; }
+  #v-chat.hat-af #orb { width: min(52vw, 230px); height: min(52vw, 230px); margin: -8px 0 -10px; }
+  #auftraege:empty { display: none; }
+  .af { border: 1px solid rgba(95,180,255,.35); background: rgba(12,22,40,.75); border-radius: 8px; padding: 8px 10px; font-size: 13px; display: flex; gap: 8px; align-items: center; }
+  .af .t { flex: 1; min-width: 0; }
+  .af .t b { display: block; font-size: 10px; letter-spacing: .1em; color: #9fd0ff; font-family: ui-monospace, Menlo, monospace; font-weight: 600; }
+  .af .t span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #dceaff; }
+  .af .t small { display: block; color: var(--muted); font-size: 12px; white-space: pre-wrap; max-height: 7.5em; overflow: auto; margin-top: 2px; }
+  .af button { flex: none; border-radius: 7px; border: 1px solid rgba(95,180,255,.4); background: rgba(95,180,255,.1); color: #dceaff; font-size: 12px; padding: 6px 9px; }
+  .af button.ja { background: #1f8f5a; border-color: #1f8f5a; color: #fff; }
+  .af .spin { width: 14px; height: 14px; flex: none; border-radius: 50%; border: 2px solid rgba(95,180,255,.25); border-top-color: #7fc4ff; animation: afspin 1s linear infinite; }
+  @keyframes afspin { to { transform: rotate(360deg); } }
+  .af.frei { border-color: #b8923a; background: rgba(60,45,10,.55); flex-wrap: wrap; }
+  .af.frei .t b { color: #f6c26b; }
+  .af .btns { display: flex; gap: 6px; width: 100%; justify-content: flex-end; }
+  .msg.cl { border-color: rgba(95,180,255,.45); }
 </style>
 </head>
 <body>
@@ -478,6 +499,7 @@
   <button type="button" data-w="termine"><svg viewBox="0 0 24 24"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/></svg>TERMINE</button>
   <button type="button" data-tab="v-einkauf"><svg viewBox="0 0 24 24"><path d="M4 6v12M7 6v12M10 6v12M14 6v12M17 6v12M20 6v12"/></svg>SCAN</button>
 </div>
+<div id="auftraege" aria-live="polite"></div>
 <div id="log"><div class="msg sys">Tippe auf den Kreis und sprich. Nochmal tippen beendet das Gespräch.</div></div>
 <form id="form" autocomplete="off">
   <input id="text" placeholder="Oder hier schreiben …" enterkeyhint="send" aria-label="Nachricht an Jarvis">
@@ -750,6 +772,7 @@
       var data = await res.json();
       if (data.frage && payload.audio) add('me', data.frage);
       if (data.antwort) add('jv', clean(data.antwort));
+      try { window.dispatchEvent(new CustomEvent('jarvis-geantwortet')); } catch (e) {}
       if (active || payload.fromVoice) {
         if (data.audio) await playServer(data.audio);
         else if (data.antwort && hasTTS) await speakDevice(data.antwort);
@@ -938,6 +961,9 @@
     listen();
   });
 
+  window.addEventListener('jarvis-senden', function (e) { var t = String(e.detail || '').trim(); if (!t || busy) return; add('me', t); unlockAudio(); send({ text: t, fromVoice: false }); });
+  window.addEventListener('jarvis-zeigen', function (e) { var d = e.detail || {}; var el = add('jv', d.text || ''); if (d.cls) el.classList.add(d.cls); });
+  window.addEventListener('jarvis-geantwortet', function () {});
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var t = textIn.value.trim(); if (!t || busy) return;
@@ -1479,12 +1505,19 @@
     var K = abKopf(rows, ['artikel', 'verkauft am', 'gewinn']);
     if (K) {
       var h = K.h, ix = function (w, ab) { return h.indexOf(w, ab || 0); };
-      var cVk = ix('verkauft am'), c = { art: ix('artikel'), kauf: ix('gekauft am'), ek: ix('retail netto'), vk: cVk, vs: ix('versand', cVk), geb: ix('gebühren'), um: ix('resell netto'), gw: ix('gewinn'), pf: ix('verkaufsplattform') };
-      var g = {}, n = 0, ohneDatum = 0;
+      var cVk = ix('verkauft am'), c = { art: ix('artikel'), kauf: ix('gekauft am'), ek: ix('retail netto'), vk: cVk, vs: ix('versand', cVk), geb: ix('gebühren'), um: ix('resell netto'), gw: ix('gewinn'), pf: ix('verkaufsplattform'), ean: ix('sku/ean') };
+      var g = {}, n = 0, ohneDatum = 0, lagerEk = {};
       for (var i = K.i + 1; i < rows.length; i++) {
         var r = rows[i], art = String(r[c.art] == null ? '' : r[c.art]).trim(); if (!art) continue;
         var kd = abDatum(r[c.kauf]), d = abDatum(r[c.vk], kd ? kd.slice(0, 4) : null);
-        if (!d) { if (r[c.vk] != null && String(r[c.vk]).trim() && !/retour|eigen|^-$|alter/i.test(String(r[c.vk]))) ohneDatum++; continue; }
+        if (!d) {
+          var vkTxt = String(r[c.vk] == null ? '' : r[c.vk]).trim();
+          if (vkTxt && !/retour|eigen|^-$|alter/i.test(vkTxt)) ohneDatum++;
+          // noch nicht verkauft: EK merken (für die Live-Schätzung)
+          var ekn = abNum(r[c.ek]);
+          if (!vkTxt && ekn) { var lk = art.toLowerCase().replace(/\s+/g, ' '), le = lagerEk[lk] = lagerEk[lk] || { typ: 'ek', monat: '', artikel: art, anzahl: 0, ek_netto: 0, ean: '' }; le.anzahl++; le.ek_netto = r2(le.ek_netto + ekn); if (!le.ean && c.ean >= 0 && r[c.ean]) le.ean = String(r[c.ean]).trim(); }
+          continue;
+        }
         var mo = d.slice(0, 7), key = mo + '|' + art.toLowerCase().replace(/\s+/g, ' ');
         var x = g[key] = g[key] || { typ: 'verkauf', monat: mo, artikel: art, anzahl: 0, umsatz_netto: 0, ek_netto: 0, gebuehren: 0, gewinn: 0, pf: {}, ohne_gewinn: 0 };
         var gw = typeof r[c.gw] === 'number' && isFinite(r[c.gw]) ? r[c.gw] : null;
@@ -1495,7 +1528,8 @@
         n++;
       }
       var out = Object.keys(g).map(function (k) { var x = g[k]; x.plattform = Object.keys(x.pf).join(', '); delete x.pf; ['umsatz_netto', 'ek_netto', 'gebuehren', 'gewinn'].forEach(function (f) { x[f] = r2(x[f]); }); return x; });
-      return { art: 'verkauf', zeilen: out, stueck: n, ohne_datum: ohneDatum };
+      var eks = Object.keys(lagerEk).map(function (k) { return lagerEk[k]; });
+      return { art: 'verkauf', zeilen: out.concat(eks), stueck: n, ohne_datum: ohneDatum, ek_zeilen: eks.length };
     }
     K = abKopf(rows, ['ek netto', 'dauer']);
     if (K) {
@@ -1728,6 +1762,57 @@
   }
   window.addEventListener('jarvis-frage', function (e) { try { hudIntent(e.detail); } catch (x) {} });
 
+
+  // ---------- Claude-Aufträge: laufend, Freigaben, Ergebnisse ----------
+  var CB_URL = 'https://luisdtg16.app.n8n.cloud/webhook/jarvis-claude', cbTimer = null, cbLetzt = null, cbLaeuft = false;
+  function cbGesehen() { try { return JSON.parse(store('jarvis_cb_seen') || '[]'); } catch (e) { return []; } }
+  async function cbCall(b) {
+    var r = await fetch(CB_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ key: KEY }, b)) });
+    return r.json();
+  }
+  function cbRender(L) {
+    var h = '';
+    (L.freigaben || []).forEach(function (f) {
+      h += '<div class="af frei" data-id="' + f.id + '"><div class="t"><b>🟡 FREIGABE NÖTIG</b><span>' + esc(f.titel) + '</span>' + (f.details ? '<small>' + esc(f.details) + '</small>' : '') + '</div><div class="btns"><button type="button" data-f="nein">❌ Abbrechen</button><button type="button" class="ja" data-f="ja">✅ Ausführen</button></div></div>';
+    });
+    (L.laufend || []).forEach(function (a) {
+      h += '<div class="af" data-id="' + a.id + '">' + (a.nacht ? '<span>🌙</span>' : '<i class="spin"></i>') + '<div class="t"><b>' + (a.nacht ? 'NACHTSCHICHT · GEPLANT' : (a.status === 'läuft' ? 'CLAUDE ARBEITET' : 'WARTET AUF DEN MAC')) + '</b><span>' + esc(a.frage) + '</span></div><button type="button" data-stop="1">Stopp</button></div>';
+    });
+    $('auftraege').innerHTML = h;
+    $('v-chat').classList.toggle('hat-af', !!h);
+    // fertige Ergebnisse einmalig in den Chat
+    var seen = cbGesehen(), neu = (L.fertig || []).filter(function (a) { return seen.indexOf(a.id) < 0; }).reverse();
+    if (cbLetzt === null && !seen.length) { store('jarvis_cb_seen', JSON.stringify((L.fertig || []).map(function (a) { return a.id; }))); }
+    else neu.forEach(function (a) {
+      window.dispatchEvent(new CustomEvent('jarvis-zeigen', { detail: { text: (a.status === 'fallback' ? '🤖 Gemini (für Claude): ' : '🧠 Claude: ') + String(a.antwort || '').replace(/<[^>]+>/g, ''), cls: 'cl' } }));
+      seen.push(a.id);
+    });
+    if (neu.length) store('jarvis_cb_seen', JSON.stringify(seen.slice(-60)));
+    cbLetzt = L;
+  }
+  async function cbLaden() {
+    if (!KEY || cbLaeuft) return; cbLaeuft = true;
+    try { var L = await cbCall({ aktion: 'liste' }); if (L && L.ok) cbRender(L); } catch (e) {}
+    cbLaeuft = false;
+    clearTimeout(cbTimer);
+    var aktiv = cbLetzt && ((cbLetzt.laufend || []).some(function (a) { return !a.nacht; }));
+    if (aktiv && document.visibilityState === 'visible') cbTimer = setTimeout(cbLaden, 10000);
+  }
+  $('auftraege').addEventListener('click', async function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var box = b.closest('.af'), id = Number(box.dataset.id);
+    b.disabled = true;
+    try {
+      if (b.dataset.stop) { await cbCall({ aktion: 'abbrechen', id: id }); box.remove(); return; }
+      var ja = b.dataset.f === 'ja';
+      var r = await cbCall({ aktion: 'freigabe', id: id, ok: ja });
+      box.remove();
+      if (r && r.ok && ja) window.dispatchEvent(new CustomEvent('jarvis-senden', { detail: '✅ Freigegeben: ' + r.titel + (r.details ? ' – ' + r.details : '') }));
+    } catch (err) { b.disabled = false; }
+  });
+  window.addEventListener('jarvis-geantwortet', function () { setTimeout(cbLaden, 2500); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') cbLaden(); });
+  setTimeout(cbLaden, 1500);
   // ---------- Geld-Überblick + USt ----------
   var ustSicht = 'vormonat';
   function renderGeld(d) {
