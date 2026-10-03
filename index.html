@@ -265,7 +265,7 @@
   #hud-clock { display: block; font-size: 22px; font-weight: 600; color: #e6f1ff; letter-spacing: .04em; text-shadow: 0 0 12px rgba(95,180,255,.55); font-variant-numeric: tabular-nums; }
   .hud-r span { display: block; font-size: 9.5px; color: rgba(95,180,255,.75); letter-spacing: .1em; }
   #v-chat #stage { padding: 0 0 4px; }
-  #v-chat #orb { width: min(70vw, 300px); height: min(70vw, 300px); }
+  #v-chat #orb { width: min(96vw, 430px); height: min(96vw, 430px); margin: -14px 0 -18px; }
   #v-chat #status { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(95,180,255,.85); }
   .hud-fin { position: relative; margin: 0 auto 8px; width: min(100%, 420px); border: 1px solid rgba(95,180,255,.35); background: linear-gradient(180deg, rgba(20,45,90,.35), rgba(8,14,26,.6)); border-radius: 6px; padding: 8px 11px 7px; cursor: pointer; box-shadow: 0 0 18px rgba(60,140,255,.12) inset; }
   .hud-fin::before, .hud-fin::after { content: ""; position: absolute; width: 10px; height: 10px; border: 0 solid var(--hud); }
@@ -539,18 +539,17 @@
   (function () {
     var cv = document.getElementById('orbc'); if (!cv || !cv.getContext) return;
     var ctx = cv.getContext('2d');
-    // Kontinente: weiches Rauschen auf der Kugel
-    function land(x, y, z) {
-      var v = Math.sin(2.1 * x + 0.7) * Math.cos(1.7 * y - 0.3) + Math.sin(2.6 * z + 1.9) * Math.cos(2.2 * x + 0.4) * 0.9 +
-        Math.sin(4.3 * y + 3.1 * z + 0.5) * 0.45 + Math.cos(5.2 * x - 2.4 * z) * 0.3;
-      return v;
-    }
-    var P = [], N = 5200;
+    // Kontinente: echte Weltkarte (Natural Earth, vorberechnet je Punkt)
+    var LAND = atob('///9v5/X8/N7ft/P+/k9P+/ltbS0l5byUlJKikgJCSkgJUSEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAEAAAAAAAQAgAAAAgAAAAAAAgEAAAAAAAQAAAAAAgQAAAAACAEAAAAACAQBAAAQAgAAAAAQCAAAACAAAAQAACAQAgAEQIAACAIAACAAAASBAAAQIAAEQICACQIAAKBAQAqBAQASIAAFRICAGRIGAKBARAqJAQASIAgFRICIERIGAKBAVAqJARAyIAgFRICoERIGIKBAVAqJAVAiKAhFRICoERYGIKBAFIqJAVACKAhFRIApERIGoIBQFIqJAFICIAhFQKApARIEoIBQFoqBAFICIAlBQKApERQEoKBEFoqBQFISIAlBQIApAQYEoCAEFoKBAFISAAlAQAgpAQQEoCAEFoKIEFISIAlARAgpEQQmoGAEFoqAEVIyCAlAQAgpEQQkoGAEVoqAEFIyKAlEQAgpExQGoCAUVoqAAFICKClERCApAQQGoCAQVoKJQFACKClARCApARSGoAAQFoCIQFICCSlAACApARSEoAAQVoCAQFACKQlJACCpIQSEpIASFhIBQFBCCQlJQCAoJQaEpIASVlKBQFBCCQkJACAoJASGhKAQFlICQEBACQkJBCCgoASGhKASElILQUBYCAkJRCCgrASGhJAQUlYAQUFYCgkJJCCgrAWGhrASUlJAwVFICgkJJCSgpIWGhrASVlJIyUFLKikpJKSgpJWWgpByUlZJyUFIKiklJKSkpBeWkpJyUkYJyUlLOiklJOSkjJeWkpJSUkYJyUkbOyklZOSkjZOWkrJyVE7JiUkbMigl5MSsj5MWkjJgVEfJiVkbMiwk5MSsjZuWkjJiTk7JiRkaMyglZOScjZuWMnByVM7JyRkyMihk5OSsmZuW8mJwVs3JyVsyOyVk5Oytm5eS8mJ2Xs3JyVs7O2Vk5Oy9n5+SsnJ2Xs3J2Ts7O2Uk5Py9n5+2EnJmTM3NuQs7O6Yk5My1n5tzU3J2S03Njau5Pzam7PbX3/9bU3p/bU39/an/d7am/f7a33vbZXDubZ0bCxIiZgRsDcACuTMgJISAgJASEBBAAAAA=');
+    var P = [], N = 7000;
     for (var i = 0; i < N; i++) {
       var y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), th = i * 2.399963, x = Math.cos(th) * r, z = Math.sin(th) * r;
-      var l = land(x, y, z) + 0.35 * Math.sin(7.1 * x + 5.3 * y - 3.7 * z) > 0.42 && Math.abs(y) < 0.9;
-      if (l || i % 5 === 0) P.push([x, y, z, l ? 1 : 0, Math.random() * 6.28]);
+      var l = (LAND.charCodeAt(i >> 3) >> (i & 7)) & 1;
+      if (l || i % 6 === 0) P.push([x, y, z, l ? 1 : 0, Math.random() * 6.28]);
     }
+    // Dein Standort (Mühlacker): Breite/Länge -> Kugel (x = cos φ cos λ, y = -sin φ, z = -cos φ sin λ)
+    var HOME_LAT = 48.95 * Math.PI / 180, HOME_LON = 8.84 * Math.PI / 180;
+    var HOME = [Math.cos(HOME_LAT) * Math.cos(HOME_LON), -Math.sin(HOME_LAT), -Math.cos(HOME_LAT) * Math.sin(HOME_LON)];
     // Gradnetz
     var G = [];
     for (var m = 0; m < 12; m++) { var lo = m * Math.PI / 6; for (var k = 0; k <= 64; k++) { var la = -Math.PI / 2 + k * Math.PI / 64; G.push([Math.cos(la) * Math.cos(lo), Math.sin(la), Math.cos(la) * Math.sin(lo)]); } }
@@ -558,7 +557,7 @@
     // Satelliten auf schrägen Bahnen
     var S = [{ inc: 0.5, sp: 0.0009, ph: 0, rr: 1.32 }, { inc: -0.9, sp: -0.0006, ph: 2, rr: 1.46 }, { inc: 1.25, sp: 0.0012, ph: 4, rr: 1.22 }];
     var COL = { idle: [86, 170, 255], standby: [86, 170, 255], listening: [64, 226, 210], thinking: [255, 196, 96], speaking: [130, 180, 255] };
-    var cur = COL.idle.slice(), lvl = 0, rotY = 0.6, rotX = 0.38, vY = 0, vX = 0, drag = null, lastAct = 0;
+    var cur = COL.idle.slice(), lvl = 0, rotY = HOME_LON + Math.PI / 2 + 0.25, rotX = -0.55, vY = 0, vX = 0, drag = null, lastAct = 0;
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     function size() { var d = Math.min(window.devicePixelRatio || 1, 2), w = cv.clientWidth || 300; cv.width = w * d; cv.height = w * d; }
     size(); window.addEventListener('resize', size);
@@ -584,14 +583,14 @@
       return .05 + .03 * Math.sin(t / 900);
     }
     function frame(t) {
-      var W = cv.width, H = cv.height, cx = W / 2, cy = H / 2, R = W * 0.32;
+      var W = cv.width, H = cv.height, cx = W / 2, cy = H / 2, R = W * 0.335;
       var tgt = COL[state] || COL.idle; for (var k = 0; k < 3; k++) cur[k] += (tgt[k] - cur[k]) * 0.06;
       lvl += (amp(t) - lvl) * 0.18;
       if (!drag) {
         var auto = reduce ? 0 : (state === 'thinking' ? 0.014 : state === 'speaking' ? 0.008 : 0.0035);
         vY *= 0.95; vX *= 0.93;
         rotY += vY + (performance.now() - lastAct > 1200 ? auto : 0);
-        rotX += vX; rotX += (0.38 - rotX) * (performance.now() - lastAct > 2500 ? 0.01 : 0); rotX = Math.max(-1.3, Math.min(1.3, rotX));
+        rotX += vX; rotX += (-0.55 - rotX) * (performance.now() - lastAct > 2500 ? 0.01 : 0); rotX = Math.max(-1.3, Math.min(1.3, rotX));
       }
       var c = cur.map(Math.round).join(','), lw = Math.max(1, W / 420);
       ctx.clearRect(0, 0, W, H);
@@ -652,6 +651,33 @@
         ctx.fillStyle = 'rgba(' + c + ',' + (.25 * sa) + ')'; ctx.beginPath(); ctx.arc(q3[0], q3[1], lw * 6, 0, 6.283); ctx.fill();
       }
       ctx.restore();
+      // Mini-Mensch an deinem Standort – dreht sich mit der Kugel
+      var hb = pr(HOME[0], HOME[1], HOME[2], R), ht = pr(HOME[0] * 1.2, HOME[1] * 1.2, HOME[2] * 1.2, R);
+      if (hb[2] > 0.02) {
+        var al = Math.min(1, hb[2] * 4), full = R * 0.3;
+        var ux = ht[0] - hb[0], uy = ht[1] - hb[1] - full * 0.45, ul = Math.sqrt(ux * ux + uy * uy) || 1;
+        ux /= ul; uy /= ul; var nx = -uy, ny = ux, L = full * (0.8 + 0.2 * hb[2]);
+        var at = function (f, s2) { return [hb[0] + ux * L * f + nx * L * s2, hb[1] + uy * L * f + ny * L * s2]; };
+        // Puls am Boden
+        var pp = reduce ? 0.5 : (t / 1600) % 1;
+        ctx.strokeStyle = 'rgba(255,255,255,' + (al * (1 - pp) * .8).toFixed(2) + ')'; ctx.lineWidth = lw * 1.3;
+        ctx.beginPath(); ctx.arc(hb[0], hb[1], L * (0.12 + pp * 0.55), 0, 6.283); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,' + al + ')'; ctx.beginPath(); ctx.arc(hb[0], hb[1], lw * 2, 0, 6.283); ctx.fill();
+        // Figur
+        ctx.save(); ctx.shadowColor = 'rgba(' + c + ',1)'; ctx.shadowBlur = lw * 10;
+        ctx.strokeStyle = 'rgba(235,248,255,' + al + ')'; ctx.fillStyle = 'rgba(235,248,255,' + al + ')';
+        ctx.lineWidth = Math.max(lw * 2.2, L * 0.085); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        var hip = at(0.42, 0), sh = at(0.74, 0), wave = reduce ? 0 : Math.sin(t / 260) * 0.12;
+        var seg = function (a1, a2) { ctx.beginPath(); ctx.moveTo(a1[0], a1[1]); ctx.lineTo(a2[0], a2[1]); ctx.stroke(); };
+        seg(at(0, -0.14), hip); seg(at(0, 0.14), hip); seg(hip, sh);
+        seg(sh, at(0.5, -0.2)); seg(sh, at(1.0 + wave, 0.26));
+        var hd = at(0.9, 0); ctx.beginPath(); ctx.arc(hd[0], hd[1], L * 0.12, 0, 6.283); ctx.fill();
+        ctx.restore();
+        // Beschriftung
+        ctx.font = '700 ' + Math.round(W * 0.03) + 'px ui-monospace, Menlo, monospace';
+        ctx.fillStyle = 'rgba(' + c + ',' + al + ')'; ctx.textBaseline = 'middle';
+        var lb = at(0.95, 0.42); ctx.fillText('BOSS', lb[0], lb[1]);
+      }
       // Pegel-Ring beim Sprechen/Zuhören
       if (lvl > 0.12) {
         ctx.strokeStyle = 'rgba(' + c + ',' + Math.min(.8, lvl).toFixed(2) + ')'; ctx.lineWidth = lw * 2;
