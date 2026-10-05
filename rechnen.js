@@ -222,6 +222,9 @@ const findNx = o => {
 };
 
 const sales = [];
+// Excel-Verkäufe (je Stück eine Zeile, „Bestellnummer“) – haben Vorrang beim Gewinn
+const xlVk = {};
+try { for (const r of $('D Excel').all().map(i => i.json)) if (r.typ === 'vk' && r.bestellnr) (xlVk[String(r.bestellnr).trim()] || (xlVk[String(r.bestellnr).trim()] = [])).push(r); } catch (e) {}
 const orders = get('D Verkäufe').filter(o => o.order_unit_id && o.order_created_at && !/cancel|storn|return/i.test(String(o.status || '')));
 for (const o of orders) {
   const q = Number(o.quantity) || 1;
@@ -233,8 +236,15 @@ for (const o of orders) {
   const ekN = ekXl != null ? ekXl / 1.19 : (m && m.ek_netto != null ? m.ek_netto : (ekB != null ? ekB / 1.19 : null));
   const versand = m ? (Number(m.versandkosten) || 0) : 0;
   const sonst = m ? (Number(m.sonstige_kosten) || 0) : 0;
-  const gewinn = ekN == null ? null : auszNetto - ekN * q - versand / 1.19 - sonst / 1.19;
-  sales.push({ tag: tag(o.order_created_at), plattform: 'Kaufland', artikel: String(o.product_title || '').split(',')[0].slice(0, 50), umsatz: brutto, gewinn, versand_bekannt: !!m, versand, status: o.status, order_id: o.order_id });
+  let gewinn = ekN == null ? null : auszNetto - ekN * q - versand / 1.19 - sonst / 1.19;
+  let versandX = versand, quelle = m ? 'nexus' : null;
+  const xv = (xlVk[String(o.order_id)] || []).shift();
+  if (xv && xv.gewinn != null && !isNaN(Number(xv.gewinn))) {
+    // Excel-Gewinn; Kaufland-Gebühr steht dort als 0 → aus der Kaufland-Auszahlung abziehen
+    const gebuehr = Number(xv.gebuehren) > 0 ? 0 : (o.revenue_gross != null ? (brutto - Number(o.revenue_gross)) / 1.19 : 0);
+    gewinn = Number(xv.gewinn) - gebuehr; versandX = Number(xv.versand) || 0; quelle = 'excel';
+  }
+  sales.push({ tag: tag(o.order_created_at), plattform: 'Kaufland', artikel: String(o.product_title || '').split(',')[0].slice(0, 50), umsatz: brutto, gewinn, versand_bekannt: !!m, versand: versandX, status: o.status, order_id: o.order_id, quelle });
 }
 nx.forEach((v, k) => {
   if (used.has(k)) return;
