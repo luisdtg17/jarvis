@@ -102,6 +102,70 @@
   .bar-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 12px; margin: -4px 0 12px; }
   .bar-row button { background: var(--panel); border: 1px solid var(--line); color: var(--text); border-radius: 999px; padding: 5px 12px; font-size: 12px; }
 
+  /* ---------- Zukunfts-Look für alle Tabs (gleiche Bedienung, nur anderes Aussehen) ---------- */
+  :root { --hud: #5fb4ff; --hud-dim: rgba(95,180,255,.28); --glas: linear-gradient(180deg, rgba(16,34,64,.55), rgba(8,13,24,.85)); }
+  .view:not(#v-chat)::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(80% 45% at 50% 0%, rgba(40,92,190,.22), rgba(7,9,13,0) 70%),
+      repeating-linear-gradient(0deg, rgba(95,180,255,.035) 0 1px, transparent 1px 34px), repeating-linear-gradient(90deg, rgba(95,180,255,.035) 0 1px, transparent 1px 34px); }
+  .view:not(#v-chat) > * { position: relative; z-index: 1; }
+  .view:not(#v-chat) .card:not(.tr-card), .view:not(#v-chat) .kpi { background: var(--glas); border: 1px solid var(--hud-dim); border-radius: 8px; position: relative;
+    box-shadow: 0 0 22px rgba(60,140,255,.08) inset, 0 0 14px rgba(60,140,255,.06); }
+  .view:not(#v-chat) .card:not(.tr-card)::before, .view:not(#v-chat) .card:not(.tr-card)::after, .view:not(#v-chat) .kpi::before, .view:not(#v-chat) .kpi::after { content: ""; position: absolute; width: 11px; height: 11px; border: 0 solid var(--hud); pointer-events: none; }
+  .view:not(#v-chat) .card:not(.tr-card)::before, .view:not(#v-chat) .kpi::before { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; border-top-left-radius: 8px; }
+  .view:not(#v-chat) .card:not(.tr-card)::after, .view:not(#v-chat) .kpi::after { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: 8px; }
+  .view:not(#v-chat) .card h3 { color: #9fd0ff; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; letter-spacing: .14em; text-shadow: 0 0 8px rgba(95,180,255,.35); }
+  .view:not(#v-chat) .kpi span { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; font-size: 11px; color: #8fb8e6; }
+  .view:not(#v-chat) .kpi b, .ea-kpi b, .wk b { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: -.01em; color: #eaf4ff; text-shadow: 0 0 10px rgba(95,180,255,.25); }
+  .view:not(#v-chat) .seg button[aria-pressed="true"] { box-shadow: 0 0 12px rgba(79,209,197,.45); }
+  .view:not(#v-chat) ul.list li { border-color: rgba(95,180,255,.14); }
+  nav.tabs { background: linear-gradient(180deg, rgba(8,14,26,.92), #05070b); border-top: 1px solid var(--hud-dim); box-shadow: 0 -6px 20px rgba(40,92,190,.12); }
+  nav.tabs button[aria-selected="true"] { color: #7fd8ff; text-shadow: 0 0 8px rgba(95,180,255,.6); }
+  nav.tabs button[aria-selected="true"] svg { filter: drop-shadow(0 0 5px rgba(95,180,255,.8)); }
+  @media (prefers-reduced-motion: no-preference) { .view.on:not(#v-chat) .card, .view.on:not(#v-chat) .kpi { animation: hudAuf .35s ease both; } }
+  @keyframes hudAuf { from { opacity: .4; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- Einnahmen & Ausgaben ---------- */
+  #card-ea .ab-top { flex-wrap: wrap; gap: 8px; }
+  .ea-nav { justify-content: center; margin: 4px 0 10px; }
+  .ea-kpi { display: flex; gap: 22px; margin: 2px 0 10px; }
+  .ea-kpi span { display: block; font-size: 13px; color: var(--muted); }
+  .ea-kpi b { font-size: 22px; font-variant-numeric: tabular-nums; }
+  #c-ea { height: 190px; touch-action: pan-y; }
+  #c-ea .e { fill: #34c759; } #c-ea .a { fill: #ff453a; } #c-ea .dim { opacity: .3; }
+  #c-ea .le { stroke: #34c759; } #c-ea .la { stroke: #ff453a; } #c-ea .le, #c-ea .la { fill: none; stroke-width: 2.5; stroke-linejoin: round; }
+  #c-ea .pe { fill: #34c759; } #c-ea .pa { fill: #ff453a; }
+  #c-ea .gh { stroke: rgba(255,255,255,.12); stroke-width: 1; } #c-ea .gv { stroke: rgba(255,255,255,.14); stroke-width: 1; stroke-dasharray: 3 4; }
+  #c-ea .band { fill: rgba(95,180,255,.08); } #c-ea .cur { stroke: rgba(255,255,255,.5); stroke-width: 1; }
+  #c-ea text { fill: var(--muted); font-size: 10.5px; }
+  .ea-typ { margin: 6px 0 4px; }
+  .ea-diff { display: flex; justify-content: flex-end; align-items: baseline; gap: 12px; border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px; }
+  .ea-diff span { color: var(--muted); font-size: 15px; } .ea-diff b { font-size: 19px; font-variant-numeric: tabular-nums; }
+  #ea-punkt { margin-left: auto; color: var(--text); font-variant-numeric: tabular-nums; }
+  .ea-leg { font-size: 11.5px; color: var(--muted); display: flex; gap: 12px; align-items: center; margin: 2px 0 6px; }
+  .ea-leg i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: -6px; } .ea-leg i.e { background: #34c759; } .ea-leg i.a { background: #ff453a; }
+
+  /* ---------- Kurs-Detail ---------- */
+  li.kurs { cursor: pointer; }
+  .ks-h b { display: block; font-size: 18px; } .ks-h span { color: var(--muted); font-size: 12px; }
+  .ks-preis { font-size: 30px; font-weight: 600; margin: 6px 0 8px; font-variant-numeric: tabular-nums; }
+  .ks-chart { min-height: 340px; margin: 0 -6px; }
+  .ks-alarm h4 { margin: 14px 0 6px; font-size: 14px; }
+  .ks-form { display: flex; gap: 8px; margin-top: 8px; }
+  .ks-form select, .ks-form input { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 9px 10px; font-size: 15px; }
+
+  /* ---------- Privat ---------- */
+  .pv-add { display: flex; gap: 8px; margin-top: 10px; }
+  .pv-add input { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 9px 10px; font-size: 15px; }
+  .pv-add input[type="date"] { flex: 0 0 132px; }
+  .pv-add .btn { padding: 9px 14px; }
+  .pv-tab { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  .pv-tab th { text-align: right; font-weight: 500; color: var(--muted); font-size: 11.5px; padding: 0 0 6px; }
+  .pv-tab th:first-child, .pv-tab td:first-child { text-align: left; }
+  .pv-tab td { text-align: right; padding: 7px 0; border-top: 1px solid var(--line); }
+  .pv-tab td small { display: block; color: var(--muted); font-size: 11px; }
+  .pv-tab tr.sum td { font-weight: 600; }
+  #pv-notiz { width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 10px; font: inherit; font-size: 15px; resize: vertical; }
+
   /* ---------- Trading ---------- */
   .seg { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
   .seg button { background: var(--panel); border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 6px 12px; font-size: 13px; }
@@ -112,7 +176,31 @@
   /* ---------- Depot-Diagramme ---------- */
   #dp-charts { margin: 10px 0 4px; }
   #dp-charts .seg { margin: 0 0 6px; }
-  #c-dp-verlauf .ln { fill: none; stroke: var(--accent); stroke-width: 2; }
+  /* Depot im Trade-Republic-Stil */
+  .tr-card { background: #000; border-color: #000; overflow: hidden; }
+  .tr-lbl { color: #8a8a8e; font-size: 15px; font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+  .tr-lbl em { font-style: normal; font-weight: 500; font-size: 12px; text-align: right; }
+  .tr-kopf { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+  .tr-wert { font-size: 30px; font-weight: 700; letter-spacing: -.01em; font-variant-numeric: tabular-nums; color: #fff; }
+  .tr-chg { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; color: #fff; }
+  .tr-chg small { display: block; color: #8a8a8e; font-weight: 500; font-size: 12px; }
+  .tr-sub { font-size: 12px; color: #8a8a8e; min-height: 16px; }
+  .tr-chart { width: calc(100% + 32px); height: 240px; display: block; margin: 8px -16px 4px; touch-action: none; cursor: crosshair; overflow: visible; }
+  .tr-chart .ln { fill: none; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+  .tr-chart .base { stroke: rgba(255,255,255,.45); stroke-width: 2; stroke-dasharray: 0 7; stroke-linecap: round; }
+  .tr-chart .glow { opacity: .25; transform-box: fill-box; transform-origin: center; animation: trPuls 1.8s ease-out infinite; }
+  @keyframes trPuls { 0% { transform: scale(.6); opacity: .45; } 100% { transform: scale(2.2); opacity: 0; } }
+  .tr-chart .cur { stroke: rgba(255,255,255,.45); stroke-width: 1; }
+  .tr-chart text { fill: var(--muted); font-size: 11px; }
+  @media (prefers-reduced-motion: reduce) { .tr-chart .glow { animation: none; } }
+  .tr-seg { display: flex; gap: 22px; margin: 22px 0 6px; }
+  .tr-seg button { background: none; border: 0; color: #6e6e73; font-weight: 700; font-size: 16px; padding: 4px 0; font-family: inherit; }
+  .tr-seg button[aria-pressed="true"] { color: #fff; }
+  /* Positionen wie bei Trade Republic */
+  #depot li.kurs .tr-pos-w { color: #8a8a8e; font-size: 13.5px; margin-top: 2px; }
+  #depot li.kurs .tr-pos-p { font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #depot li.kurs .tr-pos-p.up { color: #34c759; } #depot li.kurs .tr-pos-p.down { color: #ff453a; }
+  #c-dp-verlauf .ln-alt { fill: none; stroke: var(--accent); stroke-width: 2; }
   #c-dp-verlauf .ein { fill: none; stroke: #ff9f6b; stroke-width: 1.4; stroke-dasharray: 4 3; }
   #c-dp-verlauf .ar { fill: url(#dpg); }
   #c-dp-verlauf .pt { fill: var(--accent); }
@@ -270,7 +358,70 @@
   li.meld { cursor: pointer; }
   .sumrow > div:first-child, .sumrow > div:first-child div { text-align: left; }
   /* ---------- Jarvis-HUD ---------- */
-  #v-chat { position: relative; --hud: #5fb4ff; }
+  #v-chat { position: relative; --hud: #5fb4ff; overflow-x: hidden; }
+  /* Menü links neben der Kugel, Kugel größer */
+  #v-chat #stage { position: relative; }
+  #stage .hud-tools { position: absolute; left: 0; top: 46%; transform: translateY(-50%); flex-direction: column; gap: 6px; z-index: 3; overflow: visible; padding: 0; margin: 0; }
+  #stage .hud-tools button { flex: none; width: 52px; min-width: 0; padding: 6px 0 4px; font-size: 8px; background: rgba(8,16,30,.8); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+  #stage .hud-tools svg { width: 17px; height: 17px; }
+  #v-chat.hat-af #stage .hud-tools { position: static; transform: none; flex-direction: row; width: 100%; order: 3; }
+  #v-chat.hat-af #stage .hud-tools button { flex: 1 0 46px; width: auto; }
+  /* Fenster kommen aus der Kugel */
+  @keyframes ausKugel { from { transform: translate(var(--dx, 0), var(--dy, 0)) scale(.06); opacity: .15; } 55% { opacity: 1; } to { transform: none; opacity: 1; } }
+  #hudwin .hw.ausKugel { animation: ausKugel .42s cubic-bezier(.2,.8,.2,1); }
+  @keyframes kugelGibt { 0% { filter: none; } 40% { filter: drop-shadow(0 0 28px rgba(95,180,255,.95)) brightness(1.25); } 100% { filter: none; } }
+  #orb.gibt { animation: kugelGibt .5s ease; }
+  @media (prefers-reduced-motion: reduce) { #hudwin .hw.ausKugel, #orb.gibt { animation: none; } }
+  /* ===== Jarvis-Tab: Zukunfts-Effekte ===== */
+  #jv-boot { position: absolute; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; display: none; }
+  #v-chat.boot #jv-boot { display: block; }
+  #jv-boot .scan { position: absolute; left: -10%; right: -10%; height: 2px; top: 0; background: linear-gradient(90deg, transparent, #7fe3ff, #fff, #7fe3ff, transparent); box-shadow: 0 0 18px 4px rgba(95,200,255,.55); animation: jvScan 1.1s cubic-bezier(.5,0,.3,1) forwards; }
+  #jv-boot .ring { position: absolute; left: 50%; top: 33%; width: 40px; height: 40px; margin: -20px 0 0 -20px; border: 2px solid rgba(127,227,255,.9); border-radius: 50%; animation: jvRing 1.2s ease-out forwards; }
+  #jv-boot .ring.r2 { animation-delay: .18s; border-style: dashed; } #jv-boot .ring.r3 { animation-delay: .36s; border-width: 1px; }
+  #jv-boot .txt { position: absolute; left: 16px; bottom: 26%; font: 600 11px/1.7 ui-monospace, Menlo, monospace; color: #8fe6ff; letter-spacing: .12em; text-shadow: 0 0 8px rgba(95,200,255,.8); white-space: pre; animation: jvFade 1.9s ease forwards; background: rgba(2,8,18,.88); border: 1px solid rgba(95,200,255,.4); padding: 8px 12px; border-radius: 6px; }
+  #jv-boot .flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 33%, rgba(127,227,255,.35), transparent 60%); animation: jvFlash .9s ease-out forwards; }
+  @keyframes jvScan { from { top: 0; opacity: 1; } 85% { opacity: 1; } to { top: 100%; opacity: 0; } }
+  @keyframes jvRing { from { transform: scale(.2); opacity: 1; } to { transform: scale(14); opacity: 0; } }
+  @keyframes jvFade { 0%, 75% { opacity: 1; } to { opacity: 0; } }
+  @keyframes jvFlash { from { opacity: 1; } to { opacity: 0; } }
+  #v-chat.boot #orb { animation: jvOrbIn .9s cubic-bezier(.2,.9,.2,1); }
+  @keyframes jvOrbIn { from { transform: scale(.3) rotate(-25deg); opacity: 0; filter: brightness(3) blur(6px); } 60% { filter: brightness(1.6); } to { transform: none; opacity: 1; filter: none; } }
+  #v-chat.boot #stage .hud-tools button { animation: jvTool .5s cubic-bezier(.2,.9,.2,1) backwards; }
+  #v-chat.boot #stage .hud-tools button:nth-child(1) { animation-delay: .35s } #v-chat.boot #stage .hud-tools button:nth-child(2) { animation-delay: .42s } #v-chat.boot #stage .hud-tools button:nth-child(3) { animation-delay: .49s } #v-chat.boot #stage .hud-tools button:nth-child(4) { animation-delay: .56s } #v-chat.boot #stage .hud-tools button:nth-child(5) { animation-delay: .63s } #v-chat.boot #stage .hud-tools button:nth-child(6) { animation-delay: .7s } #v-chat.boot #stage .hud-tools button:nth-child(7) { animation-delay: .77s }
+  @keyframes jvTool { from { transform: translateX(-60px) skewX(-20deg); opacity: 0; filter: brightness(3); } to { transform: none; opacity: 1; filter: none; } }
+  #v-chat.boot .hud-top, #v-chat.boot .hud-fin, #v-chat.boot #form { animation: jvGlitch .7s steps(6) .2s backwards; }
+  @keyframes jvGlitch { 0% { opacity: 0; transform: translateX(-6px); clip-path: inset(0 0 80% 0); } 30% { opacity: 1; transform: translateX(5px); clip-path: inset(40% 0 20% 0); } 60% { transform: translateX(-3px); clip-path: inset(10% 0 50% 0); } to { opacity: 1; transform: none; clip-path: inset(0); } }
+  #stage .hud-tools button { position: relative; overflow: hidden; transition: box-shadow .2s, border-color .2s, color .2s; }
+  #stage .hud-tools button::after { content: ""; position: absolute; left: 0; right: 0; top: -40%; height: 40%; background: linear-gradient(180deg, transparent, rgba(127,227,255,.35), transparent); animation: jvToolScan 3.2s linear infinite; pointer-events: none; }
+  #stage .hud-tools button:nth-child(2n)::after { animation-delay: 1.1s } #stage .hud-tools button:nth-child(3n)::after { animation-delay: 2.1s }
+  @keyframes jvToolScan { from { top: -40%; } 30%, to { top: 120%; } }
+  #stage .hud-tools button:active { box-shadow: 0 0 18px rgba(95,200,255,.8); border-color: #7fe3ff; color: #fff; }
+  #orb.speaking canvas { animation: jvSchweb 2.4s ease-in-out infinite; }
+  #orb.thinking canvas { animation: jvDenk 1.6s ease-in-out infinite; }
+  @keyframes jvSchweb { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6px) scale(1.015); } }
+  @keyframes jvDenk { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.25); } }
+  #status { font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .08em; text-shadow: 0 0 8px rgba(95,200,255,.5); }
+  #status::after { content: "▌"; margin-left: 2px; animation: jvBlink 1s steps(2) infinite; color: #7fe3ff; }
+  @keyframes jvBlink { 50% { opacity: 0; } }
+  /* Fenster: Hologramm auf und zu */
+  #hudwin .hw .hw-scan { position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, transparent, #9fefff, transparent); box-shadow: 0 0 14px 3px rgba(127,227,255,.6); opacity: 0; pointer-events: none; z-index: 2; }
+  #hudwin .hw.ausKugel .hw-scan { animation: jvHwScan .7s .25s ease-out; }
+  #hudwin .hw.ausKugel #hw-body { animation: jvHolo .7s .2s steps(8) backwards; }
+  @keyframes jvHwScan { from { top: 0; opacity: 1; } to { top: 100%; opacity: 0; } }
+  @keyframes jvHolo { from { clip-path: inset(0 0 100% 0); opacity: .3; filter: hue-rotate(40deg) brightness(2); } to { clip-path: inset(0); opacity: 1; filter: none; } }
+  #hudwin.zu .hw { animation: jvHwZu .26s cubic-bezier(.6,0,.8,.4) forwards; } #hudwin.zu .hw-bg { animation: jvFade .26s forwards; }
+  @keyframes jvHwZu { to { transform: translate(var(--dx, 0), var(--dy, 0)) scale(.05); opacity: 0; filter: brightness(3); } }
+  /* Fußleiste: leuchtender Schieber + Jarvis-Icon lebt */
+  nav.tabs { position: relative; }
+  #nav-ind { position: absolute; top: -1px; height: 2px; left: 0; width: 40px; background: linear-gradient(90deg, transparent, #7fe3ff, transparent); box-shadow: 0 0 12px 2px rgba(95,200,255,.7); transition: transform .35s cubic-bezier(.3,1.4,.5,1), width .35s; pointer-events: none; }
+  nav.tabs button[data-v="v-chat"] svg circle:first-child { stroke-dasharray: 4 3; transform-origin: 12px 12px; animation: jvDreh 6s linear infinite; }
+  nav.tabs.spricht button[data-v="v-chat"] svg { animation: jvPuls .5s ease-in-out infinite alternate; }
+  nav.tabs.spricht button[data-v="v-chat"] svg circle:first-child { animation-duration: 1.2s; }
+  @keyframes jvDreh { to { transform: rotate(360deg); } }
+  @keyframes jvPuls { from { transform: scale(1); } to { transform: scale(1.25); filter: drop-shadow(0 0 8px #7fe3ff); } }
+  nav.tabs button { transition: color .25s, transform .2s; } nav.tabs button:active { transform: scale(.9); }
+  @media (prefers-reduced-motion: reduce) { #v-chat.boot *, #jv-boot *, #orb canvas, nav.tabs svg, nav.tabs svg circle, #stage .hud-tools button::after, #hudwin .hw * { animation: none !important; } }
+
   #v-chat::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .55;
     background-image: linear-gradient(rgba(95,180,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(95,180,255,.07) 1px, transparent 1px);
     background-size: 26px 26px; -webkit-mask-image: radial-gradient(75% 60% at 50% 45%, #000 30%, transparent 85%); mask-image: radial-gradient(75% 60% at 50% 45%, #000 30%, transparent 85%); }
@@ -287,7 +438,7 @@
   #hud-clock { display: block; font-size: 22px; font-weight: 600; color: #e6f1ff; letter-spacing: .04em; text-shadow: 0 0 12px rgba(95,180,255,.55); font-variant-numeric: tabular-nums; }
   .hud-r span { display: block; font-size: 9.5px; color: rgba(95,180,255,.75); letter-spacing: .1em; }
   #v-chat #stage { padding: 0 0 4px; }
-  #v-chat #orb { width: min(96vw, 430px); height: min(96vw, 430px); margin: -14px 0 -18px; }
+  #v-chat #orb { width: min(110vw, 490px); height: min(110vw, 490px); margin: -30px 0 -34px; }
   #v-chat #status { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(95,180,255,.85); }
   .hud-fin { position: relative; margin: 0 auto 8px; width: min(100%, 420px); border: 1px solid rgba(95,180,255,.35); background: linear-gradient(180deg, rgba(20,45,90,.35), rgba(8,14,26,.6)); border-radius: 6px; padding: 8px 11px 7px; cursor: pointer; box-shadow: 0 0 18px rgba(60,140,255,.12) inset; }
   .hud-fin::before, .hud-fin::after { content: ""; position: absolute; width: 10px; height: 10px; border: 0 solid var(--hud); }
@@ -425,6 +576,17 @@
       <div class="kpi"><span>Gewinn diesen Monat</span><b id="k-gew">–</b><small id="k-gew-s"></small></div>
       <div class="kpi"><span>Rechnungen diesen Monat</span><b id="k-monat">–</b><small>alle Kanäle · Lexware</small></div>
     </div>
+    <div class="card" id="card-ea"><h3>Umsätze <em>Lexware</em></h3>
+      <div class="ab-top"><div class="seg" id="ea-seg"><button type="button" data-a="monat" aria-pressed="true">Monat</button><button type="button" data-a="quartal" aria-pressed="false">Quartal</button><button type="button" data-a="jahr" aria-pressed="false">Jahr</button></div>
+        <div class="seg" id="ea-bn"><button type="button" data-b="brutto" aria-pressed="true">Brutto</button><button type="button" data-b="netto" aria-pressed="false">Netto</button></div></div>
+      <div class="ab-nav ea-nav"><button type="button" id="ea-prev" aria-label="Zeitraum zurück">‹</button><b id="ea-per">–</b><button type="button" id="ea-next" aria-label="Zeitraum weiter">›</button></div>
+      <div class="ea-kpi"><div><span>Einnahmen</span><b id="ea-ein">–</b></div><div><span>Ausgaben</span><b id="ea-aus">–</b></div></div>
+      <svg class="chart" id="c-ea" role="img" aria-label="Einnahmen und Ausgaben je Monat"></svg>
+      <div class="ea-leg"><i class="e"></i>Einnahmen <i class="a"></i>Ausgaben <span id="ea-punkt"></span></div>
+      <div class="seg ea-typ" id="ea-typ"><button type="button" data-t="linie" aria-pressed="true">Liniendiagramm</button><button type="button" data-t="balken" aria-pressed="false">Balken</button></div>
+      <div class="ea-diff"><span>Differenz</span><b id="ea-erg">–</b></div>
+      <ul class="rows" id="ea-rows"></ul>
+      <div class="tip" id="ea-tip">Nur lesen aus Lexware. Netto: ab 01.07.2026 sind 19 % herausgerechnet (Schätzung), davor warst du Kleinunternehmer (brutto = netto).</div></div>
     <div class="card" id="card-ab"><h3>Abschluss <em id="ab-sum"></em></h3>
       <div class="ab-top"><div class="seg" id="ab-seg"><button type="button" data-a="monat" aria-pressed="true">Monat</button><button type="button" data-a="quartal" aria-pressed="false">Quartal</button></div>
         <div class="ab-nav"><button type="button" id="ab-prev" aria-label="Zeitraum zurück">‹</button><b id="ab-per">–</b><button type="button" id="ab-next" aria-label="Zeitraum weiter">›</button></div></div>
@@ -448,14 +610,32 @@
   </div>
 </section>
 
+<section class="view" id="v-privat" aria-label="Privat">
+  <div class="scroll">
+    <div class="card"><h3>Meine To-dos <em id="pv-n"></em></h3>
+      <ul class="list" id="pv-todos"></ul>
+      <form class="pv-add" id="pv-form" autocomplete="off">
+        <input id="pv-titel" name="titel" placeholder="Neue private Aufgabe …" aria-label="Neue private Aufgabe" required>
+        <input id="pv-datum" name="faellig" type="date" aria-label="Fällig am">
+        <button type="submit" class="btn">+</button>
+      </form>
+      <div class="tip" id="pv-tip">Privat-Aufgaben siehst du nur hier. Du kannst sie auch Jarvis sagen: „Erinner mich privat an …“</div></div>
+    <div class="card"><h3>Auf deine Konten <em id="pv-gew"></em></h3>
+      <table class="pv-tab"><thead><tr><th>Konto</th><th id="pv-h-vm">Vormonat</th><th id="pv-h-am">Dieser Monat</th></tr></thead><tbody id="pv-konten"></tbody></table>
+      <div class="tip" id="pv-ktip">Basis: Gewinn pro verkauftem Artikel. Erst 30 % Steuer auf Fyrst, dann private Fixkosten, der Rest 20/15/10/25.</div></div>
+    <div class="card"><h3>Notizen</h3><textarea id="pv-notiz" rows="5" placeholder="Nur auf diesem Gerät gespeichert …" aria-label="Private Notizen"></textarea></div>
+  </div>
+</section>
+
 <section class="view" id="v-trade" aria-label="Trading">
   <div class="scroll">
-    <div class="card"><h3>Mein Depot <em id="dp-stand"></em></h3>
-      <div class="sumrow"><div style="text-align:left"><b id="dp-wert">–</b><div class="sub" style="color:var(--muted);font-size:12px">Depotwert</div></div><div><span id="dp-gv"></span><div id="dp-heute" style="color:var(--muted);font-size:12px"></div></div></div>
+    <div class="card tr-card"><div class="tr-lbl">Depot <em id="dp-stand"></em></div>
+      <div class="tr-kopf"><b id="dp-wert" class="tr-wert">–</b><span class="tr-chg" id="dp-gv"></span></div>
+      <div class="tr-sub" id="dp-heute"></div>
       <div id="dp-charts" hidden>
-        <div class="seg" id="dp-seg"><button type="button" data-t="30" aria-pressed="false">30 T</button><button type="button" data-t="90" aria-pressed="false">3 M</button><button type="button" data-t="365" aria-pressed="false">1 J</button><button type="button" data-t="0" aria-pressed="true">Alles</button></div>
-        <svg class="chart" id="c-dp-verlauf" role="img" aria-label="Depotwert im Verlauf"></svg>
-        <div class="tip" id="t-dp">Tippe ins Diagramm für einen Tag</div>
+        <div class="tr-seg" id="dp-seg"><button type="button" data-t="1" aria-pressed="false">1T</button><button type="button" data-t="7" aria-pressed="false">1W</button><button type="button" data-t="30" aria-pressed="false">1M</button><button type="button" data-t="365" aria-pressed="false">1J</button><button type="button" data-t="0" aria-pressed="true">Max</button></div>
+        <svg class="tr-chart" id="c-dp-verlauf" role="img" aria-label="Depotwert im Verlauf"></svg>
+        <div class="tip" id="t-dp"></div>
         <div class="dp-h">Aufteilung</div>
         <div class="dp-split"><svg id="c-dp-pie" viewBox="0 0 120 120" role="img" aria-label="Aufteilung des Depots"></svg><ul id="dp-leg"></ul></div>
         <div class="dp-h">Gewinn / Verlust je Position</div>
@@ -511,17 +691,14 @@
     <div class="card"><h3>Ladenhüter <em id="lh-info"></em></h3><ul class="list" id="ladenhueter"></ul><div class="tip">Am längsten im Lager (seit Bestellung) · ab 30 Tagen rot</div></div>
 </div>
 <section class="view on" id="v-chat" aria-label="Jarvis">
+<div id="jv-boot" aria-hidden="true"><div class="flash"></div><i class="ring"></i><i class="ring r2"></i><i class="ring r3"></i><div class="scan"></div><div class="txt" id="jv-boot-t"></div></div>
 <i class="hud-cn tl"></i><i class="hud-cn tr"></i><i class="hud-cn bl"></i><i class="hud-cn br"></i>
 <div class="hud-top">
   <div id="hud-l" role="button" tabindex="0" aria-label="Heute zu tun öffnen"></div>
   <div class="hud-r"><b id="hud-clock">--:--:--</b><span id="hud-date"></span><span id="hud-sync">SYNC –</span></div>
 </div>
 <div id="stage">
-  <button id="orb" type="button" aria-label="Gespräch starten oder beenden"><canvas id="orbc" aria-hidden="true"></canvas></button>
-  <div id="status">Bereit</div>
-</div>
-<div class="hud-fin" id="hud-fin" role="button" tabindex="0" aria-label="Geld-Fenster öffnen"></div>
-<div class="hud-tools" id="hud-tools">
+  <div class="hud-tools" id="hud-tools">
   <button type="button" data-w="todo"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>TO-DO<sup></sup></button>
   <button type="button" data-w="lager"><svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8"/></svg>LAGER<sup></sup></button>
   <button type="button" data-w="geld"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>GELD</button>
@@ -530,6 +707,11 @@
   <button type="button" data-w="termine"><svg viewBox="0 0 24 24"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/></svg>TERMINE</button>
   <button type="button" data-tab="v-einkauf"><svg viewBox="0 0 24 24"><path d="M4 6v12M7 6v12M10 6v12M14 6v12M17 6v12M20 6v12"/></svg>SCAN</button>
 </div>
+  <button id="orb" type="button" aria-label="Gespräch starten oder beenden"><canvas id="orbc" aria-hidden="true"></canvas></button>
+  <div id="status">Bereit</div>
+</div>
+<div class="hud-fin" id="hud-fin" role="button" tabindex="0" aria-label="Geld-Fenster öffnen"></div>
+
 <div id="auftraege" aria-live="polite"></div>
 <div id="log"><div class="msg sys">Tippe auf den Kreis und sprich. Nochmal tippen beendet das Gespräch.</div></div>
 <form id="form" autocomplete="off">
@@ -538,7 +720,7 @@
 </form>
 </section>
 
-<div id="hudwin" hidden><div class="hw-bg" data-close="1"></div><div class="hw" role="dialog" aria-modal="true" aria-labelledby="hw-t"><div class="hw-h"><span id="hw-t"></span><button type="button" data-close="1" aria-label="Schließen">×</button></div><div id="hw-body"></div><button type="button" id="hw-go">Im Tab öffnen ›</button></div></div>
+<div id="hudwin" hidden><div class="hw-bg" data-close="1"></div><div class="hw" role="dialog" aria-modal="true" aria-labelledby="hw-t"><i class="hw-scan"></i><div class="hw-h"><span id="hw-t"></span><button type="button" data-close="1" aria-label="Schließen">×</button></div><div id="hw-body"></div><button type="button" id="hw-go">Im Tab öffnen ›</button></div></div>
 <div id="sheet" hidden><div class="sh-bg" data-close="1"></div><div class="sh" role="dialog" aria-modal="true" aria-label="Artikel-Details"><button type="button" class="sh-x" data-close="1" aria-label="Schließen">×</button><div id="sh-body"></div></div></div>
 <nav class="tabs" role="tablist">
   <button type="button" role="tab" data-v="v-chat" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Jarvis</button>
@@ -547,6 +729,8 @@
   <button type="button" role="tab" data-v="v-lager" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8"/></svg>Lager</button>
   <button type="button" role="tab" data-v="v-geld" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Geld</button>
   <button type="button" role="tab" data-v="v-trade" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Trading</button>
+  <button type="button" role="tab" data-v="v-privat" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Privat</button>
+  <i id="nav-ind" aria-hidden="true"></i>
 </nav>
 <script>
 (function () {
@@ -585,7 +769,15 @@
     if (cls === 'me') { try { window.dispatchEvent(new CustomEvent('jarvis-frage', { detail: txt })); } catch (e) {} }
     return el;
   }
-  function setState(s, label) { state = s; orb.className = (s === 'idle') ? '' : s; statusEl.textContent = label; }
+  var tippT = 0;
+  function setState(s, label) {
+    state = s; orb.className = (s === 'idle') ? '' : s;
+    var nv = document.querySelector('nav.tabs'); if (nv) nv.classList.toggle('spricht', s === 'speaking' || s === 'listening');
+    clearInterval(tippT); var n = 0; label = String(label || '');
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { statusEl.textContent = label; return; }
+    tippT = setInterval(function () { n += 2; statusEl.textContent = label.slice(0, n); if (n >= label.length) clearInterval(tippT); }, 18);
+  }
+  var spkAn = null, spkBuf = null;
 
   // ---------- Jarvis-Kugel (holografischer Globus, drehbar) ----------
   var orbDragged = false;
@@ -612,6 +804,12 @@
     var COL = { idle: [86, 170, 255], standby: [86, 170, 255], listening: [64, 226, 210], thinking: [255, 196, 96], speaking: [130, 180, 255] };
     var cur = COL.idle.slice(), lvl = 0, rotY = HOME_LON + Math.PI / 2 + 0.25, rotX = -0.55, vY = 0, vX = 0, drag = null, lastAct = 0;
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var puls = 0, wellen = [], funken = [], letzteWelle = 0;
+    function jvPuls(st) { puls = Math.min(1, Math.max(puls, st || 1)); var n = performance.now(); if (n - letzteWelle > 170) { letzteWelle = n; wellen.push(n); if (wellen.length > 8) wellen.shift(); } }
+    window.jvPuls = jvPuls;
+    // Partikel-Strahl aus der Kugel Richtung Fenster
+    window.jvBurst = function (dx, dy) { if (reduce) return; var an = Math.atan2(dy, dx), now = performance.now(); for (var b = 0; b < 46; b++) funken.push({ a: an + (Math.random() - .5) * .9, v: .5 + Math.random() * 1.4, t0: now + Math.random() * 120, l: 500 + Math.random() * 350 }); jvPuls(1); };
+    var bootT = 0; window.jvBootOrb = function () { bootT = performance.now(); };
     function size() { var d = Math.min(window.devicePixelRatio || 1, 2), w = cv.clientWidth || 300; cv.width = w * d; cv.height = w * d; }
     size(); window.addEventListener('resize', size);
     // Drehen mit dem Finger
@@ -631,19 +829,26 @@
     ob.addEventListener('pointerup', end); ob.addEventListener('pointercancel', end);
     function amp(t) {
       if (state === 'listening' && analyser && buf) { try { return Math.min(1, level() * 6); } catch (e) { return .2; } }
-      if (state === 'speaking') return .35 + .3 * Math.abs(Math.sin(t / 110) * Math.sin(t / 260));
+      if (state === 'speaking') {
+        if (spkAn && spkBuf) { try { spkAn.getFloatTimeDomainData(spkBuf); var sq = 0; for (var q = 0; q < spkBuf.length; q++) sq += spkBuf[q] * spkBuf[q]; var rm = Math.sqrt(sq / spkBuf.length); if (rm > 0.004) { if (rm * 5 > 0.45) jvPuls(rm * 4); return Math.min(1, .2 + rm * 5); } } catch (e) {} }
+        return .3 + .25 * Math.abs(Math.sin(t / 110) * Math.sin(t / 260)) + puls * .45;
+      }
       if (state === 'thinking') return .22 + .12 * Math.sin(t / 160);
       return .05 + .03 * Math.sin(t / 900);
     }
     function frame(t) {
       var W = cv.width, H = cv.height, cx = W / 2, cy = H / 2, R = W * 0.335;
+      puls *= 0.9;
+      var bootP = bootT ? Math.min(1, (performance.now() - bootT) / 1100) : 1; if (bootP < 1) { R *= 0.4 + 0.6 * (1 - Math.pow(1 - bootP, 3)); }
       var tgt = COL[state] || COL.idle; for (var k = 0; k < 3; k++) cur[k] += (tgt[k] - cur[k]) * 0.06;
       lvl += (amp(t) - lvl) * 0.18;
       if (!drag) {
         var auto = reduce ? 0 : (state === 'thinking' ? 0.014 : state === 'speaking' ? 0.008 : 0.0035);
         vY *= 0.95; vX *= 0.93;
         rotY += vY + (performance.now() - lastAct > 1200 ? auto : 0);
-        rotX += vX; rotX += (-0.55 - rotX) * (performance.now() - lastAct > 2500 ? 0.01 : 0); rotX = Math.max(-1.3, Math.min(1.3, rotX));
+        var zielX = -0.55 + (state === 'speaking' && !reduce ? Math.sin(t / 650) * 0.12 : 0);
+        rotX += vX; rotX += (zielX - rotX) * (performance.now() - lastAct > 2500 ? (state === 'speaking' ? 0.04 : 0.01) : 0); rotX = Math.max(-1.3, Math.min(1.3, rotX));
+        if (bootP < 1) rotY += (1 - bootP) * 0.12;
       }
       var c = cur.map(Math.round).join(','), lw = Math.max(1, W / 420);
       ctx.clearRect(0, 0, W, H);
@@ -731,6 +936,36 @@
         ctx.fillStyle = 'rgba(' + c + ',' + al + ')'; ctx.textBaseline = 'middle';
         var lb = at(0.95, 0.42); ctx.fillText('BOSS', lb[0], lb[1]);
       }
+      // Schockwellen bei jedem Wort
+      var jetztW = performance.now();
+      for (var wi = 0; wi < wellen.length; wi++) { var wp = (jetztW - wellen[wi]) / 900; if (wp > 1) continue;
+        ctx.strokeStyle = 'rgba(' + c + ',' + (0.55 * (1 - wp)).toFixed(3) + ')'; ctx.lineWidth = lw * (2.5 - wp * 2);
+        ctx.beginPath(); ctx.arc(cx, cy, R * (1.08 + wp * 0.85), 0, 6.283); ctx.stroke(); }
+      // Equalizer-Kranz beim Sprechen/Zuhören
+      if ((state === 'speaking' || state === 'listening') && lvl > 0.08 && !reduce) {
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineWidth = Math.max(lw * 2, W / 200); ctx.lineCap = 'round';
+        for (var eb = 0; eb < 72; eb++) { var ea = eb / 72 * 6.283 + t / 4000, nz = 0.5 + 0.5 * Math.sin(eb * 1.7 + t / 70) * Math.sin(eb * 0.6 - t / 130), ln = R * (0.04 + lvl * 0.32 * nz);
+          var r0 = R * 1.2; ctx.strokeStyle = 'rgba(' + c + ',' + (0.25 + 0.6 * nz * lvl).toFixed(3) + ')';
+          ctx.beginPath(); ctx.moveTo(cx + Math.cos(ea) * r0, cy + Math.sin(ea) * r0); ctx.lineTo(cx + Math.cos(ea) * (r0 + ln), cy + Math.sin(ea) * (r0 + ln)); ctx.stroke(); }
+        ctx.restore();
+      }
+      // Denken: schnelle Segment-Ringe + Daten-Partikel
+      if (state === 'thinking' && !reduce) {
+        ctx.lineWidth = lw * 3; ctx.strokeStyle = 'rgba(' + c + ',.85)';
+        for (var dk = 0; dk < 3; dk++) { var da = t / (260 + dk * 90) * (dk % 2 ? -1 : 1) + dk * 2.1; ctx.beginPath(); ctx.arc(cx, cy, W * (0.43 - dk * 0.018), da, da + 0.7); ctx.stroke(); }
+        ctx.fillStyle = 'rgba(' + c + ',.9)';
+        for (var dp = 0; dp < 24; dp++) { var pa2 = dp / 24 * 6.283 + t / 500, pr2 = R * (1.1 + 0.25 * ((t / 700 + dp * 0.37) % 1)); ctx.fillRect(cx + Math.cos(pa2) * pr2, cy + Math.sin(pa2) * pr2, lw * 2, lw * 2); }
+        ctx.font = '700 ' + Math.round(W * 0.028) + 'px ui-monospace, Menlo, monospace'; ctx.textAlign = 'center';
+        ctx.fillText('ANALYSE ' + String(Math.floor((t / 37) % 100)).padStart(2, '0') + '%', cx, cy + R * 1.42); ctx.textAlign = 'start';
+      }
+      // Funken-Strahl zu einem Fenster
+      if (funken.length) { ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        funken = funken.filter(function (f) { var fp = (jetztW - f.t0) / f.l; if (fp < 0) return true; if (fp > 1) return false;
+          var fr = R * (0.9 + fp * f.v * 2.2), fx = cx + Math.cos(f.a) * fr, fy = cy + Math.sin(f.a) * fr;
+          ctx.fillStyle = 'rgba(' + c + ',' + (1 - fp).toFixed(3) + ')'; ctx.beginPath(); ctx.arc(fx, fy, lw * (2.6 - fp * 1.8), 0, 6.283); ctx.fill(); return true; });
+        ctx.restore(); }
+      // Boot: Aufbau-Ringe
+      if (bootP < 1) { ctx.strokeStyle = 'rgba(255,255,255,' + (1 - bootP).toFixed(3) + ')'; ctx.lineWidth = lw * 3; ctx.beginPath(); ctx.arc(cx, cy, W * 0.46 * bootP, 0, 6.283 * bootP); ctx.stroke(); }
       // Pegel-Ring beim Sprechen/Zuhören
       if (lvl > 0.12) {
         ctx.strokeStyle = 'rgba(' + c + ',' + Math.min(.8, lvl).toFixed(2) + ')'; ctx.lineWidth = lw * 2;
@@ -759,16 +994,37 @@
   }
   if (hasTTS) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 
+  // ---------- Stopp-Wort: während Jarvis spricht, hört er auf „Stopp“, „Halt“, „Ruhe“ … ----------
+  var bargeRec = null, STOPP = /(^|\s)(stopp?|halt|ruhe|sei still|abbrechen|warte mal|jarvis stopp?)(\s|$|[.!,])/i;
+  function bargeStop() { var r = bargeRec; bargeRec = null; try { if (r) { r.onend = null; r.onresult = null; r.abort(); } } catch (e) {} }
+  function bargeStart(beenden) {
+    if (!SR) return;
+    bargeStop();
+    try {
+      var r = new SR(); bargeRec = r;
+      r.lang = 'de-DE'; r.continuous = true; r.interimResults = true;
+      r.onresult = function (ev) {
+        for (var i = ev.resultIndex; i < ev.results.length; i++) {
+          if (STOPP.test(' ' + ev.results[i][0].transcript.toLowerCase() + ' ')) { bargeStop(); beenden(); return; }
+        }
+      };
+      r.onerror = function () {};
+      r.onend = function () { if (bargeRec === r && state === 'speaking') { try { r.start(); } catch (e) {} } };
+      setTimeout(function () { if (bargeRec === r) { try { r.start(); } catch (e) {} } }, 350);
+    } catch (e) { bargeRec = null; }
+  }
   function speakDevice(text) {
     return new Promise(function (resolve) {
+      var fertig = false, ende = function () { if (fertig) return; fertig = true; bargeStop(); resolve(); };
       try {
         speechSynthesis.cancel();
         var u = new SpeechSynthesisUtterance(clean(text));
         u.lang = 'de-DE'; if (voice) u.voice = voice; u.rate = 1.03;
-        u.onend = resolve; u.onerror = resolve;
-        setState('speaking', 'Jarvis spricht … (tippen zum Beenden)');
+        u.onend = ende; u.onerror = ende; u.onboundary = function () { if (window.jvPuls) window.jvPuls(1); };
+        setState('speaking', 'Jarvis spricht … (sag „Stopp“ oder tippen)');
         speechSynthesis.speak(u);
-      } catch (e) { resolve(); }
+        bargeStart(function () { try { speechSynthesis.cancel(); } catch (e) {} ende(); });
+      } catch (e) { ende(); }
     });
   }
   function playServer(b64) {
@@ -779,11 +1035,13 @@
         var bin = atob(b64), bytes = new Uint8Array(bin.length);
         for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
         var ab = await audioCtx.decodeAudioData(bytes.buffer);
-        var src = audioCtx.createBufferSource(); src.buffer = ab; src.connect(audioCtx.destination);
+        var src = audioCtx.createBufferSource(); src.buffer = ab;
+        try { if (!spkAn) { spkAn = audioCtx.createAnalyser(); spkAn.fftSize = 512; spkBuf = new Float32Array(spkAn.fftSize); spkAn.connect(audioCtx.destination); } src.connect(spkAn); } catch (e) { src.connect(audioCtx.destination); }
         currentSource = src;
-        setState('speaking', 'Jarvis spricht … (tippen zum Beenden)');
-        src.onended = function () { currentSource = null; resolve(); };
+        setState('speaking', 'Jarvis spricht … (sag „Stopp“ oder tippen)');
+        src.onended = function () { currentSource = null; bargeStop(); resolve(); };
         src.start();
+        bargeStart(function () { try { src.stop(); } catch (e) {} });
       } catch (e) { resolve(); }
     });
   }
@@ -980,6 +1238,7 @@
 
   function stopAll() {
     active = false;
+    bargeStop();
     try { if (rec) rec.abort(); } catch (e) {}
     try { if (recorder && recorder.state !== 'inactive') recorder.stop(); } catch (e) {}
     cancelAnimationFrame(rafId);
@@ -1022,6 +1281,21 @@
   var DATA_URL = 'https://luisdtg16.app.n8n.cloud/webhook/jarvis-daten';
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
   var KEY = new URLSearchParams(location.search).get('key') || store('jarvis_key') || '';
+  // ---------- Eigenes Backend (Cloudflare). Einmal mit ?api=https://… öffnen, dann gemerkt. Ohne Backend läuft alles wie bisher über n8n. ----------
+  (function () { var a = new URLSearchParams(location.search).get('api'); if (a === 'aus') store('jarvis_api', ''); else if (a && /^https:\/\//.test(a)) store('jarvis_api', a.replace(/\/+$/, '')); })();
+  var API = store('jarvis_api') || '';
+  async function apiCall(pfad, body, methode) {
+    var res = await fetch(API + pfad, { method: methode || (body ? 'POST' : 'GET'), headers: { 'Content-Type': 'application/json', 'X-Jarvis-Key': KEY }, body: body ? JSON.stringify(body) : undefined });
+    if (!res.ok) throw new Error('Backend ' + res.status);
+    return res.json();
+  }
+  window.jarvisApi = function () { return API ? apiCall : null; };
+  var rechner = null;
+  async function backendDaten(extra) {
+    var r = await apiCall('/api/rohdaten', extra || {});
+    if (!rechner) rechner = await import('./backend/src/rechnen.js');
+    return rechner.berechnen(r.roh);
+  }
   var $ = function (id) { return document.getElementById(id); };
   var eur = function (x, d) { return (Number(x) || 0).toLocaleString('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: d == null ? 0 : d }); };
   var esc = function (s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
@@ -1030,16 +1304,32 @@
   // ---------- Tabs ----------
   var tabs = document.querySelectorAll('nav.tabs button');
   var loadedTrade = false;
+  function navInd(id) {
+    var b = document.querySelector('nav.tabs button[data-v="' + id + '"]'), ind = $('nav-ind'); if (!b || !ind) return;
+    var w = b.offsetWidth * 0.6; ind.style.width = w + 'px'; ind.style.transform = 'translateX(' + (b.offsetLeft + (b.offsetWidth - w) / 2) + 'px)';
+  }
+  var bootZ = 0;
+  function jvBoot() {
+    var vc = $('v-chat'); if (!vc || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    vc.classList.remove('boot'); void vc.offsetWidth; vc.classList.add('boot'); if (window.jvBootOrb) window.jvBootOrb();
+    var zeilen = ['J.A.R.V.I.S. // SYSTEM START', '> KERN ........ OK', '> STIMME ...... OK', '> LEXWARE ..... VERBUNDEN', '> KAUFLAND .... VERBUNDEN', '> BEREIT, BOSS.'], i = 0, el = $('jv-boot-t'); el.textContent = '';
+    clearInterval(bootZ); bootZ = setInterval(function () { el.textContent += (i ? '\n' : '') + zeilen[i]; i++; if (i >= zeilen.length) clearInterval(bootZ); }, 160);
+    setTimeout(function () { vc.classList.remove('boot'); }, 2000);
+  }
+  window.addEventListener('resize', function () { navInd(store('jarvis_tab') || 'v-chat'); });
   function show(id) {
+    var warChat = $('v-chat').classList.contains('on');
+    navInd(id); if (id === 'v-chat' && !warChat) jvBoot();
     document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('on', v.id === id); });
     tabs.forEach(function (b) { b.setAttribute('aria-selected', b.dataset.v === id ? 'true' : 'false'); });
     store('jarvis_tab', id);
     if (id !== 'v-einkauf' && typeof scanStop === 'function' && (scanStream || zxReader)) scanStop();
-    if (id === 'v-dash' || id === 'v-lager' || id === 'v-geld' || id === 'v-chat') { if (last) render(last, Date.now() - lastLoad > 60000); maybeLoad(); }
+    if (id === 'v-dash' || id === 'v-lager' || id === 'v-geld' || id === 'v-chat' || id === 'v-privat') { if (last) render(last, Date.now() - lastLoad > 60000); maybeLoad(); }
     if (id !== 'v-chat' && typeof hudZu === 'function') hudZu();
     if (id === 'v-trade') { if (!loadedTrade) { loadedTrade = true; loadTrading(); } if (Date.now() - dLoad > 60000) depotCall(); if (dLast) setTimeout(function () { try { dpCharts(dLast); } catch (e) {} }, 60); }
   }
   tabs.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.v); }); });
+  setTimeout(function () { navInd(store('jarvis_tab') || 'v-chat'); if ($('v-chat').classList.contains('on')) jvBoot(); }, 60);
 
   // ---------- Begrüßung ----------
   function hello() {
@@ -1077,9 +1367,13 @@
     if (loading) return; loading = true;
     $('stand').textContent = 'Aktualisiere …';
     try {
-      var res = await fetch(DATA_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ key: KEY }, extra || {})) });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      var d = await res.json();
+      var d = null;
+      if (API) { try { d = await backendDaten(extra); } catch (e) { console.warn('Backend nicht erreichbar, nehme n8n', e); } }
+      if (!d) {
+        var res = await fetch(DATA_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ key: KEY }, extra || {})) });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        d = await res.json();
+      }
       last = d; lastLoad = Date.now();
       try { store('jarvis_dash', JSON.stringify(d)); } catch (e) {}
       render(d, false);
@@ -1165,6 +1459,8 @@
     }
     // Monatsabschluss
     renderMA(d);
+    try { renderEA(d); } catch (e) { console.warn(e); }
+    try { renderPrivat(d); } catch (e) { console.warn(e); }
 
     // Fehlende Belege
     var BL = d.belege || [], OL = d.ohne_listing || [];
@@ -1193,7 +1489,7 @@
     }).join('') : '<li class="empty">Keine Lagerdaten.</li>';
 
     // Aufgaben
-    var A = d.aufgaben || [];
+    var A = (d.aufgaben || []).filter(function (a) { return !/^privat$/i.test(a.kategorie || ''); });
     $('n-aufg').textContent = A.length ? A.length + ' offen' : '';
     $('aufgaben').innerHTML = A.length ? A.map(function (a) {
       var f = a.faellig ? new Date(a.faellig + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) : '';
@@ -1361,6 +1657,125 @@
     $('ma-tip').textContent = t;
   }
   $('ma-seg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; maWahl = b.dataset.m; store('jarvis_ma', maWahl); if (last) renderMA(last); });
+
+  // ---------- Einnahmen & Ausgaben (wie Lexware) ----------
+  var eaArt = store('jarvis_ea_art') || 'jahr', eaTyp = store('jarvis_ea_typ') || 'linie', eaMonate = null, eaNetto = store('jarvis_ea_bn') === 'netto', eaOff = 0;
+  function eaSegs() {
+    $('ea-seg').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.a === eaArt ? 'true' : 'false'); });
+    $('ea-bn').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', (b.dataset.b === 'netto') === eaNetto ? 'true' : 'false'); });
+    $('ea-typ').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.t === eaTyp ? 'true' : 'false'); });
+  }
+  function eaSchritt(max) { var r = max / 4, p = Math.pow(10, Math.floor(Math.log10(r || 1))), n = r / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; }
+  function eaZeitraum() {
+    var n = new Date(), y = n.getFullYear(), m = n.getMonth();
+    if (eaArt === 'jahr') { var j = y + eaOff; return { von: j + '-01-01', bis: j + '-12-31', titel: String(j), jahr: j }; }
+    if (eaArt === 'quartal') { var q = Math.floor(m / 3) + eaOff, jj = y + Math.floor(q / 4); q = ((q % 4) + 4) % 4; var mv = q * 3 + 1;
+      return { von: jj + '-' + ('0' + mv).slice(-2) + '-01', bis: jj + '-' + ('0' + (mv + 2)).slice(-2) + '-31', titel: 'Q' + (q + 1) + ' ' + jj, jahr: jj }; }
+    var dt = new Date(y, m + eaOff, 1), k = dt.getFullYear() + '-' + ('0' + (dt.getMonth() + 1)).slice(-2);
+    return { von: k + '-01', bis: k + '-31', titel: dt.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }), jahr: dt.getFullYear() };
+  }
+  function eaWert(v) { return eaNetto && v.d >= '2026-07-01' ? v.b / 1.19 : v.b; }
+  function eaSumme(L, von, bis) {
+    var r = { ein: 0, aus: 0, offenEin: 0, offenAus: 0, kont: {} };
+    L.forEach(function (v) {
+      if (v.d < von || v.d > bis) return;
+      var w = eaWert(v);
+      if (v.t === 'invoice' || v.t === 'salesinvoice') { r.ein += w; r.offenEin += v.o; }
+      else if (v.t === 'creditnote') r.ein -= w;
+      else if (v.t === 'purchaseinvoice') { r.aus += w; r.offenAus += v.o; r.kont[v.n || 'ohne Name'] = (r.kont[v.n || 'ohne Name'] || 0) + w; }
+      else if (v.t === 'purchasecreditnote') r.aus -= w;
+    });
+    return r;
+  }
+  function renderEA(d) {
+    eaSegs();
+    var L = d.lexjahr, Z = eaZeitraum();
+    $('ea-per').textContent = Z.titel;
+    if (!L) { ['ea-ein', 'ea-aus', 'ea-erg'].forEach(function (id) { $(id).textContent = '–'; }); $('ea-rows').innerHTML = ''; $('c-ea').innerHTML = ''; $('ea-punkt').textContent = '';
+      $('ea-tip').textContent = 'Kommt mit dem neuen Backend: Einnahmen und Ausgaben direkt aus Lexware (nur lesen).'; return; }
+    var r = eaSumme(L, Z.von, Z.bis), erg = r.ein - r.aus;
+    $('ea-ein').textContent = eur(r.ein, 2); $('ea-aus').textContent = eur(r.aus, 2); $('ea-punkt').textContent = '';
+    $('ea-erg').textContent = eur(erg, 2); $('ea-erg').className = erg >= 0 ? 'pos' : 'neg';
+    var top = Object.keys(r.kont).map(function (k) { return [k, r.kont[k]]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 5);
+    $('ea-rows').innerHTML = '<li><span>Offene Forderungen (Kunden schulden dir)</span><b>' + eur(r.offenEin, 2) + '</b></li><li><span>Offene Rechnungen (du schuldest)</span><b>' + eur(r.offenAus, 2) + '</b></li>' +
+      top.map(function (k) { return '<li><span>Ausgabe: ' + esc(k[0]) + '</span><b>' + eur(k[1]) + '</b></li>'; }).join('');
+    // Monate des Jahres (laufendes Jahr nur bis heute), wie Lexware „Umsätze“
+    var svg = $('c-ea'), W = svg.clientWidth || 320, H = 190, pl = 44, pr = 10, pt = 10, pb = 22, jetzt = new Date();
+    var nM = Z.jahr === jetzt.getFullYear() ? jetzt.getMonth() + 1 : 12, monate = [], MN = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+    for (var i = 0; i < nM; i++) { var k = Z.jahr + '-' + ('0' + (i + 1)).slice(-2); var s2 = eaSumme(L, k + '-01', k + '-31'); monate.push({ k: k, m: MN[i], e: Math.max(0, s2.ein), a: Math.max(0, s2.aus) }); }
+    var roh = Math.max.apply(null, monate.map(function (x) { return Math.max(x.e, x.a); }).concat([1])), st = eaSchritt(roh), max = Math.ceil(roh / st) * st;
+    var ih = H - pt - pb, iw = W - pl - pr, gw = iw / nM, Y = function (v) { return pt + ih - ih * v / max; }, X = function (i) { return pl + gw * i + gw / 2; };
+    var h = '';
+    monate.forEach(function (x, i) { if (x.k + '-15' >= Z.von && x.k + '-01' <= Z.bis && eaArt !== 'jahr') h += '<rect class="band" x="' + (pl + gw * i).toFixed(1) + '" y="' + pt + '" width="' + gw.toFixed(1) + '" height="' + ih + '"/>'; });
+    for (var v = 0; v <= max + 1e-9; v += st) h += '<line class="gh" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '"/><text x="' + (pl - 6) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + Math.round(v).toLocaleString('de-DE') + '</text>';
+    for (var g = 0; g <= nM; g++) h += '<line class="gv" x1="' + (pl + gw * g).toFixed(1) + '" x2="' + (pl + gw * g).toFixed(1) + '" y1="' + pt + '" y2="' + (H - pb + 4) + '"/>';
+    monate.forEach(function (x, i) { h += '<text x="' + X(i).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">' + (nM > 9 && W < 340 ? x.m.charAt(0) : x.m) + '</text>'; });
+    if (eaTyp === 'balken') {
+      var bw = Math.max(2, gw * 0.3);
+      monate.forEach(function (x, i) { var x0 = X(i) - bw - 0.5;
+        h += '<rect class="e" x="' + x0.toFixed(1) + '" y="' + Y(x.e).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, Y(0) - Y(x.e)).toFixed(1) + '" rx="2"/>';
+        h += '<rect class="a" x="' + (x0 + bw + 1).toFixed(1) + '" y="' + Y(x.a).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, Y(0) - Y(x.a)).toFixed(1) + '" rx="2"/>'; });
+    } else {
+      ['e', 'a'].forEach(function (t) {
+        h += '<polyline class="l' + t + '" points="' + monate.map(function (x, i) { return X(i).toFixed(1) + ',' + Y(x[t]).toFixed(1); }).join(' ') + '"/>';
+        monate.forEach(function (x, i) { h += '<circle class="p' + t + '" cx="' + X(i).toFixed(1) + '" cy="' + Y(x[t]).toFixed(1) + '" r="3.2"/>'; });
+      });
+    }
+    h += '<line class="cur" id="ea-cur" x1="0" x2="0" y1="' + pt + '" y2="' + (H - pb) + '" visibility="hidden"/>';
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.innerHTML = h;
+    eaMonate = { m: monate, X: X, pl: pl, gw: gw, W: W };
+    $('ea-tip').textContent = 'Nur lesen aus Lexware. ' + (eaNetto ? 'Netto: ab 01.07.2026 sind 19 % herausgerechnet (Schätzung, bei 7 % oder 0 % weicht es ab), davor warst du Kleinunternehmer (brutto = netto).' : 'Brutto = Rechnungsbeträge wie in Lexware.');
+  }
+  $('ea-seg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; eaArt = b.dataset.a; eaOff = 0; store('jarvis_ea_art', eaArt); if (last) renderEA(last); });
+  $('ea-bn').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; eaNetto = b.dataset.b === 'netto'; store('jarvis_ea_bn', eaNetto ? 'netto' : 'brutto'); if (last) renderEA(last); });
+  $('ea-prev').addEventListener('click', function () { eaOff--; if (last) renderEA(last); });
+  $('ea-typ').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; eaTyp = b.dataset.t; store('jarvis_ea_typ', eaTyp); if (last) renderEA(last); });
+  function eaZeig(ev) {
+    if (!eaMonate || !eaMonate.m.length) return; var svg = $('c-ea'), r = svg.getBoundingClientRect(), x = (ev.clientX - r.left) * eaMonate.W / r.width;
+    var i = Math.max(0, Math.min(eaMonate.m.length - 1, Math.floor((x - eaMonate.pl) / eaMonate.gw))), M = eaMonate.m[i], c = $('ea-cur');
+    if (c) { c.setAttribute('x1', eaMonate.X(i)); c.setAttribute('x2', eaMonate.X(i)); c.setAttribute('visibility', 'visible'); }
+    $('ea-punkt').textContent = M.m + ': ' + eur(M.e) + ' / ' + eur(M.a);
+  }
+  $('c-ea').addEventListener('pointerdown', eaZeig); $('c-ea').addEventListener('pointermove', function (e) { if (e.buttons || e.pointerType !== 'mouse') eaZeig(e); });
+  $('ea-next').addEventListener('click', function () { if (eaOff < 0) eaOff++; if (last) renderEA(last); });
+
+  // ---------- Privat ----------
+  function renderPrivat(d) {
+    var P = (d.aufgaben || []).filter(function (a) { return /^privat$/i.test(a.kategorie || ''); });
+    $('pv-n').textContent = P.length ? P.length + ' offen' : '';
+    $('pv-todos').innerHTML = P.length ? P.map(function (a) {
+      var f = a.faellig ? new Date(a.faellig + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) : '';
+      return '<li><button class="chk" type="button" data-id="' + a.id + '" aria-label="Erledigt: ' + esc(a.titel) + '"></button><div class="main"><div>' + esc(a.titel) + '</div>' + (f ? '<div class="sub' + (a.ueberfaellig ? ' late' : '') + '">' + (a.ueberfaellig ? 'überfällig seit ' : 'fällig ') + f + '</div>' : '') + '</div></li>';
+    }).join('') : '<li class="empty">Nichts Privates offen.</li>';
+    var M = d.monatsabschluss || {}, A = M.aktuell, V = M.vormonat;
+    if (!A && !V) { $('pv-konten').innerHTML = '<tr><td colspan="3">Noch keine Daten.</td></tr>'; return; }
+    var mName = function (x) { return x ? new Date(x.monat + '-15').toLocaleDateString('de-DE', { month: 'short' }) : '–'; };
+    $('pv-h-vm').textContent = mName(V); $('pv-h-am').textContent = mName(A) + ' (bisher)';
+    $('pv-gew').textContent = A ? 'Gewinn ' + eur(A.gewinn) : '';
+    var rows = {}, order = [];
+    [V, A].forEach(function (m, idx) { (m && m.konten || []).forEach(function (k) { var key = k.konto + '|' + k.zweck.replace(/\s*\(.*\)$/, ''); if (!rows[key]) { rows[key] = { konto: k.konto, zweck: k.zweck.replace(/\s*\(.*\)$/, ''), w: [null, null] }; order.push(key); } rows[key].w[idx] = k.betrag; }); });
+    var cell = function (v) { return v == null ? '–' : eur(v, 0); };
+    $('pv-konten').innerHTML = '<tr class="sum"><td>Gewinn</td><td>' + cell(V && V.gewinn) + '</td><td>' + cell(A && A.gewinn) + '</td></tr>' + order.map(function (k) { var r = rows[k]; return '<tr><td>' + esc(r.konto) + '<small>' + esc(r.zweck) + '</small></td><td>' + cell(r.w[0]) + '</td><td>' + cell(r.w[1]) + '</td></tr>'; }).join('');
+    $('pv-ktip').textContent = (A && A.reicht_nicht ? '⚠️ Dieser Monat deckt Steuer + Fixkosten noch nicht. ' : '') + 'Basis: Gewinn pro verkauftem Artikel. Erst 30 % Steuer auf Fyrst, dann private Fixkosten, der Rest 20/15/10/25.';
+  }
+  $('pv-todos').addEventListener('click', function (e) {
+    var b = e.target.closest('.chk'); if (!b) return;
+    var li = b.closest('li'); li.style.opacity = '.4'; b.style.background = 'var(--accent)';
+    load({ erledigt_id: Number(b.dataset.id) });
+  });
+  $('pv-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var t = $('pv-titel').value.trim(), f = $('pv-datum').value; if (!t) return;
+    var api = window.jarvisApi && window.jarvisApi();
+    $('pv-tip').textContent = 'Speichere …';
+    try {
+      if (api) { await api('/api/aufgaben', { titel: t, faellig: f || null, kategorie: 'Privat' }); $('pv-tip').textContent = 'Gespeichert.'; load(); }
+      else { window.dispatchEvent(new CustomEvent('jarvis-senden', { detail: 'Leg eine private Aufgabe an (kategorie Privat): ' + t + (f ? ', fällig am ' + f : '') })); $('pv-tip').textContent = 'An Jarvis übergeben – erscheint nach dem nächsten Aktualisieren.'; }
+      $('pv-titel').value = ''; $('pv-datum').value = '';
+    } catch (err) { $('pv-tip').textContent = 'Hat nicht geklappt (' + err.message + ').'; }
+  });
+  try { $('pv-notiz').value = store('jarvis_notiz') || ''; } catch (e) {}
+  $('pv-notiz').addEventListener('input', function () { store('jarvis_notiz', this.value); });
 
   // ---------- Mini-Verlauf (SVG) ----------
   function spark(pts) {
@@ -1774,9 +2189,22 @@
     $('hw-t').textContent = '▸ ' + T;
     $('hw-body').innerHTML = h;
     $('hw-go').dataset.tab = tab || ''; $('hw-go').hidden = !tab;
+    var warZu = $('hudwin').hidden;
     $('hudwin').hidden = false;
+    if (warZu) { try {
+      var hw = $('hudwin').querySelector('.hw'), ob = $('orb'), o = ob.getBoundingClientRect(), r = hw.getBoundingClientRect();
+      hw.style.setProperty('--dx', Math.round(o.left + o.width / 2 - (r.left + r.width / 2)) + 'px');
+      hw.style.setProperty('--dy', Math.round(o.top + o.height / 2 - (r.top + r.height / 2)) + 'px');
+      hw.classList.remove('ausKugel'); ob.classList.remove('gibt'); void hw.offsetWidth;
+      hw.classList.add('ausKugel'); ob.classList.add('gibt'); setTimeout(function () { ob.classList.remove('gibt'); }, 550);
+      if (window.jvBurst) window.jvBurst(r.left + r.width / 2 - (o.left + o.width / 2), r.top + r.height / 2 - (o.top + o.height / 2));
+    } catch (e) {} }
   }
-  function hudZu() { $('hudwin').hidden = true; hudOffen = null; }
+  function hudZu() {
+    var hwn = $('hudwin'); hudOffen = null; if (hwn.hidden) return;
+    if (!$('v-chat').classList.contains('on') || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) { hwn.hidden = true; return; }
+    hwn.classList.add('zu'); setTimeout(function () { hwn.classList.remove('zu'); if (!hudOffen) hwn.hidden = true; }, 260);
+  }
   $('hudwin').addEventListener('click', function (e) {
     if (e.target.closest('[data-close]')) { hudZu(); return; }
     if (e.target.id === 'hw-go') { var t = e.target.dataset.tab; hudZu(); if (t) show(t); return; }
@@ -2009,6 +2437,15 @@
   var PUSH_URL = 'https://luisdtg16.app.n8n.cloud/webhook/jarvis-push';
   var pushOn = false;
   async function pushCall(body) {
+    if (API) {
+      try {
+        if (body.aktion === 'vapid') return await apiCall('/api/push/vapid');
+        if (body.aktion === 'abo') return await apiCall('/api/push/abo', body);
+        if (body.aktion === 'liste') return await apiCall('/api/meldungen');
+        if (body.aktion === 'test') return await apiCall('/api/push', { titel: 'Jarvis', text: 'Push funktioniert, Boss. Ab jetzt melde ich mich hier.', tab: 'dash' });
+        if (body.aktion === 'nachricht') return await apiCall('/api/push', { titel: body.titel || 'Jarvis', text: body.text || '', tab: body.tab || 'dash' });
+      } catch (e) { console.warn('Backend-Push nicht erreichbar, nehme n8n', e); }
+    }
     var res = await fetch(PUSH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ key: KEY }, body)) });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
@@ -2149,6 +2586,7 @@
       dpVerlaufMerken(d.depot);
       renderDepot(d);
       if (d.meldung) $('dp-stand').textContent = d.meldung;
+      try { alarmePruefen(d); } catch (e) {}
     } catch (e) { $('dp-stand').textContent = 'Keine Verbindung (' + e.message + ')'; }
     dLoading = false;
   }
@@ -2162,46 +2600,74 @@
     h[heute] = { w: Math.round(dp.wert * 100) / 100, e: Math.round((dp.wert - (dp.gv || 0)) * 100) / 100 };
     var k = Object.keys(h).sort(); while (k.length > 800) delete h[k.shift()];
     store('jarvis_depot_hist', JSON.stringify(h));
+    var t; try { t = JSON.parse(store('jarvis_depot_tag') || 'null'); } catch (e) { t = null; }
+    if (!t || t.datum !== heute) t = { datum: heute, start: Math.round((dp.wert - (dp.heute || 0)) * 100) / 100, pts: [] };
+    t.pts.push([Date.now(), Math.round(dp.wert * 100) / 100]); if (t.pts.length > 300) t.pts.shift();
+    store('jarvis_depot_tag', JSON.stringify(t));
   }
-  function dpVerlauf() {
-    var svg = $('c-dp-verlauf'), h; try { h = JSON.parse(store('jarvis_depot_hist') || '{}'); } catch (e) { h = {}; }
+  // Kurve wie bei Trade Republic: eine Linie, gepunktete Startlinie, leuchtender Endpunkt, Finger zeigt Wert + Datum
+  var TR_NAME = { 1: 'Heute', 7: '1 Woche', 30: '1 Monat', 365: '1 Jahr', 0: 'Seit Beginn' };
+  function dpPunkte() {
+    var h; try { h = JSON.parse(store('jarvis_depot_hist') || '{}'); } catch (e) { h = {}; }
+    if (dpTage === 1) {
+      var t; try { t = JSON.parse(store('jarvis_depot_tag') || 'null'); } catch (e) { t = null; }
+      var heute = new Date().toLocaleDateString('sv-SE'), P = [];
+      if (t && t.datum === heute) { P.push({ ts: new Date(heute + 'T00:00:00').getTime(), w: t.start }); t.pts.forEach(function (x) { P.push({ ts: x[0], w: x[1] }); }); }
+      return P;
+    }
     var k = Object.keys(h).sort();
     if (dpTage) { var ab = new Date(Date.now() - dpTage * 864e5).toLocaleDateString('sv-SE'); k = k.filter(function (d) { return d >= ab; }); }
-    var W = svg.clientWidth || 340, H = 150, pl = 4, pr = 4, pt = 14, pb = 18;
+    return k.map(function (d) { return { ts: new Date(d + 'T12:00:00').getTime(), w: h[d].w, e: h[d].e }; });
+  }
+  function dpKopf(wert, diff, basis, label) {
+    $('dp-wert').textContent = eur(wert, 2);
+    var el = $('dp-gv');
+    if (diff == null || !basis) { el.innerHTML = '<small>' + esc(label) + '</small>'; return; }
+    var pz = diff / basis * 100;
+    el.innerHTML = (diff >= 0 ? '▲ ' : '▼ ') + Math.abs(pz).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %<small>' + (diff >= 0 ? '+' : '−') + eur(Math.abs(diff), 2) + ' · ' + esc(label) + '</small>';
+  }
+  function dpKopfAktuell(P) {
+    var dp = (dLast && dLast.depot) || {}, wert = dp.wert || (P.length ? P[P.length - 1].w : 0);
+    if (dpTage === 0) dpKopf(wert, dp.gv, wert - (dp.gv || 0), TR_NAME[0]);
+    else if (dpTage === 1) dpKopf(wert, dp.heute, wert - (dp.heute || 0), TR_NAME[1]);
+    else if (P.length >= 2) dpKopf(wert, wert - P[0].w, P[0].w, TR_NAME[dpTage]);
+    else dpKopf(wert, null, null, TR_NAME[dpTage]);
+  }
+  function dpVerlauf() {
+    var svg = $('c-dp-verlauf'), P = dpPunkte();
+    var W = svg.clientWidth || 340, H = 210, pt = 12, pb = 12;
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-    if (k.length < 2) {
-      svg.innerHTML = '<text x="' + W / 2 + '" y="70" text-anchor="middle">Der Verlauf startet heute –</text><text x="' + W / 2 + '" y="86" text-anchor="middle">ab morgen siehst du hier eine Kurve.</text>';
-      svg.onclick = null; return;
+    dpKopfAktuell(P);
+    if (P.length < 2) {
+      svg.innerHTML = '<text x="' + W / 2 + '" y="' + (H / 2) + '" text-anchor="middle">' + (dpTage === 1 ? 'Der Tagesverlauf füllt sich, sobald du heute öfter reinschaust.' : 'Der Verlauf läuft seit 03.10. – er wird jeden Tag länger.') + '</text>';
+      svg.onpointerdown = svg.onpointermove = null; $('t-dp').textContent = ''; return;
     }
-    var P = k.map(function (d) { return { d: d, w: h[d].w, e: h[d].e }; });
-    var vals = []; P.forEach(function (p) { vals.push(p.w); if (p.e) vals.push(p.e); });
-    var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), sp = (mx - mn) || mx * 0.05 || 1; mn -= sp * 0.1; mx += sp * 0.1;
-    var t0 = new Date(P[0].d).getTime(), t1 = new Date(P[P.length - 1].d).getTime();
-    var X = function (p) { return pl + (W - pl - pr) * (new Date(p.d).getTime() - t0) / ((t1 - t0) || 1); };
+    var vals = P.map(function (p) { return p.w; }), mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), sp = (mx - mn) || mx * 0.01 || 1;
+    mn -= sp * 0.08; mx += sp * 0.08;
+    var t0 = P[0].ts, t1 = P[P.length - 1].ts;
+    var X = function (p) { return (W - 8) * (p.ts - t0) / ((t1 - t0) || 1); };
     var Y = function (v) { return pt + (H - pt - pb) * (1 - (v - mn) / (mx - mn)); };
+    var ende = P[P.length - 1], farbe = '#fff';
     var lw = P.map(function (p, i) { return (i ? 'L' : 'M') + X(p).toFixed(1) + ' ' + Y(p.w).toFixed(1); }).join('');
-    var le = P.filter(function (p) { return p.e; }).map(function (p, i) { return (i ? 'L' : 'M') + X(p).toFixed(1) + ' ' + Y(p.e).toFixed(1); }).join('');
-    var ar = lw + 'L' + X(P[P.length - 1]).toFixed(1) + ' ' + (H - pb) + 'L' + X(P[0]).toFixed(1) + ' ' + (H - pb) + 'Z';
-    var dt = function (d) { return new Date(d + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }); };
-    var ende = P[P.length - 1], gut = ende.w >= P[0].w;
-    var html = '<defs><linearGradient id="dpg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + (gut ? '#4fd1c5' : '#ff7a7a') + '" stop-opacity=".35"/><stop offset="1" stop-color="' + (gut ? '#4fd1c5' : '#ff7a7a') + '" stop-opacity="0"/></linearGradient></defs>' +
-      '<line class="grid" x1="0" x2="' + W + '" y1="' + (H - pb) + '" y2="' + (H - pb) + '"/>' +
-      '<path class="ar" d="' + ar + '"/>' + (le ? '<path class="ein" d="' + le + '"/>' : '') + '<path class="ln" d="' + lw + '" style="stroke:' + (gut ? 'var(--accent)' : '#ff7a7a') + '"/>' +
-      '<circle class="pt" cx="' + X(ende).toFixed(1) + '" cy="' + Y(ende.w).toFixed(1) + '" r="3.5"/>' +
-      '<text x="' + pl + '" y="' + (H - 4) + '">' + dt(P[0].d) + '</text><text x="' + (W - pr) + '" y="' + (H - 4) + '" text-anchor="end">' + dt(ende.d) + '</text>' +
-      '<text x="' + pl + '" y="10">' + eur(Math.max.apply(null, P.map(function (p) { return p.w; }))) + ' max</text>' +
-      '<text x="' + (W - pr) + '" y="10" text-anchor="end">— Wert  ┅ eingezahlt</text>' +
-      '<line id="dp-cur" class="grid" x1="0" x2="0" y1="' + pt + '" y2="' + (H - pb) + '" style="display:none"/>';
-    svg.innerHTML = html;
-    var diff = ende.w - P[0].w;
-    $('t-dp').innerHTML = 'Im Zeitraum <span class="' + cls(diff) + '">' + (diff > 0 ? '+' : '') + eur(diff, 2) + '</span> · tippe ins Diagramm';
-    svg.onclick = function (ev) {
+    var by = Y(dpTage === 0 && P[0].e ? P[0].e : P[0].w).toFixed(1);
+    svg.innerHTML = '<line class="base" x1="0" x2="' + W + '" y1="' + by + '" y2="' + by + '"/>' +
+      '<path class="ln" d="' + lw + '" stroke="' + farbe + '"/>' +
+
+      '<g id="dp-scrub" style="display:none"><line class="cur" id="dp-cur" y1="0" y2="' + H + '"/><circle id="dp-cdot" r="4.5" fill="' + farbe + '" stroke="#000" stroke-width="1.5"/></g>';
+    var datum = function (p) { var d = new Date(p.ts); return dpTage === 1 ? d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr' : d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short', year: '2-digit' }); };
+    $('t-dp').textContent = 'Finger auf die Kurve legen für Wert und Datum.';
+    var zeig = function (ev) {
       var r = svg.getBoundingClientRect(), x = (ev.clientX - r.left) * W / r.width, best = P[0];
       P.forEach(function (p) { if (Math.abs(X(p) - x) < Math.abs(X(best) - x)) best = p; });
-      var c = $('dp-cur'); c.setAttribute('x1', X(best)); c.setAttribute('x2', X(best)); c.style.display = '';
-      var g = best.e ? best.w - best.e : null;
-      $('t-dp').innerHTML = dt(best.d) + ': <b>' + eur(best.w, 2) + '</b>' + (g != null ? ' · <span class="' + cls(g) + '">' + (g > 0 ? '+' : '') + eur(g, 2) + '</span> G/V' : '');
+      var g = $('dp-scrub'); g.style.display = '';
+      $('dp-cur').setAttribute('x1', X(best)); $('dp-cur').setAttribute('x2', X(best));
+      $('dp-cdot').setAttribute('cx', X(best)); $('dp-cdot').setAttribute('cy', Y(best.w));
+      dpKopf(best.w, best.w - P[0].w, P[0].w, datum(best));
     };
+    var ende2 = function () { var g = $('dp-scrub'); if (g) g.style.display = 'none'; dpKopfAktuell(P); };
+    svg.onpointerdown = function (ev) { try { svg.setPointerCapture(ev.pointerId); } catch (e) {} zeig(ev); };
+    svg.onpointermove = function (ev) { if (ev.buttons || ev.pointerType === 'touch') zeig(ev); };
+    svg.onpointerup = svg.onpointercancel = svg.onpointerleave = ende2;
   }
   function dpCharts(d) {
     var dp = (d && d.depot) || {}, P = (dp.positionen || []).filter(function (p) { return p.wert > 0; });
@@ -2238,17 +2704,18 @@
   function delBtn(kind, id) { return '<button class="del" type="button" data-kind="' + kind + '" data-id="' + id + '" aria-label="Löschen">✕</button>'; }
   function renderDepot(d) {
     var dp = d.depot || {}, P = dp.positionen || [];
-    $('dp-stand').textContent = 'Stand ' + new Date(d.stand).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    var dpT = new Date(d.stand || Date.now()); $('dp-stand').textContent = isNaN(dpT) ? '' : 'Stand ' + dpT.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     $('dp-wert').textContent = P.length ? eur(dp.wert, 2) : '–';
     $('dp-gv').innerHTML = P.length ? '<span class="' + cls(dp.gv) + '">' + (dp.gv > 0 ? '+' : '') + eur(dp.gv, 2) + ' (' + pct(dp.gv_prozent) + ')</span>' : '';
     $('dp-heute').innerHTML = P.length ? 'heute <span class="' + cls(dp.heute) + '">' + (dp.heute > 0 ? '+' : '') + eur(dp.heute, 2) + '</span>' : '';
     $('depot').innerHTML = P.length ? P.map(function (p) {
-      return '<li><div class="main"><div>' + esc(p.name) + '</div><div class="sub">' + p.stueck.toLocaleString('de-DE') + ' Stk · Kauf ' + eur(p.kaufkurs, 2) + ' · jetzt ' + (p.preis != null ? eur(p.preis, 2) : 'kein Kurs') + ' <span class="' + cls(p.tag_prozent) + '">' + pct(p.tag_prozent) + '</span></div></div><div class="val" style="text-align:right">' + (p.wert != null ? eur(p.wert, 2) : '–') + '<div class="sub ' + cls(p.gv) + '">' + (p.gv != null ? (p.gv > 0 ? '+' : '') + eur(p.gv, 2) : '') + '</div></div>' + delBtn('pos', p.id) + '</li>';
+      var pz = p.gv_prozent != null ? p.gv_prozent : (p.kaufkurs && p.preis != null ? (p.preis / p.kaufkurs - 1) * 100 : null);
+      return '<li class="kurs" data-sym="' + esc(p.symbol || '') + '" data-name="' + esc(p.name) + '" data-preis="' + (p.preis != null ? p.preis : '') + '"><div class="main"><div><b>' + esc(p.name) + '</b>' + (alarmeFuer(p.symbol).length ? ' 🔔' : '') + '</div><div class="tr-pos-w">' + (p.wert != null ? eur(p.wert, 2) : '–') + ' · ' + p.stueck.toLocaleString('de-DE') + ' Stk</div></div><div class="tr-pos-p ' + (pz == null ? '' : pz >= 0 ? 'up' : 'down') + '">' + (pz == null ? '–' : (pz >= 0 ? '▲ ' : '▼ ') + Math.abs(pz).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %') + '</div>' + delBtn('pos', p.id) + '</li>';
     }).join('') : '<li class="empty">Noch keine Positionen. Unten hinzufügen.</li>';
     try { dpCharts(d); } catch (e) {}
     var W = d.watchlist || [];
     $('watch').innerHTML = W.length ? W.map(function (p) {
-      return '<li><div class="main"><div>' + esc(p.name) + '</div><div class="sub">' + esc(p.symbol || 'kein Kürzel gefunden') + '</div></div><div class="val" style="text-align:right">' + (p.preis != null ? eur(p.preis, 2) : '–') + '<div class="sub ' + cls(p.tag_prozent) + '">' + pct(p.tag_prozent) + '</div></div>' + delBtn('pos', p.id) + '</li>';
+      return '<li class="kurs" data-sym="' + esc(p.symbol || '') + '" data-name="' + esc(p.name) + '" data-preis="' + (p.preis != null ? p.preis : '') + '"><div class="main"><div>' + esc(p.name) + (alarmeFuer(p.symbol).length ? ' <span class="tag">🔔</span>' : '') + '</div><div class="sub">' + esc(p.symbol || 'kein Kürzel gefunden') + '</div></div><div class="val" style="text-align:right">' + (p.preis != null ? eur(p.preis, 2) : '–') + '<div class="sub ' + cls(p.tag_prozent) + '">' + pct(p.tag_prozent) + '</div></div>' + delBtn('pos', p.id) + '</li>';
     }).join('') : '<li class="empty">Leer. Füge oben einen Wert mit Stück 0 hinzu.</li>';
     var TR = d.trades || { liste: [] };
     $('tr-sum').innerHTML = TR.anzahl ? '<span class="' + cls(TR.gesamt) + '">' + (TR.gesamt > 0 ? '+' : '') + eur(TR.gesamt, 2) + '</span> · ' + TR.gewinner + '/' + TR.anzahl + ' im Plus' : '';
@@ -2273,14 +2740,57 @@
     btn.disabled = false; f.reset(); f.datum.value = new Date().toLocaleDateString('sv-SE');
   });
   $('f-trade').datum.value = new Date().toLocaleDateString('sv-SE');
+  // ---------- Kurs-Detail wie bei Trade Republic + Kursalarme ----------
+  function alarmeAlle() { try { return JSON.parse(store('jarvis_alarme') || '[]'); } catch (e) { return []; } }
+  function alarmeFuer(sym) { return alarmeAlle().filter(function (a) { return a.sym === sym && !a.erledigt; }); }
+  function alarmeSpeichern(l) { store('jarvis_alarme', JSON.stringify(l)); }
+  function kursSheet(sym, name, preis) {
+    var A = alarmeFuer(sym);
+    $('sh-body').innerHTML = '<div class="ks-h"><b>' + esc(name) + '</b><span>' + esc(sym || '') + '</span></div>' +
+      '<div class="ks-preis">' + (preis ? eur(Number(preis), 2) : '–') + '</div>' +
+      '<div id="ks-chart" class="ks-chart"></div>' +
+      '<div class="ks-alarm"><h4>🔔 Kursalarm</h4>' +
+      (A.length ? '<ul class="list">' + A.map(function (a, i) { return '<li><div class="main"><div>' + (a.richtung === 'ueber' ? 'Steigt über ' : 'Fällt unter ') + eur(a.preis, 2) + '</div></div><button type="button" class="del" data-alarm="' + a.id + '" aria-label="Alarm löschen">✕</button></li>'; }).join('') + '</ul>' : '<p class="tip">Noch kein Alarm.</p>') +
+      '<form class="ks-form" id="ks-form"><select id="ks-r" aria-label="Richtung"><option value="ueber">steigt über</option><option value="unter">fällt unter</option></select><input id="ks-p" inputmode="decimal" placeholder="Preis in €" aria-label="Preis in Euro" required><button class="btn" type="submit">Setzen</button></form>' +
+      '<p class="tip">Jarvis prüft den Kurs, sobald die Depot-Kurse aktualisiert werden, und meldet sich per Mitteilung. Kein Kauf und Verkauf – das entscheidest du.</p></div>';
+    $('sheet').hidden = false;
+    if (sym) widget('ks-chart', 'symbol-overview', { symbols: [[name, sym + '|1D']], chartOnly: false, width: '100%', height: 340, showVolume: false, hideDateRanges: false, hideMarketStatus: true, hideSymbolLogo: true,
+      scalePosition: 'no', scaleMode: 'Normal', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', fontSize: '11', noTimeScale: false, valuesTracking: '1', changeMode: 'price-and-percent',
+      chartType: 'area', lineWidth: 2, lineType: 0, dateRanges: ['1d|1', '1w|15', '1m|30', '12m|1D', '60m|1W', 'all|1M'], lineColor: 'rgba(0, 210, 120, 1)', topColor: 'rgba(0, 210, 120, 0.25)', bottomColor: 'rgba(0, 210, 120, 0)', upColor: '#00d278', downColor: '#ff5a5f', gridLineColor: 'rgba(255,255,255,0.04)', dateFormat: 'dd.MM.yy' });
+    else $('ks-chart').innerHTML = '<p class="tip">Für diesen Wert ist kein Kürzel bekannt.</p>';
+    $('ks-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var v = Number(String($('ks-p').value).replace(',', '.')); if (!(v > 0)) return;
+      var l = alarmeAlle(); l.push({ id: Date.now(), sym: sym, name: name, richtung: $('ks-r').value, preis: v });
+      alarmeSpeichern(l); kursSheet(sym, name, preis); if (dLast) renderDepot(dLast);
+      try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (x) {}
+    });
+    $('sh-body').querySelectorAll('[data-alarm]').forEach(function (b) { b.addEventListener('click', function () {
+      alarmeSpeichern(alarmeAlle().filter(function (a) { return String(a.id) !== b.dataset.alarm; })); kursSheet(sym, name, preis); if (dLast) renderDepot(dLast);
+    }); });
+  }
+  async function alarmePruefen(d) {
+    var P = ((d.depot || {}).positionen || []).concat(d.watchlist || []), l = alarmeAlle(), treffer = [];
+    l.forEach(function (a) {
+      if (a.erledigt) return;
+      var p = P.find(function (x) { return x.symbol === a.sym; }); if (!p || p.preis == null) return;
+      if ((a.richtung === 'ueber' && p.preis >= a.preis) || (a.richtung === 'unter' && p.preis <= a.preis)) { a.erledigt = true; a.zeit = Date.now(); treffer.push(a.name + (a.richtung === 'ueber' ? ' ist über ' : ' ist unter ') + eur(a.preis, 2) + ' (jetzt ' + eur(p.preis, 2) + ')'); }
+    });
+    if (!treffer.length) return;
+    alarmeSpeichern(l.filter(function (a) { return !a.erledigt || Date.now() - (a.zeit || 0) < 30 * 864e5; }));
+    $('dp-stand').textContent = '🔔 ' + treffer[0];
+    try { var reg = await navigator.serviceWorker.ready; if (Notification.permission === 'granted') treffer.forEach(function (t) { reg.showNotification('🔔 Kursalarm', { body: t, tag: 'kurs-' + t.slice(0, 20) }); }); } catch (e) {}
+  }
   document.getElementById('v-trade').addEventListener('click', function (e) {
+    var k = e.target.closest('li.kurs');
+    if (k && !e.target.closest('.del')) { kursSheet(k.dataset.sym, k.dataset.name, k.dataset.preis); return; }
     var b = e.target.closest('.del'); if (!b) return;
     if (!b.classList.contains('sure')) { b.classList.add('sure'); b.textContent = 'Löschen?'; setTimeout(function () { b.classList.remove('sure'); b.textContent = '✕'; }, 3000); return; }
     b.closest('li').style.opacity = '.4';
     depotCall({ aktion: b.dataset.kind === 'pos' ? 'pos_del' : 'trade_del', id: Number(b.dataset.id) });
   });
   try { var dc = JSON.parse(store('jarvis_depot') || 'null'); if (dc) { dLast = dc; renderDepot(dc); } } catch (e) {}
-  setInterval(function () { if (document.visibilityState === 'visible' && $('v-trade').classList.contains('on')) depotCall(); }, 2 * 60000);
+  setInterval(function () { if (window.jarvisAktiv && jarvisAktiv() && $('v-trade').classList.contains('on')) depotCall(); }, 5 * 60000);
 
   // ---------- Start ----------
   if ('serviceWorker' in navigator) { try { navigator.serviceWorker.register('sw.js'); } catch (e) {} }
@@ -2291,7 +2801,11 @@
   startTab = startTab ? 'v-' + startTab : (store('jarvis_tab') || 'v-chat');
   if (!document.getElementById(startTab)) startTab = 'v-chat';
   show(startTab);
-  setInterval(function () { if (document.visibilityState === 'visible' && ($('v-chat').classList.contains('on') || $('v-dash').classList.contains('on') || $('v-lager').classList.contains('on') || $('v-geld').classList.contains('on'))) load(); }, 5 * 60000);
+  // Auto-Aktualisierung nur, wenn du die App gerade benutzt (spart n8n-Ausführungen; im Standby kein Dauer-Neuladen)
+  var zuletztBedient = Date.now();
+  ['pointerdown', 'keydown'].forEach(function (ev) { document.addEventListener(ev, function () { zuletztBedient = Date.now(); }, true); });
+  window.jarvisAktiv = function () { return document.visibilityState === 'visible' && Date.now() - zuletztBedient < 10 * 60000; };
+  setInterval(function () { if (jarvisAktiv() && ($('v-dash').classList.contains('on') || $('v-lager').classList.contains('on') || $('v-geld').classList.contains('on'))) load(); }, 15 * 60000);
 })();
 </script>
 </body>
