@@ -1056,9 +1056,20 @@
     setState('thinking', 'Jarvis denkt nach …');
     payload.key = KEY; payload.tts = serverVoice;
     try {
-      var res = await fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error('Server antwortet mit ' + res.status);
-      var data = await res.json();
+      var data = null, api = window.jarvisApi && window.jarvisApi();
+      // Zuerst das eigene Backend (Gemini direkt, keine n8n-Ausführungen); bei Fehler wie bisher n8n
+      if (api && payload.text) {
+        try {
+          var verlauf = [].slice.call(log.querySelectorAll('.msg.me, .msg.jv')).slice(-13, -1).map(function (m) { return { rolle: m.classList.contains('jv') ? 'jarvis' : 'user', text: m.textContent }; });
+          data = await api('/api/jarvis', { prompt: payload.text, verlauf: verlauf, kanal: payload.fromVoice ? 'app' : 'text' });
+          if (!data || !data.antwort) data = null;
+        } catch (e) { data = null; }
+      }
+      if (!data) {
+        var res = await fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error('Server antwortet mit ' + res.status);
+        data = await res.json();
+      }
       if (data.frage && payload.audio) add('me', data.frage);
       if (data.antwort) add('jv', clean(data.antwort));
       try { window.dispatchEvent(new CustomEvent('jarvis-geantwortet')); } catch (e) {}
@@ -1282,8 +1293,8 @@
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
   var KEY = new URLSearchParams(location.search).get('key') || store('jarvis_key') || '';
   // ---------- Eigenes Backend (Cloudflare). Einmal mit ?api=https://… öffnen, dann gemerkt. Ohne Backend läuft alles wie bisher über n8n. ----------
-  (function () { var a = new URLSearchParams(location.search).get('api'); if (a === 'aus') store('jarvis_api', ''); else if (a && /^https:\/\//.test(a)) store('jarvis_api', a.replace(/\/+$/, '')); })();
-  var API = store('jarvis_api') || '';
+  (function () { var a = new URLSearchParams(location.search).get('api'); if (a === 'aus') store('jarvis_api', 'aus'); else if (a && /^https:\/\//.test(a)) store('jarvis_api', a.replace(/\/+$/, '')); })();
+  var API = store('jarvis_api') === 'aus' ? '' : (store('jarvis_api') || 'https://jarvis-api.dettlingluis.workers.dev');
   async function apiCall(pfad, body, methode) {
     var res = await fetch(API + pfad, { method: methode || (body ? 'POST' : 'GET'), headers: { 'Content-Type': 'application/json', 'X-Jarvis-Key': KEY }, body: body ? JSON.stringify(body) : undefined });
     if (!res.ok) throw new Error('Backend ' + res.status);
@@ -1293,7 +1304,7 @@
   var rechner = null;
   async function backendDaten(extra) {
     var r = await apiCall('/api/rohdaten', extra || {});
-    if (!rechner) rechner = await import('./backend/src/rechnen.js');
+    if (!rechner) rechner = await import('./rechnen.js');
     return rechner.berechnen(r.roh);
   }
   var $ = function (id) { return document.getElementById(id); };
