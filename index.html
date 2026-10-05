@@ -1492,14 +1492,16 @@
         var n = PP.zaehler[s[0]] || 0, bad = PP.liste.some(function (p) { return p.s[s[0]] === 'fehlt'; });
         return '<div' + (bad ? ' class="bad"' : '') + '><b>' + n + '<small>/' + PP.anzahl + '</small></b><span>' + s[1] + '</span></div>';
       }).join('');
-      $('pipeline').innerHTML = PP.liste.length ? PP.liste.map(function (p) {
+      var ppOffen = PP.liste.filter(function (p) { return !p.storno && !STEPS.every(function (st) { return p.s[st[0]] === 'ok'; }); });
+      var ppFertig = PP.liste.length - ppOffen.length;
+      $('pipeline').innerHTML = ppOffen.length ? ppOffen.map(function (p) {
         var dt = new Date(p.datum);
         var tipT = STEPS.map(function (s) { return s[1] + ': ' + (LAB[p.s[s[0]]] || p.s[s[0]]); }).join(' · ');
         var haengt = STEPS.filter(function (s) { return p.s[s[0]] === 'fehlt'; }).map(function (s) { return s[1]; });
         return '<li data-poid="' + esc(p.order_id) + '" style="cursor:pointer"><div class="main"><div>' + esc(p.artikel) + (p.notiz ? ' 📝' : '') + '</div><div class="sub">' + esc(p.order_id) + ' · ' + dt.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) + ' · ' + eur(p.betrag, 2) +
           (p.gewinn != null ? ' · Gewinn ' + eur(p.gewinn, 2) : '') + (haengt.length ? ' · <span style="color:#ff7a7a">hängt: ' + haengt.join(', ') + '</span>' : '') + '</div></div>' +
           '<div class="pdots" role="img" aria-label="' + esc(tipT) + '" title="' + esc(tipT) + '">' + STEPS.map(function (s) { return '<i class="' + p.s[s[0]] + '"></i>'; }).join('') + '</div></li>';
-      }).join('') : '<li class="empty">Noch keine Bestellungen seit 01.10.</li>';
+      }).join('') + (ppFertig ? '<li class="empty">' + ppFertig + ' fertige Bestellung' + (ppFertig === 1 ? '' : 'en') + ' ausgeblendet ✅</li>' : '') : '<li class="empty">' + (PP.liste.length ? 'Alles erledigt ✅' : 'Noch keine Bestellungen seit 01.10.') + '</li>';
     }
     PPL = (PP && PP.liste) || [];
     // Monatsabschluss
