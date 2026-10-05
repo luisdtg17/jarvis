@@ -2824,7 +2824,60 @@
   }
   // Kurve wie bei Trade Republic: eine Linie, gepunktete Startlinie, leuchtender Endpunkt, Finger zeigt Wert + Datum
   var TR_NAME = { 1: 'Heute', 7: '1 Woche', 30: '1 Monat', 365: '1 Jahr', 0: 'Seit Beginn' };
+  // Echte Kurve aus deinen Käufen (Trade Republic) × Börsenkursen (Xetra, über das Backend)
+  var DP_KAEUFE = [
+    { sym: 'XAIX.DE', name: 'AI & Big Data', ts: Date.parse('2026-08-24T11:51:00+02:00'), stk: 1.994515, kurs: 200.55, geb: 1 },
+    { sym: 'IS3N.DE', name: 'Core MSCI EM IMI', ts: Date.parse('2026-09-16T12:40:00+02:00'), stk: 4.244482, kurs: 47.12, geb: 1 }
+  ];
+  var DP_SERIE = { tag: null, lang: null, geladen: 0, laeuft: false };
+  function dpReihe(kurse, tagesweise) {
+    // kurse: { sym: [[ts, close], …] } → Depotwert je Zeitpunkt (fehlende Kurse mit dem letzten bekannten auffüllen)
+    var zeiten = {}; Object.keys(kurse).forEach(function (s) { kurse[s].forEach(function (x) { zeiten[x[0]] = 1; }); });
+    var T = Object.keys(zeiten).map(Number).sort(function (a, b) { return a - b; }), letzt = {}, idx = {}, out = [];
+    Object.keys(kurse).forEach(function (s) { idx[s] = 0; });
+    T.forEach(function (t) {
+      Object.keys(kurse).forEach(function (s) { var L = kurse[s]; while (idx[s] < L.length && L[idx[s]][0] <= t) { letzt[s] = L[idx[s]][1]; idx[s]++; } });
+      var w = 0, e = 0, ok = true, aktiv = 0;
+      DP_KAEUFE.forEach(function (k) {
+        var ab = tagesweise ? new Date(new Date(k.ts).toDateString()).getTime() : k.ts;
+        if (t < ab) return; aktiv++;
+        var c = letzt[k.sym]; if (c == null) { ok = false; return; }
+        w += k.stk * c; e += k.stk * k.kurs + k.geb;
+      });
+      if (aktiv && ok) out.push({ ts: t, w: Math.round(w * 100) / 100, e: Math.round(e * 100) / 100 });
+    });
+    return out;
+  }
+  async function dpSerieLaden(erzwingen) {
+    var api = window.jarvisApi && window.jarvisApi();
+    if (!api || DP_SERIE.laeuft || (!erzwingen && Date.now() - DP_SERIE.geladen < 10 * 60000)) return;
+    DP_SERIE.laeuft = true;
+    try {
+      var syms = DP_KAEUFE.map(function (k) { return k.sym; }).filter(function (s, i, a) { return a.indexOf(s) === i; });
+      var lang = {}, tag = {};
+      await Promise.all(syms.map(async function (s) {
+        var a = await api('/api/kurse?symbol=' + encodeURIComponent(s) + '&bereich=6mo'); if (a && a.ok) lang[s] = a.punkte;
+        var b = await api('/api/kurse?symbol=' + encodeURIComponent(s) + '&bereich=1d'); if (b && b.ok) tag[s] = b.punkte;
+      }));
+      if (Object.keys(lang).length === syms.length) DP_SERIE.lang = dpReihe(lang, true);
+      if (Object.keys(tag).length === syms.length) DP_SERIE.tag = dpReihe(tag, false);
+      DP_SERIE.geladen = Date.now();
+      try { store('jarvis_dp_serie', JSON.stringify({ lang: DP_SERIE.lang, tag: DP_SERIE.tag, geladen: DP_SERIE.geladen })); } catch (e) {}
+    } catch (e) {}
+    DP_SERIE.laeuft = false;
+    try { dpVerlauf(); } catch (e) {}
+  }
+  try { var dps = JSON.parse(store('jarvis_dp_serie') || 'null'); if (dps) { DP_SERIE.lang = dps.lang; DP_SERIE.tag = dps.tag; } } catch (e) {}
   function dpPunkte() {
+    dpSerieLaden(false);
+    if (dpTage === 1 && DP_SERIE.tag && DP_SERIE.tag.length > 1) return DP_SERIE.tag;
+    if (dpTage !== 1 && DP_SERIE.lang && DP_SERIE.lang.length > 1) {
+      var L = DP_SERIE.lang.slice();
+      var live = DP_SERIE.tag && DP_SERIE.tag[DP_SERIE.tag.length - 1];
+      if (live && live.ts > L[L.length - 1].ts) L.push(live);
+      if (dpTage) { var ab = Date.now() - dpTage * 864e5; var F = L.filter(function (p) { return p.ts >= ab; }); if (F.length > 1) L = F; }
+      return L;
+    }
     var h; try { h = JSON.parse(store('jarvis_depot_hist') || '{}'); } catch (e) { h = {}; }
     if (dpTage === 1) {
       var t; try { t = JSON.parse(store('jarvis_depot_tag') || 'null'); } catch (e) { t = null; }
@@ -2844,8 +2897,10 @@
     el.innerHTML = (diff >= 0 ? '▲ ' : '▼ ') + Math.abs(pz).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %<small>' + (diff >= 0 ? '+' : '−') + eur(Math.abs(diff), 2) + ' · ' + esc(label) + '</small>';
   }
   function dpKopfAktuell(P) {
-    var dp = (dLast && dLast.depot) || {}, wert = dp.wert || (P.length ? P[P.length - 1].w : 0);
-    if (dpTage === 0) dpKopf(wert, dp.gv, wert - (dp.gv || 0), TR_NAME[0]);
+    var dp = (dLast && dLast.depot) || {}, end = P.length ? P[P.length - 1] : null, wert = (end && DP_SERIE.lang ? end.w : 0) || dp.wert || (end ? end.w : 0);
+    if (dpTage === 0 && end && end.e) dpKopf(wert, wert - end.e, end.e, TR_NAME[0]);
+    else if (dpTage === 0) dpKopf(wert, dp.gv, wert - (dp.gv || 0), TR_NAME[0]);
+    else if (dpTage === 1 && P.length >= 2) dpKopf(wert, wert - P[0].w, P[0].w, TR_NAME[1]);
     else if (dpTage === 1) dpKopf(wert, dp.heute, wert - (dp.heute || 0), TR_NAME[1]);
     else if (P.length >= 2) dpKopf(wert, wert - P[0].w, P[0].w, TR_NAME[dpTage]);
     else dpKopf(wert, null, null, TR_NAME[dpTage]);
@@ -2856,7 +2911,7 @@
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     dpKopfAktuell(P);
     if (P.length < 2) {
-      svg.innerHTML = '<text x="' + W / 2 + '" y="' + (H / 2) + '" text-anchor="middle">' + (dpTage === 1 ? 'Der Tagesverlauf füllt sich, sobald du heute öfter reinschaust.' : 'Der Verlauf läuft seit 03.10. – er wird jeden Tag länger.') + '</text>';
+      svg.innerHTML = '<text x="' + W / 2 + '" y="' + (H / 2) + '" text-anchor="middle">' + (DP_SERIE.laeuft ? 'Lade Kursverlauf …' : (dpTage === 1 ? 'Heute noch kein Börsenhandel – Kurve kommt ab 9 Uhr.' : 'Kursverlauf lädt …')) + '</text>';
       svg.onpointerdown = svg.onpointermove = null; $('t-dp').textContent = ''; return;
     }
     var vals = P.map(function (p) { return p.w; }), mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), sp = (mx - mn) || mx * 0.01 || 1;
@@ -2879,7 +2934,7 @@
       var g = $('dp-scrub'); g.style.display = '';
       $('dp-cur').setAttribute('x1', X(best)); $('dp-cur').setAttribute('x2', X(best));
       $('dp-cdot').setAttribute('cx', X(best)); $('dp-cdot').setAttribute('cy', Y(best.w));
-      dpKopf(best.w, best.w - P[0].w, P[0].w, datum(best));
+      if (dpTage === 0 && best.e) dpKopf(best.w, best.w - best.e, best.e, datum(best)); else dpKopf(best.w, best.w - P[0].w, P[0].w, datum(best));
     };
     var ende2 = function () { var g = $('dp-scrub'); if (g) g.style.display = 'none'; dpKopfAktuell(P); };
     svg.onpointerdown = function (ev) { try { svg.setPointerCapture(ev.pointerId); } catch (e) {} zeig(ev); };
