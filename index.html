@@ -367,6 +367,19 @@
   .antw input { flex: 1; min-width: 0; border-radius: 10px; }
   .antw-r { margin-top: 6px; font-size: 13px; white-space: pre-wrap; color: var(--text); border-left: 2px solid var(--accent); padding-left: 8px; cursor: default; }
   #versand li .sub { font-size: 12px; }
+  #versand li[data-oid] { cursor: pointer; }
+  #versand .prog { font-size: 11px; color: var(--accent); white-space: nowrap; margin-left: 8px; }
+  .vs-h { font-size: 17px; font-weight: 600; padding-right: 40px; }
+  .vs-m { color: var(--muted); font-size: 13px; margin: 2px 0 12px; }
+  .vs-s { display: flex; align-items: center; gap: 10px; padding: 11px 2px; border-top: 1px solid var(--line); }
+  .vs-s .t { flex: 1; } .vs-s .t small { display: block; color: var(--muted); font-size: 12px; }
+  .vs-s button.tg { font: inherit; font-size: 13px; border-radius: 999px; padding: 6px 12px; border: 1px solid #3a4656; background: none; color: var(--text); white-space: nowrap; }
+  .vs-s button.tg.ok { background: var(--accent); color: #001018; border-color: var(--accent); font-weight: 600; }
+  .vs-s .auto { font-size: 12px; color: var(--accent); white-space: nowrap; }
+  .vs-pk { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .vs-pk input { font: inherit; font-size: 13px; color: var(--text); background: rgba(255,255,255,.04); border: 1px solid #3a4656; border-radius: 10px; padding: 6px 9px; width: 110px; }
+  .vs-pk input.kg { width: 70px; }
+  .vs-n { width: 100%; box-sizing: border-box; font: inherit; font-size: 14px; color: var(--text); background: rgba(255,255,255,.04); border: 1px solid #3a4656; border-radius: 10px; padding: 8px 10px; margin-top: 6px; min-height: 60px; }
   .sumrow > div:first-child, .sumrow > div:first-child div { text-align: left; }
   /* ---------- Jarvis-HUD ---------- */
   #v-chat { position: relative; --hud: #5fb4ff; overflow-x: hidden; }
@@ -1187,7 +1200,7 @@
   }
   function disarm() {
     try { if (wakeRec) { wakeRec.onend = null; wakeRec.abort(); } } catch (e) {}
-    wakeRec = null; cancelAnimationFrame(clapRaf); clapRaf = 0;
+    wakeRec = null; cancelAnimationFrame(clapRaf); clearTimeout(clapRaf); clapRaf = 0;
   }
   function wake(rest) {
     disarm();
@@ -1234,7 +1247,7 @@
         clapTimes.push(now);
         if (clapTimes.length >= 2 && now - clapTimes[clapTimes.length - 2] > 140) { clapTimes = []; wake(''); return; }
       } else { noise = noise * 0.98 + rms * 0.02; }
-      clapRaf = requestAnimationFrame(loop);
+      clapRaf = document.hidden ? setTimeout(loop, 25) : requestAnimationFrame(loop); // im Hintergrund (Mac) weiter lauschen
     })();
   }
   standbyBtn.addEventListener('click', async function () {
@@ -2579,12 +2592,64 @@
     if (!KEY || !API) return;
     try { renderVersand(await apiCall('/api/versand')); } catch (e) {}
   }
+  var VERSAND = [];
+  function vsSchritte(b) {
+    var s = b.schritte || {};
+    return [
+      { k: 'paket', n: 'Paketgröße', auto: !!b.masse, info: b.masse ? b.masse.replace(/x/g, '×') + ' cm · ' + String(b.gewicht).replace('.', ',') + ' kg' : 'noch offen' },
+      { k: 'rechnung', n: 'Rechnung', auto: !!b.rechnung, man: !!s.rechnung, info: b.rechnung ? 'Entwurf in Lexware' : (s.rechnung ? 'von dir erledigt' : 'kommt mit der Pipeline') },
+      { k: 'label', n: 'DHL-Label', auto: !!b.sendungsnr, info: b.sendungsnr ? 'Sendung ' + b.sendungsnr : 'kommt mit der Pipeline' },
+      { k: 'druck', n: 'Gedruckt', auto: b.label_status === 'gedruckt', info: b.label_status === 'gedruckt' ? 'auf dem Mac' : (b.sendungsnr ? 'wartet auf den Mac' : '–') },
+      { k: 'nexus', n: 'In neXus', man: !!s.nexus, info: 'z. B. Bestand vor 1.7. von Hand nachtragen' },
+      { k: 'excel', n: 'In Excel', man: !!s.excel, info: 'Verkauf eingetragen' },
+      { k: 'versendet', n: 'Versendet', auto: !!b.sendungsnr, man: !!s.versendet, info: s.versendet ? 'selbst verschickt – kein Label nötig' : (b.sendungsnr ? 'bei Kaufland gemeldet' : 'selbst verschickt? Dann abhaken') }
+    ];
+  }
+  function vsFortschritt(b) { var S = vsSchritte(b), f = S.filter(function (x) { return x.auto || x.man; }).length; return f + '/' + S.length; }
+  function openBestellung(oid) {
+    var b = VERSAND.find(function (x) { return x.order_id === oid; }); if (!b) return;
+    var S = vsSchritte(b);
+    $('sh-body').innerHTML = '<div class="vs-h">' + esc(b.artikel) + '</div><div class="vs-m">' + esc(b.kunde) + (b.ort ? ' · ' + esc(b.ort) : '') + ' · Bestellung ' + esc(b.order_id) + (b.preis ? ' · ' + eur(b.preis, 2) : '') + '</div>' +
+      S.map(function (x) {
+        var r = '<div class="vs-s" data-k="' + x.k + '"><div class="t">' + (x.auto || x.man ? '✅ ' : '⬜️ ') + esc(x.n) + '<small>' + esc(x.info) + '</small>';
+        if (x.k === 'paket') r += '<div class="vs-pk"><input data-pm placeholder="60x30x15" value="' + esc(b.masse || '60x30x15') + '"><input class="kg" data-pg inputmode="decimal" placeholder="kg" value="' + esc(b.gewicht != null ? String(b.gewicht).replace('.', ',') : '2') + '"><button type="button" class="tg ok" data-pk-save>Speichern</button></div>';
+        r += '</div>';
+        if (x.k !== 'paket' && x.k !== 'label' && x.k !== 'druck') r += x.auto ? '<span class="auto">automatisch</span>' : '<button type="button" class="tg' + (x.man ? ' ok' : '') + '" data-tg="' + x.k + '">' + (x.man ? '✓ erledigt' : 'Abhaken') + '</button>';
+        return r + '</div>';
+      }).join('') +
+      '<div class="vs-s" style="display:block"><div class="t">📝 Notiz</div><textarea class="vs-n" data-notiz placeholder="z. B. EK vor 1.7., nicht in neXus">' + esc((b.schritte || {}).notiz || '') + '</textarea></div>';
+    $('sh-body').dataset.oid = oid;
+    $('sheet').hidden = false;
+  }
+  $('sh-body').addEventListener('click', async function (e) {
+    var oid = this.dataset.oid, b = e.target.closest('button'); if (!oid || !b) return;
+    var x = VERSAND.find(function (y) { return y.order_id === oid; }); if (!x) return;
+    try {
+      if (b.dataset.tg) {
+        var an = !b.classList.contains('ok'); b.disabled = true;
+        var r = await apiCall('/api/versand/schritt', { order_id: oid, schritt: b.dataset.tg, wert: an });
+        x.schritte = r.schritte; openBestellung(oid); renderVersand({ bestellungen: VERSAND, dhl: VERSAND_DHL });
+      }
+      if (b.hasAttribute('data-pk-save')) {
+        b.textContent = '…';
+        var p = await apiCall('/api/paket', { order_id: oid, masse: this.querySelector('[data-pm]').value, gewicht: Number(this.querySelector('[data-pg]').value.replace(',', '.')) });
+        x.masse = p.masse.replace(/[^\d×]/g, '').replace(/×/g, 'x'); x.gewicht = p.gewicht; openBestellung(oid); renderVersand({ bestellungen: VERSAND, dhl: VERSAND_DHL });
+      }
+    } catch (err) { b.disabled = false; b.textContent = 'Fehler – nochmal'; }
+  });
+  $('sh-body').addEventListener('change', async function (e) {
+    var oid = this.dataset.oid; if (!oid || !e.target.matches('[data-notiz]')) return;
+    try { var r = await apiCall('/api/versand/schritt', { order_id: oid, notiz: e.target.value }); var x = VERSAND.find(function (y) { return y.order_id === oid; }); if (x) x.schritte = r.schritte; } catch (err) {}
+  });
+  $('sheet').addEventListener('click', function (e) { if (e.target.closest('[data-close]')) delete $('sh-body').dataset.oid; });
+  var VERSAND_DHL = null;
+  $('versand').addEventListener('click', function (e) { var li = e.target.closest('li[data-oid]'); if (li) openBestellung(li.dataset.oid); });
   function renderVersand(d) {
-    var B = (d && d.bestellungen) || [];
+    var B = (d && d.bestellungen) || []; VERSAND = B; VERSAND_DHL = d ? d.dhl : null;
     $('n-versand').textContent = B.length ? B.length + ' offen' : '';
     $('versand').innerHTML = B.length ? B.map(function (b) {
       var st = b.sendungsnr ? (b.label_status === 'gedruckt' ? '🖨️ gedruckt' : '🏷️ Label da · wartet auf Druck') : (b.masse ? '📦 ' + b.masse.replace(/x/g, '×') + ' · ' + String(b.gewicht).replace('.', ',') + ' kg' : '❓ Paketgröße fehlt');
-      return '<li><div class="main"><div><b>' + esc(b.artikel) + '</b></div><div class="sub">' + esc(b.kunde) + ' · ' + esc(b.order_id) + ' · ' + st + '</div></div></li>';
+      return '<li data-oid="' + esc(b.order_id) + '"><div class="main"><div><b>' + esc(b.artikel) + '</b><span class="prog">' + vsFortschritt(b) + ' ›</span></div><div class="sub">' + esc(b.kunde) + ' · ' + esc(b.order_id) + ' · ' + st + '</div></div></li>';
     }).join('') : '<li class="empty">Nichts zu versenden.</li>';
     $('versand-dhl').textContent = d && d.dhl === false ? 'DHL noch nicht verbunden – Labels kommen, sobald die Zugangsdaten drin sind.' : '';
   }
