@@ -775,7 +775,7 @@
 
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   var hasTTS = 'speechSynthesis' in window;
-  var serverVoice = store('jarvis_voice') === 'server' || !hasTTS;
+  var serverVoice = store('jarvis_voice') !== 'device' || !hasTTS; // Standard: natürliche Gemini-Stimme
   var active = false, state = 'idle', busy = false;
   var rec = null, liveEl = null, finalText = '';
   var audioCtx = null, currentSource = null;
@@ -786,7 +786,7 @@
   voiceBtn.addEventListener('click', function () {
     if (!hasTTS) return;
     serverVoice = !serverVoice; store('jarvis_voice', serverVoice ? 'server' : 'device'); paintVoice();
-    add('sys', serverVoice ? 'HD-Stimme an (kostet ca. 1 Cent pro Antwort).' : 'iPhone-Stimme an (kostenlos).');
+    add('sys', serverVoice ? 'HD-Stimme an (Gemini, kostenlos – bei Tageslimit automatisch iPhone-Stimme).' : 'iPhone-Stimme an (kostenlos).');
   });
 
   function add(cls, txt) {
@@ -1068,9 +1068,26 @@
         setState('speaking', 'Jarvis spricht … (sag „Stopp“ oder tippen)');
         src.onended = function () { currentSource = null; bargeStop(); resolve(); };
         src.start();
-        bargeStart(function () { try { src.stop(); } catch (e) {} });
+        bargeStart(function () { ttsAbbruch = true; try { src.stop(); } catch (e) {} });
       } catch (e) { resolve(); }
     });
+  }
+  // Natürliche Stimme (Gemini) – erster Satz sofort, Rest lädt parallel → flüssig ohne lange Pause
+  var ttsAbbruch = false;
+  async function speakNatural(text) {
+    var api = window.jarvisApi && window.jarvisApi(); var t = clean(text);
+    if (!api) return speakDevice(t);
+    var m = t.match(/^[\s\S]{25,}?[.!?](\s|$)/), s1 = m ? m[0].trim() : t, rest = m ? t.slice(m[0].length).trim() : '';
+    ttsAbbruch = false;
+    var p1 = api('/api/tts', { text: s1 }).catch(function () { return null; });
+    var p2 = rest ? api('/api/tts', { text: rest }).catch(function () { return null; }) : null;
+    var r1 = await p1;
+    if (!r1 || !r1.ok || !r1.audio) return speakDevice(t);
+    await playServer(r1.audio);
+    if (!p2 || ttsAbbruch) return;
+    var r2 = await p2;
+    if (ttsAbbruch) return;
+    if (r2 && r2.ok && r2.audio) await playServer(r2.audio); else await speakDevice(rest);
   }
   function unlockAudio() {
     try { if (hasTTS) { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } } catch (e) {}
@@ -1102,6 +1119,7 @@
       try { window.dispatchEvent(new CustomEvent('jarvis-geantwortet')); } catch (e) {}
       if (active || payload.fromVoice) {
         if (data.audio) await playServer(data.audio);
+        else if (data.antwort && serverVoice) await speakNatural(data.antwort);
         else if (data.antwort && hasTTS) await speakDevice(data.antwort);
       }
     } catch (e) {
@@ -1287,6 +1305,7 @@
     try { if (recorder && recorder.state !== 'inactive') recorder.stop(); } catch (e) {}
     cancelAnimationFrame(rafId);
     try { if (hasTTS) speechSynthesis.cancel(); } catch (e) {}
+    ttsAbbruch = true;
     try { if (currentSource) currentSource.stop(); } catch (e) {}
     setState('idle', 'Gespräch beendet');
     if (standby) setTimeout(armStandby, 600);
