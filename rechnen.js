@@ -323,8 +323,10 @@ const pipe = Object.entries(og).map(([id, us]) => {
   const nexus = ss.length > 0 && ss.every(x => x.versand_bekannt);
   const gewOk = ss.length > 0 && ss.every(x => x.gewinn != null);
   const X = '-';
-  return {
-    order_id: id, datum: us[0].order_created_at, storno,
+  // Von Boss in der App manuell abgehakt (Spalte „schritte“): rechnung, versendet, nexus, excel
+  let man = {}; for (const u of us) { try { const j = JSON.parse(u.schritte || '{}'); if (j && Object.keys(j).length) { man = j; break; } } catch (e) {} }
+  const res = {
+    order_id: id, datum: us[0].order_created_at, storno, man, notiz: man.notiz || '',
     artikel: String(us[0].product_title || '').split(',')[0].slice(0, 45) + (us.length > 1 ? ' +' + (us.length - 1) : ''),
     betrag: r2(us.reduce((a, u) => a + (Number(u.unit_price) || 0) * (Number(u.quantity) || 1), 0)),
     gewinn: gewOk ? r2(ss.reduce((a, x) => a + x.gewinn, 0)) : null,
@@ -337,6 +339,13 @@ const pipe = Object.entries(og).map(([id, us]) => {
       gewinn: gewOk ? 'ok' : 'offen'
     }
   };
+  if (!storno) {
+    if (man.rechnung) res.s.rechnung = 'ok';
+    if (man.versendet) { res.s.label = 'ok'; res.s.versand = 'ok'; if (res.s.nexus === 'fehlt' && !nexus) res.s.nexus = 'offen'; }
+    if (man.nexus) res.s.nexus = 'ok';
+    if (man.excel) res.s.gewinn = 'ok';
+  }
+  return res;
 }).sort((a, b) => String(b.datum).localeCompare(String(a.datum)));
 const aktivP = pipe.filter(p => !p.storno);
 const zaehl = k => aktivP.filter(p => p.s[k] === 'ok').length;

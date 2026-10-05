@@ -1490,11 +1490,12 @@
         var dt = new Date(p.datum);
         var tipT = STEPS.map(function (s) { return s[1] + ': ' + (LAB[p.s[s[0]]] || p.s[s[0]]); }).join(' · ');
         var haengt = STEPS.filter(function (s) { return p.s[s[0]] === 'fehlt'; }).map(function (s) { return s[1]; });
-        return '<li><div class="main"><div>' + esc(p.artikel) + '</div><div class="sub">' + esc(p.order_id) + ' · ' + dt.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) + ' · ' + eur(p.betrag, 2) +
+        return '<li data-poid="' + esc(p.order_id) + '" style="cursor:pointer"><div class="main"><div>' + esc(p.artikel) + (p.notiz ? ' 📝' : '') + '</div><div class="sub">' + esc(p.order_id) + ' · ' + dt.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) + ' · ' + eur(p.betrag, 2) +
           (p.gewinn != null ? ' · Gewinn ' + eur(p.gewinn, 2) : '') + (haengt.length ? ' · <span style="color:#ff7a7a">hängt: ' + haengt.join(', ') + '</span>' : '') + '</div></div>' +
           '<div class="pdots" role="img" aria-label="' + esc(tipT) + '" title="' + esc(tipT) + '">' + STEPS.map(function (s) { return '<i class="' + p.s[s[0]] + '"></i>'; }).join('') + '</div></li>';
       }).join('') : '<li class="empty">Noch keine Bestellungen seit 01.10.</li>';
     }
+    PPL = (PP && PP.liste) || [];
     // Monatsabschluss
     renderMA(d);
     try { renderEA(d); } catch (e) { console.warn(e); }
@@ -2587,6 +2588,45 @@
     } catch (x) { out.textContent = 'Jarvis nicht erreichbar.'; }
   }
 
+  // ---------- Bestell-Pipeline: Bestellung antippen → Schritte manuell abhaken ----------
+  var PPL = [];
+  var PP_STEPS = [['bezahlt', 'Bezahlt', null], ['rechnung', 'Rechnung', 'rechnung'], ['label', 'DHL-Label', null], ['versand', 'Versendet', 'versendet'], ['nexus', 'In neXus', 'nexus'], ['gewinn', 'Gebucht (Excel)', 'excel']];
+  var PP_LAB = { ok: 'erledigt', offen: 'offen', entwurf: 'Entwurf in Lexware', fehlt: 'hängt', warten: 'wartet', spaeter: 'kommt mit dem Versand', storno: 'storniert', '-': '–' };
+  function openPipe(oid) {
+    var p = PPL.find(function (x) { return x.order_id === oid; }); if (!p) return;
+    var m = p.man || {};
+    $('sh-body').innerHTML = '<div class="vs-h">' + esc(p.artikel) + '</div><div class="vs-m">Bestellung ' + esc(p.order_id) + ' · ' + new Date(p.datum).toLocaleDateString('de-DE') + ' · ' + eur(p.betrag, 2) + (p.gewinn != null ? ' · Gewinn ' + eur(p.gewinn, 2) : '') + '</div>' +
+      PP_STEPS.map(function (st) {
+        var v = p.s[st[0]], ok = v === 'ok', manuell = st[2] && m[st[2]];
+        var info = manuell ? 'von dir abgehakt' : (PP_LAB[v] || v);
+        var r = '<div class="vs-s"><div class="t">' + (ok ? '✅ ' : (v === 'fehlt' ? '🔴 ' : '⬜️ ')) + esc(st[1]) + '<small>' + esc(info) + '</small></div>';
+        if (st[2] && !p.storno) r += (ok && !manuell) ? '<span class="auto">automatisch</span>' : '<button type="button" class="tg' + (manuell ? ' ok' : '') + '" data-pp="' + st[2] + '">' + (manuell ? '✓ erledigt' : 'Abhaken') + '</button>';
+        return r + '</div>';
+      }).join('') +
+      '<div class="vs-s" style="display:block"><div class="t">📝 Notiz</div><textarea class="vs-n" data-ppnotiz placeholder="z. B. EK vor 1.7., nicht in neXus">' + esc(p.notiz || '') + '</textarea></div>';
+    $('sh-body').dataset.poid = oid; delete $('sh-body').dataset.oid;
+    $('sheet').hidden = false;
+  }
+  $('pipeline').addEventListener('click', function (e) { var li = e.target.closest('li[data-poid]'); if (li) openPipe(li.dataset.poid); });
+  $('sh-body').addEventListener('click', async function (e) {
+    var oid = this.dataset.poid, b = e.target.closest('button[data-pp]'); if (!oid || !b) return;
+    var p = PPL.find(function (x) { return x.order_id === oid; }); if (!p) return;
+    var an = !b.classList.contains('ok'); b.disabled = true; b.textContent = '…';
+    try {
+      var r = await apiCall('/api/versand/schritt', { order_id: oid, schritt: b.dataset.pp, wert: an });
+      p.man = r.schritte;
+      var key = { rechnung: 'rechnung', versendet: 'versand', nexus: 'nexus', excel: 'gewinn' }[b.dataset.pp];
+      if (an) { p.s[key] = 'ok'; if (key === 'versand') p.s.label = 'ok'; } else { p.s[key] = 'offen'; if (key === 'versand') p.s.label = 'spaeter'; }
+      openPipe(oid); if (last) render(last, true);
+      setTimeout(function () { lastLoad = 0; load(); }, 1500);
+    } catch (x) { b.disabled = false; b.textContent = 'Fehler – nochmal'; }
+  });
+  $('sh-body').addEventListener('change', async function (e) {
+    var oid = this.dataset.poid; if (!oid || !e.target.matches('[data-ppnotiz]')) return;
+    try { var r = await apiCall('/api/versand/schritt', { order_id: oid, notiz: e.target.value }); var p = PPL.find(function (x) { return x.order_id === oid; }); if (p) { p.man = r.schritte; p.notiz = e.target.value; } } catch (x) {}
+  });
+  $('sheet').addEventListener('click', function (e) { if (e.target.closest('[data-close]')) delete $('sh-body').dataset.poid; });
+
   // ---------- Versand (offene Bestellungen + Pipeline) ----------
   async function loadVersand() {
     if (!KEY || !API) return;
@@ -2618,7 +2658,7 @@
         return r + '</div>';
       }).join('') +
       '<div class="vs-s" style="display:block"><div class="t">📝 Notiz</div><textarea class="vs-n" data-notiz placeholder="z. B. EK vor 1.7., nicht in neXus">' + esc((b.schritte || {}).notiz || '') + '</textarea></div>';
-    $('sh-body').dataset.oid = oid;
+    $('sh-body').dataset.oid = oid; delete $('sh-body').dataset.poid;
     $('sheet').hidden = false;
   }
   $('sh-body').addEventListener('click', async function (e) {
