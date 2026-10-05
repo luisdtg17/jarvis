@@ -127,13 +127,22 @@
   /* ---------- Einnahmen & Ausgaben ---------- */
   #card-ea .ab-top { flex-wrap: wrap; gap: 8px; }
   .ea-nav { justify-content: center; margin: 4px 0 10px; }
-  .ea-kpi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
-  .ea-kpi div { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
-  .ea-kpi span { display: block; font-size: 11px; color: var(--muted); }
-  .ea-kpi b { font-size: 17px; font-variant-numeric: tabular-nums; }
-  #c-ea .e { fill: #4fd1c5; } #c-ea .a { fill: #ff8a7a; } #c-ea .dim { opacity: .3; }
+  .ea-kpi { display: flex; gap: 22px; margin: 2px 0 10px; }
+  .ea-kpi span { display: block; font-size: 13px; color: var(--muted); }
+  .ea-kpi b { font-size: 22px; font-variant-numeric: tabular-nums; }
+  #c-ea { height: 190px; touch-action: pan-y; }
+  #c-ea .e { fill: #34c759; } #c-ea .a { fill: #ff453a; } #c-ea .dim { opacity: .3; }
+  #c-ea .le { stroke: #34c759; } #c-ea .la { stroke: #ff453a; } #c-ea .le, #c-ea .la { fill: none; stroke-width: 2.5; stroke-linejoin: round; }
+  #c-ea .pe { fill: #34c759; } #c-ea .pa { fill: #ff453a; }
+  #c-ea .gh { stroke: rgba(255,255,255,.12); stroke-width: 1; } #c-ea .gv { stroke: rgba(255,255,255,.14); stroke-width: 1; stroke-dasharray: 3 4; }
+  #c-ea .band { fill: rgba(95,180,255,.08); } #c-ea .cur { stroke: rgba(255,255,255,.5); stroke-width: 1; }
+  #c-ea text { fill: var(--muted); font-size: 10.5px; }
+  .ea-typ { margin: 6px 0 4px; }
+  .ea-diff { display: flex; justify-content: flex-end; align-items: baseline; gap: 12px; border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px; }
+  .ea-diff span { color: var(--muted); font-size: 15px; } .ea-diff b { font-size: 19px; font-variant-numeric: tabular-nums; }
+  #ea-punkt { margin-left: auto; color: var(--text); font-variant-numeric: tabular-nums; }
   .ea-leg { font-size: 11.5px; color: var(--muted); display: flex; gap: 12px; align-items: center; margin: 2px 0 6px; }
-  .ea-leg i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: -6px; } .ea-leg i.e { background: #4fd1c5; } .ea-leg i.a { background: #ff8a7a; }
+  .ea-leg i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: -6px; } .ea-leg i.e { background: #34c759; } .ea-leg i.a { background: #ff453a; }
 
   /* ---------- Kurs-Detail ---------- */
   li.kurs { cursor: pointer; }
@@ -363,6 +372,56 @@
   @keyframes kugelGibt { 0% { filter: none; } 40% { filter: drop-shadow(0 0 28px rgba(95,180,255,.95)) brightness(1.25); } 100% { filter: none; } }
   #orb.gibt { animation: kugelGibt .5s ease; }
   @media (prefers-reduced-motion: reduce) { #hudwin .hw.ausKugel, #orb.gibt { animation: none; } }
+  /* ===== Jarvis-Tab: Zukunfts-Effekte ===== */
+  #jv-boot { position: absolute; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; display: none; }
+  #v-chat.boot #jv-boot { display: block; }
+  #jv-boot .scan { position: absolute; left: -10%; right: -10%; height: 2px; top: 0; background: linear-gradient(90deg, transparent, #7fe3ff, #fff, #7fe3ff, transparent); box-shadow: 0 0 18px 4px rgba(95,200,255,.55); animation: jvScan 1.1s cubic-bezier(.5,0,.3,1) forwards; }
+  #jv-boot .ring { position: absolute; left: 50%; top: 33%; width: 40px; height: 40px; margin: -20px 0 0 -20px; border: 2px solid rgba(127,227,255,.9); border-radius: 50%; animation: jvRing 1.2s ease-out forwards; }
+  #jv-boot .ring.r2 { animation-delay: .18s; border-style: dashed; } #jv-boot .ring.r3 { animation-delay: .36s; border-width: 1px; }
+  #jv-boot .txt { position: absolute; left: 16px; bottom: 26%; font: 600 11px/1.7 ui-monospace, Menlo, monospace; color: #8fe6ff; letter-spacing: .12em; text-shadow: 0 0 8px rgba(95,200,255,.8); white-space: pre; animation: jvFade 1.9s ease forwards; background: rgba(2,8,18,.88); border: 1px solid rgba(95,200,255,.4); padding: 8px 12px; border-radius: 6px; }
+  #jv-boot .flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 33%, rgba(127,227,255,.35), transparent 60%); animation: jvFlash .9s ease-out forwards; }
+  @keyframes jvScan { from { top: 0; opacity: 1; } 85% { opacity: 1; } to { top: 100%; opacity: 0; } }
+  @keyframes jvRing { from { transform: scale(.2); opacity: 1; } to { transform: scale(14); opacity: 0; } }
+  @keyframes jvFade { 0%, 75% { opacity: 1; } to { opacity: 0; } }
+  @keyframes jvFlash { from { opacity: 1; } to { opacity: 0; } }
+  #v-chat.boot #orb { animation: jvOrbIn .9s cubic-bezier(.2,.9,.2,1); }
+  @keyframes jvOrbIn { from { transform: scale(.3) rotate(-25deg); opacity: 0; filter: brightness(3) blur(6px); } 60% { filter: brightness(1.6); } to { transform: none; opacity: 1; filter: none; } }
+  #v-chat.boot #stage .hud-tools button { animation: jvTool .5s cubic-bezier(.2,.9,.2,1) backwards; }
+  #v-chat.boot #stage .hud-tools button:nth-child(1) { animation-delay: .35s } #v-chat.boot #stage .hud-tools button:nth-child(2) { animation-delay: .42s } #v-chat.boot #stage .hud-tools button:nth-child(3) { animation-delay: .49s } #v-chat.boot #stage .hud-tools button:nth-child(4) { animation-delay: .56s } #v-chat.boot #stage .hud-tools button:nth-child(5) { animation-delay: .63s } #v-chat.boot #stage .hud-tools button:nth-child(6) { animation-delay: .7s } #v-chat.boot #stage .hud-tools button:nth-child(7) { animation-delay: .77s }
+  @keyframes jvTool { from { transform: translateX(-60px) skewX(-20deg); opacity: 0; filter: brightness(3); } to { transform: none; opacity: 1; filter: none; } }
+  #v-chat.boot .hud-top, #v-chat.boot .hud-fin, #v-chat.boot #form { animation: jvGlitch .7s steps(6) .2s backwards; }
+  @keyframes jvGlitch { 0% { opacity: 0; transform: translateX(-6px); clip-path: inset(0 0 80% 0); } 30% { opacity: 1; transform: translateX(5px); clip-path: inset(40% 0 20% 0); } 60% { transform: translateX(-3px); clip-path: inset(10% 0 50% 0); } to { opacity: 1; transform: none; clip-path: inset(0); } }
+  #stage .hud-tools button { position: relative; overflow: hidden; transition: box-shadow .2s, border-color .2s, color .2s; }
+  #stage .hud-tools button::after { content: ""; position: absolute; left: 0; right: 0; top: -40%; height: 40%; background: linear-gradient(180deg, transparent, rgba(127,227,255,.35), transparent); animation: jvToolScan 3.2s linear infinite; pointer-events: none; }
+  #stage .hud-tools button:nth-child(2n)::after { animation-delay: 1.1s } #stage .hud-tools button:nth-child(3n)::after { animation-delay: 2.1s }
+  @keyframes jvToolScan { from { top: -40%; } 30%, to { top: 120%; } }
+  #stage .hud-tools button:active { box-shadow: 0 0 18px rgba(95,200,255,.8); border-color: #7fe3ff; color: #fff; }
+  #orb.speaking canvas { animation: jvSchweb 2.4s ease-in-out infinite; }
+  #orb.thinking canvas { animation: jvDenk 1.6s ease-in-out infinite; }
+  @keyframes jvSchweb { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6px) scale(1.015); } }
+  @keyframes jvDenk { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.25); } }
+  #status { font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .08em; text-shadow: 0 0 8px rgba(95,200,255,.5); }
+  #status::after { content: "▌"; margin-left: 2px; animation: jvBlink 1s steps(2) infinite; color: #7fe3ff; }
+  @keyframes jvBlink { 50% { opacity: 0; } }
+  /* Fenster: Hologramm auf und zu */
+  #hudwin .hw .hw-scan { position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, transparent, #9fefff, transparent); box-shadow: 0 0 14px 3px rgba(127,227,255,.6); opacity: 0; pointer-events: none; z-index: 2; }
+  #hudwin .hw.ausKugel .hw-scan { animation: jvHwScan .7s .25s ease-out; }
+  #hudwin .hw.ausKugel #hw-body { animation: jvHolo .7s .2s steps(8) backwards; }
+  @keyframes jvHwScan { from { top: 0; opacity: 1; } to { top: 100%; opacity: 0; } }
+  @keyframes jvHolo { from { clip-path: inset(0 0 100% 0); opacity: .3; filter: hue-rotate(40deg) brightness(2); } to { clip-path: inset(0); opacity: 1; filter: none; } }
+  #hudwin.zu .hw { animation: jvHwZu .26s cubic-bezier(.6,0,.8,.4) forwards; } #hudwin.zu .hw-bg { animation: jvFade .26s forwards; }
+  @keyframes jvHwZu { to { transform: translate(var(--dx, 0), var(--dy, 0)) scale(.05); opacity: 0; filter: brightness(3); } }
+  /* Fußleiste: leuchtender Schieber + Jarvis-Icon lebt */
+  nav.tabs { position: relative; }
+  #nav-ind { position: absolute; top: -1px; height: 2px; left: 0; width: 40px; background: linear-gradient(90deg, transparent, #7fe3ff, transparent); box-shadow: 0 0 12px 2px rgba(95,200,255,.7); transition: transform .35s cubic-bezier(.3,1.4,.5,1), width .35s; pointer-events: none; }
+  nav.tabs button[data-v="v-chat"] svg circle:first-child { stroke-dasharray: 4 3; transform-origin: 12px 12px; animation: jvDreh 6s linear infinite; }
+  nav.tabs.spricht button[data-v="v-chat"] svg { animation: jvPuls .5s ease-in-out infinite alternate; }
+  nav.tabs.spricht button[data-v="v-chat"] svg circle:first-child { animation-duration: 1.2s; }
+  @keyframes jvDreh { to { transform: rotate(360deg); } }
+  @keyframes jvPuls { from { transform: scale(1); } to { transform: scale(1.25); filter: drop-shadow(0 0 8px #7fe3ff); } }
+  nav.tabs button { transition: color .25s, transform .2s; } nav.tabs button:active { transform: scale(.9); }
+  @media (prefers-reduced-motion: reduce) { #v-chat.boot *, #jv-boot *, #orb canvas, nav.tabs svg, nav.tabs svg circle, #stage .hud-tools button::after, #hudwin .hw * { animation: none !important; } }
+
   #v-chat::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .55;
     background-image: linear-gradient(rgba(95,180,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(95,180,255,.07) 1px, transparent 1px);
     background-size: 26px 26px; -webkit-mask-image: radial-gradient(75% 60% at 50% 45%, #000 30%, transparent 85%); mask-image: radial-gradient(75% 60% at 50% 45%, #000 30%, transparent 85%); }
@@ -517,13 +576,15 @@
       <div class="kpi"><span>Gewinn diesen Monat</span><b id="k-gew">–</b><small id="k-gew-s"></small></div>
       <div class="kpi"><span>Rechnungen diesen Monat</span><b id="k-monat">–</b><small>alle Kanäle · Lexware</small></div>
     </div>
-    <div class="card" id="card-ea"><h3>Einnahmen &amp; Ausgaben <em>Lexware</em></h3>
+    <div class="card" id="card-ea"><h3>Umsätze <em>Lexware</em></h3>
       <div class="ab-top"><div class="seg" id="ea-seg"><button type="button" data-a="monat" aria-pressed="true">Monat</button><button type="button" data-a="quartal" aria-pressed="false">Quartal</button><button type="button" data-a="jahr" aria-pressed="false">Jahr</button></div>
         <div class="seg" id="ea-bn"><button type="button" data-b="brutto" aria-pressed="true">Brutto</button><button type="button" data-b="netto" aria-pressed="false">Netto</button></div></div>
       <div class="ab-nav ea-nav"><button type="button" id="ea-prev" aria-label="Zeitraum zurück">‹</button><b id="ea-per">–</b><button type="button" id="ea-next" aria-label="Zeitraum weiter">›</button></div>
-      <div class="ea-kpi"><div><span>Einnahmen</span><b id="ea-ein">–</b></div><div><span>Ausgaben</span><b id="ea-aus">–</b></div><div><span>Ergebnis</span><b id="ea-erg">–</b></div></div>
+      <div class="ea-kpi"><div><span>Einnahmen</span><b id="ea-ein">–</b></div><div><span>Ausgaben</span><b id="ea-aus">–</b></div></div>
       <svg class="chart" id="c-ea" role="img" aria-label="Einnahmen und Ausgaben je Monat"></svg>
-      <div class="ea-leg"><i class="e"></i>Einnahmen <i class="a"></i>Ausgaben</div>
+      <div class="ea-leg"><i class="e"></i>Einnahmen <i class="a"></i>Ausgaben <span id="ea-punkt"></span></div>
+      <div class="seg ea-typ" id="ea-typ"><button type="button" data-t="linie" aria-pressed="true">Liniendiagramm</button><button type="button" data-t="balken" aria-pressed="false">Balken</button></div>
+      <div class="ea-diff"><span>Differenz</span><b id="ea-erg">–</b></div>
       <ul class="rows" id="ea-rows"></ul>
       <div class="tip" id="ea-tip">Nur lesen aus Lexware. Netto: ab 01.07.2026 sind 19 % herausgerechnet (Schätzung), davor warst du Kleinunternehmer (brutto = netto).</div></div>
     <div class="card" id="card-ab"><h3>Abschluss <em id="ab-sum"></em></h3>
@@ -630,6 +691,7 @@
     <div class="card"><h3>Ladenhüter <em id="lh-info"></em></h3><ul class="list" id="ladenhueter"></ul><div class="tip">Am längsten im Lager (seit Bestellung) · ab 30 Tagen rot</div></div>
 </div>
 <section class="view on" id="v-chat" aria-label="Jarvis">
+<div id="jv-boot" aria-hidden="true"><div class="flash"></div><i class="ring"></i><i class="ring r2"></i><i class="ring r3"></i><div class="scan"></div><div class="txt" id="jv-boot-t"></div></div>
 <i class="hud-cn tl"></i><i class="hud-cn tr"></i><i class="hud-cn bl"></i><i class="hud-cn br"></i>
 <div class="hud-top">
   <div id="hud-l" role="button" tabindex="0" aria-label="Heute zu tun öffnen"></div>
@@ -658,7 +720,7 @@
 </form>
 </section>
 
-<div id="hudwin" hidden><div class="hw-bg" data-close="1"></div><div class="hw" role="dialog" aria-modal="true" aria-labelledby="hw-t"><div class="hw-h"><span id="hw-t"></span><button type="button" data-close="1" aria-label="Schließen">×</button></div><div id="hw-body"></div><button type="button" id="hw-go">Im Tab öffnen ›</button></div></div>
+<div id="hudwin" hidden><div class="hw-bg" data-close="1"></div><div class="hw" role="dialog" aria-modal="true" aria-labelledby="hw-t"><i class="hw-scan"></i><div class="hw-h"><span id="hw-t"></span><button type="button" data-close="1" aria-label="Schließen">×</button></div><div id="hw-body"></div><button type="button" id="hw-go">Im Tab öffnen ›</button></div></div>
 <div id="sheet" hidden><div class="sh-bg" data-close="1"></div><div class="sh" role="dialog" aria-modal="true" aria-label="Artikel-Details"><button type="button" class="sh-x" data-close="1" aria-label="Schließen">×</button><div id="sh-body"></div></div></div>
 <nav class="tabs" role="tablist">
   <button type="button" role="tab" data-v="v-chat" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Jarvis</button>
@@ -668,6 +730,7 @@
   <button type="button" role="tab" data-v="v-geld" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Geld</button>
   <button type="button" role="tab" data-v="v-trade" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Trading</button>
   <button type="button" role="tab" data-v="v-privat" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Privat</button>
+  <i id="nav-ind" aria-hidden="true"></i>
 </nav>
 <script>
 (function () {
@@ -706,7 +769,15 @@
     if (cls === 'me') { try { window.dispatchEvent(new CustomEvent('jarvis-frage', { detail: txt })); } catch (e) {} }
     return el;
   }
-  function setState(s, label) { state = s; orb.className = (s === 'idle') ? '' : s; statusEl.textContent = label; }
+  var tippT = 0;
+  function setState(s, label) {
+    state = s; orb.className = (s === 'idle') ? '' : s;
+    var nv = document.querySelector('nav.tabs'); if (nv) nv.classList.toggle('spricht', s === 'speaking' || s === 'listening');
+    clearInterval(tippT); var n = 0; label = String(label || '');
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { statusEl.textContent = label; return; }
+    tippT = setInterval(function () { n += 2; statusEl.textContent = label.slice(0, n); if (n >= label.length) clearInterval(tippT); }, 18);
+  }
+  var spkAn = null, spkBuf = null;
 
   // ---------- Jarvis-Kugel (holografischer Globus, drehbar) ----------
   var orbDragged = false;
@@ -733,6 +804,12 @@
     var COL = { idle: [86, 170, 255], standby: [86, 170, 255], listening: [64, 226, 210], thinking: [255, 196, 96], speaking: [130, 180, 255] };
     var cur = COL.idle.slice(), lvl = 0, rotY = HOME_LON + Math.PI / 2 + 0.25, rotX = -0.55, vY = 0, vX = 0, drag = null, lastAct = 0;
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var puls = 0, wellen = [], funken = [], letzteWelle = 0;
+    function jvPuls(st) { puls = Math.min(1, Math.max(puls, st || 1)); var n = performance.now(); if (n - letzteWelle > 170) { letzteWelle = n; wellen.push(n); if (wellen.length > 8) wellen.shift(); } }
+    window.jvPuls = jvPuls;
+    // Partikel-Strahl aus der Kugel Richtung Fenster
+    window.jvBurst = function (dx, dy) { if (reduce) return; var an = Math.atan2(dy, dx), now = performance.now(); for (var b = 0; b < 46; b++) funken.push({ a: an + (Math.random() - .5) * .9, v: .5 + Math.random() * 1.4, t0: now + Math.random() * 120, l: 500 + Math.random() * 350 }); jvPuls(1); };
+    var bootT = 0; window.jvBootOrb = function () { bootT = performance.now(); };
     function size() { var d = Math.min(window.devicePixelRatio || 1, 2), w = cv.clientWidth || 300; cv.width = w * d; cv.height = w * d; }
     size(); window.addEventListener('resize', size);
     // Drehen mit dem Finger
@@ -752,19 +829,26 @@
     ob.addEventListener('pointerup', end); ob.addEventListener('pointercancel', end);
     function amp(t) {
       if (state === 'listening' && analyser && buf) { try { return Math.min(1, level() * 6); } catch (e) { return .2; } }
-      if (state === 'speaking') return .35 + .3 * Math.abs(Math.sin(t / 110) * Math.sin(t / 260));
+      if (state === 'speaking') {
+        if (spkAn && spkBuf) { try { spkAn.getFloatTimeDomainData(spkBuf); var sq = 0; for (var q = 0; q < spkBuf.length; q++) sq += spkBuf[q] * spkBuf[q]; var rm = Math.sqrt(sq / spkBuf.length); if (rm > 0.004) { if (rm * 5 > 0.45) jvPuls(rm * 4); return Math.min(1, .2 + rm * 5); } } catch (e) {} }
+        return .3 + .25 * Math.abs(Math.sin(t / 110) * Math.sin(t / 260)) + puls * .45;
+      }
       if (state === 'thinking') return .22 + .12 * Math.sin(t / 160);
       return .05 + .03 * Math.sin(t / 900);
     }
     function frame(t) {
       var W = cv.width, H = cv.height, cx = W / 2, cy = H / 2, R = W * 0.335;
+      puls *= 0.9;
+      var bootP = bootT ? Math.min(1, (performance.now() - bootT) / 1100) : 1; if (bootP < 1) { R *= 0.4 + 0.6 * (1 - Math.pow(1 - bootP, 3)); }
       var tgt = COL[state] || COL.idle; for (var k = 0; k < 3; k++) cur[k] += (tgt[k] - cur[k]) * 0.06;
       lvl += (amp(t) - lvl) * 0.18;
       if (!drag) {
         var auto = reduce ? 0 : (state === 'thinking' ? 0.014 : state === 'speaking' ? 0.008 : 0.0035);
         vY *= 0.95; vX *= 0.93;
         rotY += vY + (performance.now() - lastAct > 1200 ? auto : 0);
-        rotX += vX; rotX += (-0.55 - rotX) * (performance.now() - lastAct > 2500 ? 0.01 : 0); rotX = Math.max(-1.3, Math.min(1.3, rotX));
+        var zielX = -0.55 + (state === 'speaking' && !reduce ? Math.sin(t / 650) * 0.12 : 0);
+        rotX += vX; rotX += (zielX - rotX) * (performance.now() - lastAct > 2500 ? (state === 'speaking' ? 0.04 : 0.01) : 0); rotX = Math.max(-1.3, Math.min(1.3, rotX));
+        if (bootP < 1) rotY += (1 - bootP) * 0.12;
       }
       var c = cur.map(Math.round).join(','), lw = Math.max(1, W / 420);
       ctx.clearRect(0, 0, W, H);
@@ -852,6 +936,36 @@
         ctx.fillStyle = 'rgba(' + c + ',' + al + ')'; ctx.textBaseline = 'middle';
         var lb = at(0.95, 0.42); ctx.fillText('BOSS', lb[0], lb[1]);
       }
+      // Schockwellen bei jedem Wort
+      var jetztW = performance.now();
+      for (var wi = 0; wi < wellen.length; wi++) { var wp = (jetztW - wellen[wi]) / 900; if (wp > 1) continue;
+        ctx.strokeStyle = 'rgba(' + c + ',' + (0.55 * (1 - wp)).toFixed(3) + ')'; ctx.lineWidth = lw * (2.5 - wp * 2);
+        ctx.beginPath(); ctx.arc(cx, cy, R * (1.08 + wp * 0.85), 0, 6.283); ctx.stroke(); }
+      // Equalizer-Kranz beim Sprechen/Zuhören
+      if ((state === 'speaking' || state === 'listening') && lvl > 0.08 && !reduce) {
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineWidth = Math.max(lw * 2, W / 200); ctx.lineCap = 'round';
+        for (var eb = 0; eb < 72; eb++) { var ea = eb / 72 * 6.283 + t / 4000, nz = 0.5 + 0.5 * Math.sin(eb * 1.7 + t / 70) * Math.sin(eb * 0.6 - t / 130), ln = R * (0.04 + lvl * 0.32 * nz);
+          var r0 = R * 1.2; ctx.strokeStyle = 'rgba(' + c + ',' + (0.25 + 0.6 * nz * lvl).toFixed(3) + ')';
+          ctx.beginPath(); ctx.moveTo(cx + Math.cos(ea) * r0, cy + Math.sin(ea) * r0); ctx.lineTo(cx + Math.cos(ea) * (r0 + ln), cy + Math.sin(ea) * (r0 + ln)); ctx.stroke(); }
+        ctx.restore();
+      }
+      // Denken: schnelle Segment-Ringe + Daten-Partikel
+      if (state === 'thinking' && !reduce) {
+        ctx.lineWidth = lw * 3; ctx.strokeStyle = 'rgba(' + c + ',.85)';
+        for (var dk = 0; dk < 3; dk++) { var da = t / (260 + dk * 90) * (dk % 2 ? -1 : 1) + dk * 2.1; ctx.beginPath(); ctx.arc(cx, cy, W * (0.43 - dk * 0.018), da, da + 0.7); ctx.stroke(); }
+        ctx.fillStyle = 'rgba(' + c + ',.9)';
+        for (var dp = 0; dp < 24; dp++) { var pa2 = dp / 24 * 6.283 + t / 500, pr2 = R * (1.1 + 0.25 * ((t / 700 + dp * 0.37) % 1)); ctx.fillRect(cx + Math.cos(pa2) * pr2, cy + Math.sin(pa2) * pr2, lw * 2, lw * 2); }
+        ctx.font = '700 ' + Math.round(W * 0.028) + 'px ui-monospace, Menlo, monospace'; ctx.textAlign = 'center';
+        ctx.fillText('ANALYSE ' + String(Math.floor((t / 37) % 100)).padStart(2, '0') + '%', cx, cy + R * 1.42); ctx.textAlign = 'start';
+      }
+      // Funken-Strahl zu einem Fenster
+      if (funken.length) { ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        funken = funken.filter(function (f) { var fp = (jetztW - f.t0) / f.l; if (fp < 0) return true; if (fp > 1) return false;
+          var fr = R * (0.9 + fp * f.v * 2.2), fx = cx + Math.cos(f.a) * fr, fy = cy + Math.sin(f.a) * fr;
+          ctx.fillStyle = 'rgba(' + c + ',' + (1 - fp).toFixed(3) + ')'; ctx.beginPath(); ctx.arc(fx, fy, lw * (2.6 - fp * 1.8), 0, 6.283); ctx.fill(); return true; });
+        ctx.restore(); }
+      // Boot: Aufbau-Ringe
+      if (bootP < 1) { ctx.strokeStyle = 'rgba(255,255,255,' + (1 - bootP).toFixed(3) + ')'; ctx.lineWidth = lw * 3; ctx.beginPath(); ctx.arc(cx, cy, W * 0.46 * bootP, 0, 6.283 * bootP); ctx.stroke(); }
       // Pegel-Ring beim Sprechen/Zuhören
       if (lvl > 0.12) {
         ctx.strokeStyle = 'rgba(' + c + ',' + Math.min(.8, lvl).toFixed(2) + ')'; ctx.lineWidth = lw * 2;
@@ -906,7 +1020,7 @@
         speechSynthesis.cancel();
         var u = new SpeechSynthesisUtterance(clean(text));
         u.lang = 'de-DE'; if (voice) u.voice = voice; u.rate = 1.03;
-        u.onend = ende; u.onerror = ende;
+        u.onend = ende; u.onerror = ende; u.onboundary = function () { if (window.jvPuls) window.jvPuls(1); };
         setState('speaking', 'Jarvis spricht … (sag „Stopp“ oder tippen)');
         speechSynthesis.speak(u);
         bargeStart(function () { try { speechSynthesis.cancel(); } catch (e) {} ende(); });
@@ -921,7 +1035,8 @@
         var bin = atob(b64), bytes = new Uint8Array(bin.length);
         for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
         var ab = await audioCtx.decodeAudioData(bytes.buffer);
-        var src = audioCtx.createBufferSource(); src.buffer = ab; src.connect(audioCtx.destination);
+        var src = audioCtx.createBufferSource(); src.buffer = ab;
+        try { if (!spkAn) { spkAn = audioCtx.createAnalyser(); spkAn.fftSize = 512; spkBuf = new Float32Array(spkAn.fftSize); spkAn.connect(audioCtx.destination); } src.connect(spkAn); } catch (e) { src.connect(audioCtx.destination); }
         currentSource = src;
         setState('speaking', 'Jarvis spricht … (sag „Stopp“ oder tippen)');
         src.onended = function () { currentSource = null; bargeStop(); resolve(); };
@@ -1189,7 +1304,22 @@
   // ---------- Tabs ----------
   var tabs = document.querySelectorAll('nav.tabs button');
   var loadedTrade = false;
+  function navInd(id) {
+    var b = document.querySelector('nav.tabs button[data-v="' + id + '"]'), ind = $('nav-ind'); if (!b || !ind) return;
+    var w = b.offsetWidth * 0.6; ind.style.width = w + 'px'; ind.style.transform = 'translateX(' + (b.offsetLeft + (b.offsetWidth - w) / 2) + 'px)';
+  }
+  var bootZ = 0;
+  function jvBoot() {
+    var vc = $('v-chat'); if (!vc || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    vc.classList.remove('boot'); void vc.offsetWidth; vc.classList.add('boot'); if (window.jvBootOrb) window.jvBootOrb();
+    var zeilen = ['J.A.R.V.I.S. // SYSTEM START', '> KERN ........ OK', '> STIMME ...... OK', '> LEXWARE ..... VERBUNDEN', '> KAUFLAND .... VERBUNDEN', '> BEREIT, BOSS.'], i = 0, el = $('jv-boot-t'); el.textContent = '';
+    clearInterval(bootZ); bootZ = setInterval(function () { el.textContent += (i ? '\n' : '') + zeilen[i]; i++; if (i >= zeilen.length) clearInterval(bootZ); }, 160);
+    setTimeout(function () { vc.classList.remove('boot'); }, 2000);
+  }
+  window.addEventListener('resize', function () { navInd(store('jarvis_tab') || 'v-chat'); });
   function show(id) {
+    var warChat = $('v-chat').classList.contains('on');
+    navInd(id); if (id === 'v-chat' && !warChat) jvBoot();
     document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('on', v.id === id); });
     tabs.forEach(function (b) { b.setAttribute('aria-selected', b.dataset.v === id ? 'true' : 'false'); });
     store('jarvis_tab', id);
@@ -1199,6 +1329,7 @@
     if (id === 'v-trade') { if (!loadedTrade) { loadedTrade = true; loadTrading(); } if (Date.now() - dLoad > 60000) depotCall(); if (dLast) setTimeout(function () { try { dpCharts(dLast); } catch (e) {} }, 60); }
   }
   tabs.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.v); }); });
+  setTimeout(function () { navInd(store('jarvis_tab') || 'v-chat'); if ($('v-chat').classList.contains('on')) jvBoot(); }, 60);
 
   // ---------- Begrüßung ----------
   function hello() {
@@ -1528,11 +1659,13 @@
   $('ma-seg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; maWahl = b.dataset.m; store('jarvis_ma', maWahl); if (last) renderMA(last); });
 
   // ---------- Einnahmen & Ausgaben (wie Lexware) ----------
-  var eaArt = store('jarvis_ea_art') || 'monat', eaNetto = store('jarvis_ea_bn') === 'netto', eaOff = 0;
+  var eaArt = store('jarvis_ea_art') || 'jahr', eaTyp = store('jarvis_ea_typ') || 'linie', eaMonate = null, eaNetto = store('jarvis_ea_bn') === 'netto', eaOff = 0;
   function eaSegs() {
     $('ea-seg').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.a === eaArt ? 'true' : 'false'); });
     $('ea-bn').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', (b.dataset.b === 'netto') === eaNetto ? 'true' : 'false'); });
+    $('ea-typ').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.t === eaTyp ? 'true' : 'false'); });
   }
+  function eaSchritt(max) { var r = max / 4, p = Math.pow(10, Math.floor(Math.log10(r || 1))), n = r / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; }
   function eaZeitraum() {
     var n = new Date(), y = n.getFullYear(), m = n.getMonth();
     if (eaArt === 'jahr') { var j = y + eaOff; return { von: j + '-01-01', bis: j + '-12-31', titel: String(j), jahr: j }; }
@@ -1558,32 +1691,52 @@
     eaSegs();
     var L = d.lexjahr, Z = eaZeitraum();
     $('ea-per').textContent = Z.titel;
-    if (!L) { ['ea-ein', 'ea-aus', 'ea-erg'].forEach(function (id) { $(id).textContent = '–'; }); $('ea-rows').innerHTML = ''; $('c-ea').innerHTML = '';
+    if (!L) { ['ea-ein', 'ea-aus', 'ea-erg'].forEach(function (id) { $(id).textContent = '–'; }); $('ea-rows').innerHTML = ''; $('c-ea').innerHTML = ''; $('ea-punkt').textContent = '';
       $('ea-tip').textContent = 'Kommt mit dem neuen Backend: Einnahmen und Ausgaben direkt aus Lexware (nur lesen).'; return; }
     var r = eaSumme(L, Z.von, Z.bis), erg = r.ein - r.aus;
-    $('ea-ein').textContent = eur(r.ein); $('ea-aus').textContent = eur(r.aus);
-    $('ea-erg').textContent = eur(erg); $('ea-erg').className = erg >= 0 ? 'pos' : 'neg';
+    $('ea-ein').textContent = eur(r.ein, 2); $('ea-aus').textContent = eur(r.aus, 2); $('ea-punkt').textContent = '';
+    $('ea-erg').textContent = eur(erg, 2); $('ea-erg').className = erg >= 0 ? 'pos' : 'neg';
     var top = Object.keys(r.kont).map(function (k) { return [k, r.kont[k]]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 5);
     $('ea-rows').innerHTML = '<li><span>Offene Forderungen (Kunden schulden dir)</span><b>' + eur(r.offenEin, 2) + '</b></li><li><span>Offene Rechnungen (du schuldest)</span><b>' + eur(r.offenAus, 2) + '</b></li>' +
       top.map(function (k) { return '<li><span>Ausgabe: ' + esc(k[0]) + '</span><b>' + eur(k[1]) + '</b></li>'; }).join('');
-    // 12 Monate des Jahres, gewählter Zeitraum hervorgehoben
-    var svg = $('c-ea'), W = svg.clientWidth || 320, H = 150, pb = 18, pt = 8, monate = [];
-    for (var i = 0; i < 12; i++) { var k = Z.jahr + '-' + ('0' + (i + 1)).slice(-2); var s2 = eaSumme(L, k + '-01', k + '-31'); monate.push({ k: k, e: Math.max(0, s2.ein), a: Math.max(0, s2.aus) }); }
-    var max = Math.max.apply(null, monate.map(function (x) { return Math.max(x.e, x.a); }).concat([1])), gw = W / 12, bw = Math.max(2, gw * 0.32);
-    var h = '<line class="grid" x1="0" x2="' + W + '" y1="' + (H - pb) + '" y2="' + (H - pb) + '"/>';
-    monate.forEach(function (x, i) {
-      var inZ = x.k + '-15' >= Z.von && x.k + '-01' <= Z.bis, dim = inZ ? '' : ' dim', x0 = i * gw + gw * 0.14;
-      var he = (H - pb - pt) * x.e / max, ha = (H - pb - pt) * x.a / max;
-      h += '<rect class="e' + dim + '" x="' + x0.toFixed(1) + '" y="' + (H - pb - he).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, he).toFixed(1) + '" rx="2"><title>' + x.k + ' Einnahmen ' + eur(x.e) + '</title></rect>';
-      h += '<rect class="a' + dim + '" x="' + (x0 + bw + 1).toFixed(1) + '" y="' + (H - pb - ha).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, ha).toFixed(1) + '" rx="2"><title>' + x.k + ' Ausgaben ' + eur(x.a) + '</title></rect>';
-      h += '<text x="' + (i * gw + gw / 2).toFixed(1) + '" y="' + (H - 4) + '" text-anchor="middle">' + 'JFMAMJJASOND'.charAt(i) + '</text>';
-    });
+    // Monate des Jahres (laufendes Jahr nur bis heute), wie Lexware „Umsätze“
+    var svg = $('c-ea'), W = svg.clientWidth || 320, H = 190, pl = 44, pr = 10, pt = 10, pb = 22, jetzt = new Date();
+    var nM = Z.jahr === jetzt.getFullYear() ? jetzt.getMonth() + 1 : 12, monate = [], MN = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+    for (var i = 0; i < nM; i++) { var k = Z.jahr + '-' + ('0' + (i + 1)).slice(-2); var s2 = eaSumme(L, k + '-01', k + '-31'); monate.push({ k: k, m: MN[i], e: Math.max(0, s2.ein), a: Math.max(0, s2.aus) }); }
+    var roh = Math.max.apply(null, monate.map(function (x) { return Math.max(x.e, x.a); }).concat([1])), st = eaSchritt(roh), max = Math.ceil(roh / st) * st;
+    var ih = H - pt - pb, iw = W - pl - pr, gw = iw / nM, Y = function (v) { return pt + ih - ih * v / max; }, X = function (i) { return pl + gw * i + gw / 2; };
+    var h = '';
+    monate.forEach(function (x, i) { if (x.k + '-15' >= Z.von && x.k + '-01' <= Z.bis && eaArt !== 'jahr') h += '<rect class="band" x="' + (pl + gw * i).toFixed(1) + '" y="' + pt + '" width="' + gw.toFixed(1) + '" height="' + ih + '"/>'; });
+    for (var v = 0; v <= max + 1e-9; v += st) h += '<line class="gh" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '"/><text x="' + (pl - 6) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + Math.round(v).toLocaleString('de-DE') + '</text>';
+    for (var g = 0; g <= nM; g++) h += '<line class="gv" x1="' + (pl + gw * g).toFixed(1) + '" x2="' + (pl + gw * g).toFixed(1) + '" y1="' + pt + '" y2="' + (H - pb + 4) + '"/>';
+    monate.forEach(function (x, i) { h += '<text x="' + X(i).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">' + (nM > 9 && W < 340 ? x.m.charAt(0) : x.m) + '</text>'; });
+    if (eaTyp === 'balken') {
+      var bw = Math.max(2, gw * 0.3);
+      monate.forEach(function (x, i) { var x0 = X(i) - bw - 0.5;
+        h += '<rect class="e" x="' + x0.toFixed(1) + '" y="' + Y(x.e).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, Y(0) - Y(x.e)).toFixed(1) + '" rx="2"/>';
+        h += '<rect class="a" x="' + (x0 + bw + 1).toFixed(1) + '" y="' + Y(x.a).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, Y(0) - Y(x.a)).toFixed(1) + '" rx="2"/>'; });
+    } else {
+      ['e', 'a'].forEach(function (t) {
+        h += '<polyline class="l' + t + '" points="' + monate.map(function (x, i) { return X(i).toFixed(1) + ',' + Y(x[t]).toFixed(1); }).join(' ') + '"/>';
+        monate.forEach(function (x, i) { h += '<circle class="p' + t + '" cx="' + X(i).toFixed(1) + '" cy="' + Y(x[t]).toFixed(1) + '" r="3.2"/>'; });
+      });
+    }
+    h += '<line class="cur" id="ea-cur" x1="0" x2="0" y1="' + pt + '" y2="' + (H - pb) + '" visibility="hidden"/>';
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.innerHTML = h;
+    eaMonate = { m: monate, X: X, pl: pl, gw: gw, W: W };
     $('ea-tip').textContent = 'Nur lesen aus Lexware. ' + (eaNetto ? 'Netto: ab 01.07.2026 sind 19 % herausgerechnet (Schätzung, bei 7 % oder 0 % weicht es ab), davor warst du Kleinunternehmer (brutto = netto).' : 'Brutto = Rechnungsbeträge wie in Lexware.');
   }
   $('ea-seg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; eaArt = b.dataset.a; eaOff = 0; store('jarvis_ea_art', eaArt); if (last) renderEA(last); });
   $('ea-bn').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; eaNetto = b.dataset.b === 'netto'; store('jarvis_ea_bn', eaNetto ? 'netto' : 'brutto'); if (last) renderEA(last); });
   $('ea-prev').addEventListener('click', function () { eaOff--; if (last) renderEA(last); });
+  $('ea-typ').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; eaTyp = b.dataset.t; store('jarvis_ea_typ', eaTyp); if (last) renderEA(last); });
+  function eaZeig(ev) {
+    if (!eaMonate || !eaMonate.m.length) return; var svg = $('c-ea'), r = svg.getBoundingClientRect(), x = (ev.clientX - r.left) * eaMonate.W / r.width;
+    var i = Math.max(0, Math.min(eaMonate.m.length - 1, Math.floor((x - eaMonate.pl) / eaMonate.gw))), M = eaMonate.m[i], c = $('ea-cur');
+    if (c) { c.setAttribute('x1', eaMonate.X(i)); c.setAttribute('x2', eaMonate.X(i)); c.setAttribute('visibility', 'visible'); }
+    $('ea-punkt').textContent = M.m + ': ' + eur(M.e) + ' / ' + eur(M.a);
+  }
+  $('c-ea').addEventListener('pointerdown', eaZeig); $('c-ea').addEventListener('pointermove', function (e) { if (e.buttons || e.pointerType !== 'mouse') eaZeig(e); });
   $('ea-next').addEventListener('click', function () { if (eaOff < 0) eaOff++; if (last) renderEA(last); });
 
   // ---------- Privat ----------
@@ -2044,9 +2197,14 @@
       hw.style.setProperty('--dy', Math.round(o.top + o.height / 2 - (r.top + r.height / 2)) + 'px');
       hw.classList.remove('ausKugel'); ob.classList.remove('gibt'); void hw.offsetWidth;
       hw.classList.add('ausKugel'); ob.classList.add('gibt'); setTimeout(function () { ob.classList.remove('gibt'); }, 550);
+      if (window.jvBurst) window.jvBurst(r.left + r.width / 2 - (o.left + o.width / 2), r.top + r.height / 2 - (o.top + o.height / 2));
     } catch (e) {} }
   }
-  function hudZu() { $('hudwin').hidden = true; hudOffen = null; }
+  function hudZu() {
+    var hwn = $('hudwin'); hudOffen = null; if (hwn.hidden) return;
+    if (!$('v-chat').classList.contains('on') || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) { hwn.hidden = true; return; }
+    hwn.classList.add('zu'); setTimeout(function () { hwn.classList.remove('zu'); if (!hudOffen) hwn.hidden = true; }, 260);
+  }
   $('hudwin').addEventListener('click', function (e) {
     if (e.target.closest('[data-close]')) { hudZu(); return; }
     if (e.target.id === 'hw-go') { var t = e.target.dataset.tab; hudZu(); if (t) show(t); return; }
