@@ -1211,8 +1211,9 @@
     else if (hasTTS && !serverVoice) { speakDevice('Ja, Boss?').then(function () { if (active) listen(); }); }
     else listen();
   }
+  var wakeAus = false, wakeGemeldet = false, wakePause = 250;
   function startWake() {
-    if (!SR || !standby || active || wakeRec) return;
+    if (!SR || !standby || active || wakeRec || wakeAus) return;
     var r = new SR(); wakeRec = r;
     r.lang = 'de-DE'; r.continuous = true; r.interimResults = true;
     r.onresult = function (ev) {
@@ -1222,8 +1223,13 @@
         if (ev.results[i].isFinal) { wake(t.split(/jarvis|dschawis|tscharwis/i).pop()); return; }
       }
     };
-    r.onerror = function (ev) { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { add('sys', 'Spracherkennung nicht erlaubt. Standby hört nur auf Klatschen.'); } };
-    r.onend = function () { wakeRec = null; if (standby && !active) setTimeout(startWake, 250); };
+    var t0 = Date.now();
+    r.onerror = function (ev) { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed' || ev.error === 'audio-capture') { wakeAus = true; if (!wakeGemeldet) { wakeGemeldet = true; add('sys', 'Mikrofon für „Jarvis“ nicht erlaubt – Standby hört nur auf Klatschen. Mikro erlauben und App neu öffnen.'); } } };
+    r.onend = function () {
+      wakeRec = null; if (wakeAus || !standby || active) return;
+      wakePause = (Date.now() - t0 < 1500) ? Math.min(30000, (wakePause || 250) * 2) : 250; // ständig abbrechende Erkennung → immer längere Pausen (keine Dauer-Töne)
+      setTimeout(startWake, wakePause);
+    };
     try { r.start(); } catch (e) { wakeRec = null; }
   }
   async function startClap() {
@@ -1479,7 +1485,7 @@
     // Bestell-Pipeline
     var PP = d.pipeline;
     if (PP) {
-      var STEPS = [['bezahlt', 'Bezahlt'], ['rechnung', 'Rechnung'], ['label', 'Label'], ['versand', 'Versand'], ['nexus', 'neXus'], ['gewinn', 'Gebucht']];
+      var STEPS = [['bezahlt', 'Bezahlt'], ['rechnung', 'Rechnung'], ['label', 'Label'], ['versand', 'Versand'], ['nexus', 'neXus'], ['gewinn', 'Gewinn']];
       var LAB = { ok: 'erledigt', offen: 'offen', entwurf: 'Entwurf', fehlt: 'hängt', warten: 'wartet', spaeter: 'später', storno: 'storniert', '-': '–' };
       $('pp-info').textContent = PP.anzahl ? (PP.probleme ? PP.probleme + ' hängen' : 'alles im Fluss') : '';
       $('pp-k').innerHTML = STEPS.map(function (s) {
@@ -2590,7 +2596,7 @@
 
   // ---------- Bestell-Pipeline: Bestellung antippen → Schritte manuell abhaken ----------
   var PPL = [];
-  var PP_STEPS = [['bezahlt', 'Bezahlt', null], ['rechnung', 'Rechnung', 'rechnung'], ['label', 'DHL-Label', null], ['versand', 'Versendet', 'versendet'], ['nexus', 'In neXus', 'nexus'], ['gewinn', 'Gebucht (Excel)', 'excel']];
+  var PP_STEPS = [['bezahlt', 'Bezahlt', null], ['rechnung', 'Rechnung', 'rechnung'], ['label', 'DHL-Label', null], ['versand', 'Versendet', 'versendet'], ['nexus', 'In neXus', 'nexus'], ['gewinn', 'Gewinn berechnet', 'excel']];
   var PP_LAB = { ok: 'erledigt', offen: 'offen', entwurf: 'Entwurf in Lexware', fehlt: 'hängt', warten: 'wartet', spaeter: 'kommt mit dem Versand', storno: 'storniert', '-': '–' };
   function openPipe(oid) {
     var p = PPL.find(function (x) { return x.order_id === oid; }); if (!p) return;
