@@ -2634,7 +2634,7 @@
     if (!m) return; b.textContent = '…'; b.disabled = true;
     try {
       var r = await apiCall('/api/paket', { order_id: pk.dataset.oid, masse: m, gewicht: Number(kg || 2) });
-      pk.outerHTML = '<div class="pk-fertig">📦 ' + esc(r.masse) + ' · ' + esc(String(r.gewicht).replace('.', ',')) + ' kg ✓ – kommt in die nächste Pipeline</div>';
+      pk.outerHTML = '<div class="pk-fertig">📦 ' + esc(r.masse) + ' · ' + esc(String(r.gewicht).replace('.', ',')) + ' kg ✓ – ' + (r.auto ? 'Label wird gebucht & gedruckt, sobald bezahlt' : 'kommt in die nächste Pipeline') + '</div>';
     } catch (x) { b.textContent = 'Fehler – nochmal'; b.disabled = false; }
   }
   async function retoureErstellen(pk, b) {
