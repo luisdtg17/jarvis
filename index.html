@@ -360,6 +360,13 @@
   .pk button, .pk input, .antw input, .antw button { font: inherit; font-size: 13px; color: var(--text); background: rgba(255,255,255,.04); border: 1px solid #3a4656; border-radius: 999px; padding: 5px 11px; }
   .pk button.on { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,.08); }
   .pk input { width: 104px; border-radius: 10px; }
+  .pk.gkp { display: block; padding: 10px; border: 1px solid #2a3542; border-radius: 12px; background: rgba(255,255,255,.02); }
+  .pk.gkp .r { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .pk.gkp .lb { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--mut, #8a96a6); width: 100%; margin-bottom: -2px; }
+  .pk.gkp input.n { width: 58px; text-align: center; padding: 5px 6px; }
+  .pk.gkp input.kgi { width: 70px; text-align: center; }
+  .pk.gkp .hint { font-size: 12px; color: var(--mut, #8a96a6); margin: -2px 0 8px; }
+  .pk.gkp .err { font-size: 12px; color: #ff7a7a; margin-top: 6px; }
   .pk .ok, .antw .ok { background: var(--accent); color: #001018; border-color: var(--accent); font-weight: 600; }
   .pk-fertig { margin-top: 6px; font-size: 13px; color: var(--accent); }
   .lbl-btn { font: inherit; font-size: 13px; margin-top: 6px; color: #001018; background: var(--accent); border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 600; cursor: pointer; }
@@ -2594,10 +2601,8 @@
       var zeit = (heute ? '' : t.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) + ', ') + t.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
       var d = m.daten || {}, extra = '';
       if (d.art === 'paket') {
-        extra = d.paket ? '<div class="pk-fertig">📦 ' + esc(String(d.paket.masse).replace(/x/g, '×')) + ' cm · ' + esc(String(d.paket.gewicht).replace('.', ',')) + ' kg ✓' + (d.paket.sendungsnr ? ' · Label ' + esc(d.paket.sendungsnr) : '') + '</div>'
-          : '<div class="pk" data-oid="' + esc(d.order_id) + '"><button type="button" class="on" data-m="60x30x15">60×30×15</button><input type="text" inputmode="numeric" placeholder="andere: LxBxH" data-mi>' +
-            [1, 2, 5, 10].map(function (k) { return '<button type="button" data-kg="' + k + '"' + (k === 2 ? ' class="on"' : '') + '>' + k + ' kg</button>'; }).join('') +
-            '<button type="button" class="ok" data-pk-ok>Speichern</button></div>';
+        extra = d.paket ? '<div class="pk-fertig">📦 ' + pkText(d.paket) + ' ✓' + (d.paket.sendungsnr ? ' · Label ' + esc(d.paket.sendungsnr) : '') + '</div>'
+          : pkForm(d.order_id, null, 'data-pk-ok');
       }
       if (d.art === 'retoure') {
         extra = d.label_nr ? '<div class="pk-fertig">↩️ Retourenlabel ' + esc(d.label_nr) + ' ✓</div><div data-lblnr="' + esc(d.label_nr) + '"></div>'
@@ -2618,10 +2623,36 @@
     var li = e.target.closest('li.meld'); if (li) li.classList.toggle('open');
   });
   $('meldungen').addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.closest('.antw')) { e.preventDefault(); antworten(e.target.closest('li.meld')); } });
+  // Paket-Auswahl wie im DHL-Geschäftskundenportal: Produkt, Gewicht (Pflicht), Maße (optional)
+  var PK_HINT = { paket: 'DHL Paket · bis 31,5 kg · max. 120 × 60 × 60 cm', klein: 'DHL Kleinpaket · bis 1 kg · max. 35,3 × 25 × 8 cm' };
+  function pkText(p) {
+    var m = p.masse ? String(p.masse).replace(/x/g, '×').replace(/\s*cm$/, '') + ' cm · ' : '';
+    return (p.produkt === 'klein' ? 'DHL Kleinpaket' : 'DHL Paket') + ' · ' + m + String(p.gewicht).replace('.', ',') + ' kg';
+  }
+  function pkForm(oid, v, okAttr) {
+    v = v || {}; var pr = v.produkt === 'klein' ? 'klein' : 'paket', m = String(v.masse || '').split(/[x×]/);
+    return '<div class="pk gkp" data-oid="' + esc(oid) + '" data-pr="' + pr + '">' +
+      '<div class="r"><span class="lb">Produkt</span><button type="button" data-prw="paket"' + (pr === 'paket' ? ' class="on"' : '') + '>DHL Paket</button><button type="button" data-prw="klein"' + (pr === 'klein' ? ' class="on"' : '') + '>DHL Kleinpaket</button></div>' +
+      '<div class="hint" data-hint>' + PK_HINT[pr] + '</div>' +
+      '<div class="r"><span class="lb">Gewicht (kg)*</span><input class="kgi" data-kgi inputmode="decimal" value="' + esc(v.gewicht != null ? String(v.gewicht).replace('.', ',') : (pr === 'klein' ? '0,5' : '1')) + '">' +
+        ['0,5', '1', '2', '5', '10'].map(function (k) { return '<button type="button" data-kgw="' + k + '">' + k + '</button>'; }).join('') + '</div>' +
+      '<div class="r"><span class="lb">Länge × Breite × Höhe (cm, optional)</span><input class="n" data-l inputmode="numeric" placeholder="L" value="' + esc(m[0] || '') + '">×<input class="n" data-b inputmode="numeric" placeholder="B" value="' + esc(m[1] || '') + '">×<input class="n" data-h inputmode="numeric" placeholder="H" value="' + esc(m[2] || '') + '"></div>' +
+      '<button type="button" class="ok" ' + okAttr + '>Bestätigen</button><div class="err" data-err hidden></div></div>';
+  }
+  function pkLesen(pk) {
+    var g = function (s) { return (pk.querySelector(s).value || '').trim(); };
+    var l = g('[data-l]'), b = g('[data-b]'), h = g('[data-h]');
+    return { order_id: pk.dataset.oid, produkt: pk.dataset.pr, gewicht: Number(g('[data-kgi]').replace(',', '.')), masse: (l && b && h) ? l + 'x' + b + 'x' + h : '' };
+  }
+  function pkKlick(pk, b) {
+    if (b.dataset.prw) { pk.dataset.pr = b.dataset.prw; pk.querySelectorAll('[data-prw]').forEach(function (x) { x.classList.toggle('on', x === b); }); pk.querySelector('[data-hint]').textContent = PK_HINT[b.dataset.prw]; return true; }
+    if (b.dataset.kgw) { pk.querySelector('[data-kgi]').value = b.dataset.kgw; return true; }
+    return false;
+  }
   function meldAktion(e) {
     var pk = e.target.closest('.pk'), b = e.target.closest('button');
     if (pk && b) {
-      if (b.dataset.m) { pk.querySelectorAll('[data-m]').forEach(function (x) { x.classList.toggle('on', x === b); }); pk.querySelector('[data-mi]').value = ''; }
+      if (pk.classList.contains('gkp') && pkKlick(pk, b)) return;
       if (b.dataset.kg) pk.querySelectorAll('[data-kg]').forEach(function (x) { x.classList.toggle('on', x === b); });
       if (b.hasAttribute('data-pk-ok')) paketSpeichern(pk, b);
       if (b.hasAttribute('data-ret-ok')) retoureErstellen(pk, b);
@@ -2630,12 +2661,12 @@
     if (b && b.hasAttribute('data-antw')) antworten(b.closest('li.meld'));
   }
   async function paketSpeichern(pk, b) {
-    var eigen = pk.querySelector('[data-mi]').value.trim(), m = eigen || (pk.querySelector('[data-m].on') || {}).dataset.m, kg = (pk.querySelector('[data-kg].on') || {}).dataset.kg;
-    if (!m) return; b.textContent = '…'; b.disabled = true;
+    var err = pk.querySelector('[data-err]'); err.hidden = true; b.textContent = '…'; b.disabled = true;
     try {
-      var r = await apiCall('/api/paket', { order_id: pk.dataset.oid, masse: m, gewicht: Number(kg || 2) });
-      pk.outerHTML = '<div class="pk-fertig">📦 ' + esc(r.masse) + ' · ' + esc(String(r.gewicht).replace('.', ',')) + ' kg ✓ – ' + (r.auto ? 'Label wird gebucht & gedruckt, sobald bezahlt' : 'kommt in die nächste Pipeline') + '</div>';
-    } catch (x) { b.textContent = 'Fehler – nochmal'; b.disabled = false; }
+      var r = await apiCall('/api/paket', pkLesen(pk));
+      if (r.ok === false) throw new Error(r.fehler);
+      pk.outerHTML = '<div class="pk-fertig">📦 ' + esc(pkText(r)) + ' ✓ – ' + (r.auto ? 'Label wird gebucht & gedruckt, sobald bezahlt' : 'kommt in die nächste Pipeline') + '</div>';
+    } catch (x) { err.textContent = String(x.message || x); err.hidden = false; b.textContent = 'Bestätigen'; b.disabled = false; }
   }
   async function retoureErstellen(pk, b) {
     if (b.dataset.sicher !== '1') { b.dataset.sicher = '1'; b.textContent = 'Sicher? Nochmal tippen = Label kaufen'; return; }
@@ -2709,7 +2740,7 @@
   function vsSchritte(b) {
     var s = b.schritte || {};
     return [
-      { k: 'paket', n: 'Paketgröße', auto: !!b.masse, info: b.masse ? b.masse.replace(/x/g, '×') + ' cm · ' + String(b.gewicht).replace('.', ',') + ' kg' : 'noch offen' },
+      { k: 'paket', n: 'Paket', auto: b.gewicht != null, info: b.gewicht != null ? pkText(b) : 'noch offen' },
       { k: 'rechnung', n: 'Rechnung', auto: !!b.rechnung, man: !!s.rechnung, info: b.rechnung ? 'Entwurf in Lexware' : (s.rechnung ? 'von dir erledigt' : 'kommt mit der Pipeline') },
       { k: 'label', n: 'DHL-Label', auto: !!b.sendungsnr, info: b.sendungsnr ? 'Sendung ' + b.sendungsnr : 'kommt mit der Pipeline' },
       { k: 'druck', n: 'Gedruckt', auto: b.label_status === 'gedruckt', info: b.label_status === 'gedruckt' ? 'auf dem Mac' : (b.sendungsnr ? 'wartet auf den Mac' : '–') },
@@ -2725,7 +2756,7 @@
     $('sh-body').innerHTML = '<div class="vs-h">' + esc(b.artikel) + '</div><div class="vs-m">' + esc(b.kunde) + (b.ort ? ' · ' + esc(b.ort) : '') + ' · Bestellung ' + esc(b.order_id) + (b.preis ? ' · ' + eur(b.preis, 2) : '') + '</div>' +
       S.map(function (x) {
         var r = '<div class="vs-s" data-k="' + x.k + '"><div class="t">' + (x.auto || x.man ? '✅ ' : '⬜️ ') + esc(x.n) + '<small>' + esc(x.info) + '</small>';
-        if (x.k === 'paket') r += '<div class="vs-pk"><input data-pm placeholder="60x30x15" value="' + esc(b.masse || '60x30x15') + '"><input class="kg" data-pg inputmode="decimal" placeholder="kg" value="' + esc(b.gewicht != null ? String(b.gewicht).replace('.', ',') : '2') + '"><button type="button" class="tg ok" data-pk-save>Speichern</button></div>';
+        if (x.k === 'paket') r += pkForm(b.order_id, b.gewicht != null ? b : null, 'data-pk-save');
         r += '</div>';
         if (x.k !== 'paket' && x.k !== 'label' && x.k !== 'druck') r += x.auto ? '<span class="auto">automatisch</span>' : '<button type="button" class="tg' + (x.man ? ' ok' : '') + '" data-tg="' + x.k + '">' + (x.man ? '✓ erledigt' : 'Abhaken') + '</button>';
         return r + '</div>';
@@ -2736,6 +2767,7 @@
   }
   $('sh-body').addEventListener('click', async function (e) {
     var oid = this.dataset.oid, b = e.target.closest('button'); if (!oid || !b) return;
+    var gk = b.closest('.pk.gkp'); if (gk && pkKlick(gk, b)) return;
     var x = VERSAND.find(function (y) { return y.order_id === oid; }); if (!x) return;
     try {
       if (b.dataset.tg) {
@@ -2745,8 +2777,9 @@
       }
       if (b.hasAttribute('data-pk-save')) {
         b.textContent = '…';
-        var p = await apiCall('/api/paket', { order_id: oid, masse: this.querySelector('[data-pm]').value, gewicht: Number(this.querySelector('[data-pg]').value.replace(',', '.')) });
-        x.masse = p.masse.replace(/[^\d×]/g, '').replace(/×/g, 'x'); x.gewicht = p.gewicht; openBestellung(oid); renderVersand({ bestellungen: VERSAND, dhl: VERSAND_DHL });
+        var p = await apiCall('/api/paket', pkLesen(gk));
+        if (p.ok === false) { var er = gk.querySelector('[data-err]'); er.textContent = p.fehler; er.hidden = false; b.textContent = 'Bestätigen'; return; }
+        x.masse = p.masse.replace(/[^\d×]/g, '').replace(/×/g, 'x'); x.gewicht = p.gewicht; x.produkt = p.produkt; openBestellung(oid); renderVersand({ bestellungen: VERSAND, dhl: VERSAND_DHL });
       }
     } catch (err) { b.disabled = false; b.textContent = 'Fehler – nochmal'; }
   });
@@ -2761,7 +2794,7 @@
     var B = (d && d.bestellungen) || []; VERSAND = B; VERSAND_DHL = d ? d.dhl : null;
     $('n-versand').textContent = B.length ? B.length + ' offen' : '';
     $('versand').innerHTML = B.length ? B.map(function (b) {
-      var st = b.sendungsnr ? (b.label_status === 'gedruckt' ? '🖨️ gedruckt' : '🏷️ Label da · wartet auf Druck') : (b.masse ? '📦 ' + b.masse.replace(/x/g, '×') + ' · ' + String(b.gewicht).replace('.', ',') + ' kg' : '❓ Paketgröße fehlt');
+      var st = b.sendungsnr ? (b.label_status === 'gedruckt' ? '🖨️ gedruckt' : '🏷️ Label da · wartet auf Druck') : (b.gewicht != null ? '📦 ' + pkText(b) : '❓ Paket fehlt');
       return '<li data-oid="' + esc(b.order_id) + '"><div class="main"><div><b>' + esc(b.artikel) + '</b><span class="prog">' + vsFortschritt(b) + ' ›</span></div><div class="sub">' + esc(b.kunde) + ' · ' + esc(b.order_id) + ' · ' + st + '</div></div></li>';
     }).join('') : '<li class="empty">Nichts zu versenden.</li>';
     $('versand-dhl').textContent = d && d.dhl === false ? 'DHL noch nicht verbunden – Labels kommen, sobald die Zugangsdaten drin sind.' : '';
