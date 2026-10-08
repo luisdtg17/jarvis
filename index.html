@@ -362,6 +362,8 @@
   .pk input { width: 104px; border-radius: 10px; }
   .pk .ok, .antw .ok { background: var(--accent); color: #001018; border-color: var(--accent); font-weight: 600; }
   .pk-fertig { margin-top: 6px; font-size: 13px; color: var(--accent); }
+  .lbl-btn { font: inherit; font-size: 13px; margin-top: 6px; color: #001018; background: var(--accent); border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 600; cursor: pointer; }
+  .msg .lbl-btn { display: block; }
   .antw { display: none; margin-top: 8px; gap: 6px; cursor: default; }
   li.meld.open .antw { display: flex; }
   .antw input { flex: 1; min-width: 0; border-radius: 10px; }
@@ -1116,6 +1118,7 @@
       }
       if (data.frage && payload.audio) add('me', data.frage);
       if (data.antwort) add('jv', clean(data.antwort));
+      (data.anhaenge || []).forEach(function (a) { if (a.typ === 'label' && window.jarvisLabelKnopf) { var el = add('jv', ''); el.appendChild(window.jarvisLabelKnopf(a.nr, '📄 ' + (a.titel || 'DHL-Label') + ' öffnen')); } });
       try { window.dispatchEvent(new CustomEvent('jarvis-geantwortet')); } catch (e) {}
       if (active || payload.fromVoice) {
         if (data.audio) await playServer(data.audio);
@@ -1353,6 +1356,27 @@
     return res.json();
   }
   window.jarvisApi = function () { return API ? apiCall : null; };
+  // DHL-Label-PDF: vorab laden, beim Tippen sofort teilen (iPhone: in Dateien sichern / an Kaufland-App) oder öffnen
+  var labelCache = {};
+  function labelLaden(nr) {
+    if (!labelCache[nr]) labelCache[nr] = fetch(API + '/api/labels/pdf?nr=' + encodeURIComponent(nr), { headers: { 'X-Jarvis-Key': KEY } })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
+      .then(function (b) { labelCache[nr + ':f'] = new File([b], 'DHL-Label-' + nr + '.pdf', { type: 'application/pdf' }); return b; })
+      .catch(function (e) { delete labelCache[nr]; throw e; });
+    return labelCache[nr];
+  }
+  window.jarvisLabelKnopf = function (nr, text) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'lbl-btn'; b.textContent = text || '📄 Label öffnen'; b.dataset.lbl = nr;
+    labelLaden(nr).catch(function () { b.textContent = '⚠️ Label noch nicht abrufbar – tippen für neuen Versuch'; });
+    b.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var f = labelCache[nr + ':f'];
+      if (!f) { b.textContent = '… lädt'; labelLaden(nr).then(function () { b.textContent = text || '📄 Label öffnen'; }).catch(function () { b.textContent = '⚠️ Fehler – nochmal tippen'; }); return; }
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f], title: 'DHL-Label ' + nr }).catch(function () {}); return; }
+      var a = document.createElement('a'); a.href = URL.createObjectURL(f); a.target = '_blank'; a.download = f.name; document.body.appendChild(a); a.click(); setTimeout(function () { a.remove(); }, 1000);
+    });
+    return b;
+  };
   var rechner = null;
   async function backendDaten(extra) {
     var r = await apiCall('/api/rohdaten', extra || {});
@@ -2575,13 +2599,21 @@
             [1, 2, 5, 10].map(function (k) { return '<button type="button" data-kg="' + k + '"' + (k === 2 ? ' class="on"' : '') + '>' + k + ' kg</button>'; }).join('') +
             '<button type="button" class="ok" data-pk-ok>Speichern</button></div>';
       }
+      if (d.art === 'retoure') {
+        extra = d.label_nr ? '<div class="pk-fertig">↩️ Retourenlabel ' + esc(d.label_nr) + ' ✓</div><div data-lblnr="' + esc(d.label_nr) + '"></div>'
+          : '<div class="pk" data-ret="' + esc(d.schluessel || '') + '" data-oid="' + esc(d.order_id || '') + '">' + [1, 2, 5].map(function (k) { return '<button type="button" data-kg="' + k + '"' + (k === 1 ? ' class="on"' : '') + '>' + k + ' kg</button>'; }).join('') +
+            '<button type="button" class="ok" data-ret-ok>Retourenlabel erstellen (kostenpflichtig)</button></div>';
+      }
+      if (d.art === 'label' && d.nr) extra = '<div data-lblnr="' + esc(d.nr) + '"></div>';
       return '<li class="meld' + (m.id > seen ? ' neu' : '') + '" data-mid="' + m.id + '"><div class="main"><div><b>' + esc(m.titel) + '</b> <span class="sub">' + zeit + '</span></div><div class="mtext">' + esc(m.text) + '</div>' + extra +
         '<div class="antw"><input type="text" placeholder="Jarvis antworten …" enterkeyhint="send"><button type="button" class="ok" data-antw>➤</button></div><div class="antw-r" hidden></div></div></li>';
     }).join('') + (M.length > 4 ? '<li><button class="chk" style="width:auto;padding:2px 10px;border-radius:999px;color:var(--text);font-size:12px" type="button" id="meld-more">' + (all ? 'Weniger' : 'Alle ' + M.length + ' zeigen') + '</button></li>' : '') : '<li class="empty">Noch keine Mitteilungen.</li>';
+    $('meldungen').querySelectorAll('[data-lblnr]').forEach(function (x) { if (window.jarvisLabelKnopf) x.appendChild(window.jarvisLabelKnopf(x.dataset.lblnr, '📄 Label öffnen / teilen')); });
     if (M[0] && $('v-dash').classList.contains('on')) setTimeout(function () { store('jarvis_meld_seen', String(M[0].id)); }, 4000);
   }
   $('meldungen').addEventListener('click', function (e) {
     if (e.target.closest('#meld-more')) { this.dataset.all = this.dataset.all === '1' ? '0' : '1'; try { renderMeldungen(JSON.parse(store('jarvis_meld') || 'null')); } catch (x) {} return; }
+    if (e.target.closest('.lbl-btn')) return;
     if (e.target.closest('.pk, .antw, .antw-r')) return meldAktion(e);
     var li = e.target.closest('li.meld'); if (li) li.classList.toggle('open');
   });
@@ -2592,6 +2624,7 @@
       if (b.dataset.m) { pk.querySelectorAll('[data-m]').forEach(function (x) { x.classList.toggle('on', x === b); }); pk.querySelector('[data-mi]').value = ''; }
       if (b.dataset.kg) pk.querySelectorAll('[data-kg]').forEach(function (x) { x.classList.toggle('on', x === b); });
       if (b.hasAttribute('data-pk-ok')) paketSpeichern(pk, b);
+      if (b.hasAttribute('data-ret-ok')) retoureErstellen(pk, b);
       return;
     }
     if (b && b.hasAttribute('data-antw')) antworten(b.closest('li.meld'));
@@ -2604,6 +2637,18 @@
       pk.outerHTML = '<div class="pk-fertig">📦 ' + esc(r.masse) + ' · ' + esc(String(r.gewicht).replace('.', ',')) + ' kg ✓ – kommt in die nächste Pipeline</div>';
     } catch (x) { b.textContent = 'Fehler – nochmal'; b.disabled = false; }
   }
+  async function retoureErstellen(pk, b) {
+    if (b.dataset.sicher !== '1') { b.dataset.sicher = '1'; b.textContent = 'Sicher? Nochmal tippen = Label kaufen'; return; }
+    var kg = Number((pk.querySelector('[data-kg].on') || {}).dataset.kg || 1);
+    b.textContent = '… erstelle Label'; b.disabled = true;
+    try {
+      var r = await apiCall('/api/retoure', { schluessel: pk.dataset.ret || undefined, order_id: pk.dataset.oid || undefined, kg: kg });
+      if (!r.ok) throw new Error(r.fehler || 'Fehler');
+      var box = document.createElement('div'); box.innerHTML = '<div class="pk-fertig">↩️ Retourenlabel ' + esc(r.sendungsnr) + ' ✓</div>';
+      box.appendChild(window.jarvisLabelKnopf(String(r.sendungsnr), '📄 Label öffnen / teilen'));
+      pk.replaceWith(box);
+    } catch (x) { b.disabled = false; b.dataset.sicher = ''; b.textContent = 'Fehler: ' + String(x.message || x).slice(0, 80); }
+  }
   async function antworten(li) {
     var inp = li.querySelector('.antw input'), t = inp.value.trim(); if (!t) return;
     var out = li.querySelector('.antw-r'); out.hidden = false; out.textContent = 'Jarvis denkt …'; inp.value = '';
@@ -2611,6 +2656,7 @@
     try {
       var r = await apiCall('/api/jarvis', { prompt: 'Antwort von Boss auf deine Mitteilung „' + titel + ': ' + text + '“ → ' + t, verlauf: [], kanal: 'text' });
       out.textContent = r.antwort || r.output || r.text || 'Erledigt.';
+      (r.anhaenge || []).forEach(function (a) { if (a.typ === 'label') out.appendChild(window.jarvisLabelKnopf(a.nr, '📄 ' + (a.titel || 'Label') + ' öffnen / teilen')); });
       if (/paket|label|pipeline/i.test(out.textContent)) { loadMeldungen(); loadVersand(); }
     } catch (x) { out.textContent = 'Jarvis nicht erreichbar.'; }
   }
