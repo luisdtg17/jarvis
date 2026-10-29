@@ -1113,10 +1113,10 @@
     try {
       var data = null, api = window.jarvisApi && window.jarvisApi();
       // Zuerst das eigene Backend (Gemini direkt, keine n8n-Ausführungen); bei Fehler wie bisher n8n
-      if (api && payload.text) {
+      if (api && (payload.text || payload.audio)) {
         try {
           var verlauf = [].slice.call(log.querySelectorAll('.msg.me, .msg.jv')).slice(-13, -1).map(function (m) { return { rolle: m.classList.contains('jv') ? 'jarvis' : 'user', text: m.textContent }; });
-          data = await api('/api/jarvis', { prompt: payload.text, verlauf: verlauf, kanal: payload.fromVoice ? 'app' : 'text' });
+          data = await api('/api/jarvis', payload.audio && !payload.text ? { audio: payload.audio, mime: payload.mime, verlauf: verlauf, kanal: 'app' } : { prompt: payload.text, verlauf: verlauf, kanal: payload.fromVoice ? 'app' : 'text' });
           if (!data || !data.antwort) data = null;
         } catch (e) { data = null; }
       }
