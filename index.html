@@ -1176,7 +1176,7 @@
 
   // ---------- Zuhören: Aufnahme (Fallback) ----------
   async function ensureMic() {
-    if (!stream) stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (!stream) stream = (IST_ANDROID && clapStream) ? clapStream : await navigator.mediaDevices.getUserMedia({ audio: true });
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (!analyser) {
       var src = audioCtx.createMediaStreamSource(stream);
@@ -1203,13 +1203,14 @@
     };
     recorder.start(250);
     setState('listening', 'Ich höre zu …');
-    var start = performance.now(), speech = 0, last = 0;
+    var start = performance.now(), speech = 0, last = 0, floor = 0.004;
     (function loop() {
       if (state !== 'listening' || !recorder || recorder.state === 'inactive') return;
       var now = performance.now(), l = level();
-      if (l > 0.035) { if (!speech) speech = now; last = now; }
-      if (!speech && standby && now - start > 8000) { recorder.onstop = null; recorder.stop(); active = false; armStandby(); return; }
-      if ((speech && last - speech > 350 && now - last > 1300) || now - start > 30000) { recorder.stop(); return; }
+      var thr = IST_ANDROID ? Math.max(0.006, floor * 2.5) : 0.035;
+      if (l > thr) { if (!speech) speech = now; last = now; } else if (IST_ANDROID) floor = floor * 0.95 + l * 0.05;
+      if (!IST_ANDROID && !speech && standby && now - start > 8000) { recorder.onstop = null; recorder.stop(); active = false; armStandby(); return; }
+      if ((speech && last - speech > 350 && now - last > 1300) || now - start > (IST_ANDROID ? 10000 : 30000)) { recorder.stop(); return; }
       rafId = requestAnimationFrame(loop);
     })();
   }
