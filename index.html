@@ -783,6 +783,8 @@
   var voiceBtn = document.getElementById('voiceBtn');
 
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var IST_ANDROID = /Android/i.test(navigator.userAgent);
+  if (IST_ANDROID) SR = null; // Android: Browser-Spracherkennung liefert nichts bzw. kollidiert mit dem Klatsch-Mikro → eigene Aufnahme nutzen
   var hasTTS = 'speechSynthesis' in window;
   var serverVoice = store('jarvis_voice') !== 'device' || !hasTTS; // Standard: natürliche Gemini-Stimme
   var active = false, state = 'idle', busy = false;
@@ -1184,6 +1186,7 @@
   }
   function level() { analyser.getFloatTimeDomainData(buf); var s = 0; for (var i = 0; i < buf.length; i++) s += buf[i] * buf[i]; return Math.sqrt(s / buf.length); }
   function listenRec() {
+    if (!stream || !analyser) { ensureMic().then(listenRec).catch(function (e) { active = false; add('sys', 'Mikrofon nicht verfügbar (' + (e.name || e.message) + ').'); setState('idle', 'Bereit'); }); return; }
     chunks = [];
     var opts = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'];
     mime = ''; for (var i = 0; i < opts.length; i++) if (window.MediaRecorder && MediaRecorder.isTypeSupported(opts[i])) { mime = opts[i]; break; }
@@ -1223,7 +1226,7 @@
 
   function armStandby() {
     if (!standby || active) return;
-    setState('standby', 'Standby: sag „Jarvis“ oder klatsch zweimal');
+    setState('standby', SR ? 'Standby: sag „Jarvis“ oder klatsch zweimal' : 'Standby: zweimal klatschen oder antippen');
     startWake(); startClap();
   }
   function disarm() {
