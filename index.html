@@ -1105,6 +1105,7 @@
         if (audioCtx.state === 'suspended') await audioCtx.resume();
         var bin = atob(b64), bytes = new Uint8Array(bin.length);
         for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        jvLog('Ton: audioCtx=' + audioCtx.state + ' bytes=' + bytes.length);
         var ab = await audioCtx.decodeAudioData(bytes.buffer);
         var src = audioCtx.createBufferSource(); src.buffer = ab;
         try { if (!spkAn) { spkAn = audioCtx.createAnalyser(); spkAn.fftSize = 512; spkBuf = new Float32Array(spkAn.fftSize); spkAn.connect(audioCtx.destination); } src.connect(spkAn); } catch (e) { src.connect(audioCtx.destination); }
@@ -1113,7 +1114,7 @@
         src.onended = function () { currentSource = null; bargeStop(); resolve(); };
         src.start();
         bargeStart(function () { ttsAbbruch = true; try { src.stop(); } catch (e) {} });
-      } catch (e) { resolve(); }
+      } catch (e) { jvLog('Ton-Fehler: ' + (e && e.message) + ' audioCtx=' + (audioCtx && audioCtx.state)); resolve(); }
     });
   }
   // Natürliche Stimme (Gemini) – erster Satz sofort, Rest lädt parallel → flüssig ohne lange Pause
@@ -1126,13 +1127,17 @@
     var p1 = api('/api/tts', { text: s1 }).catch(function () { return null; });
     var p2 = rest ? api('/api/tts', { text: rest }).catch(function () { return null; }) : null;
     var r1 = await p1;
-    if (!r1 || !r1.ok || !r1.audio) return speakDevice(t);
+    if (!r1 || !r1.ok || !r1.audio) { jvLog('TTS vom Backend fehlgeschlagen, nehme Gerätestimme'); return speakDevice(t); }
     await playServer(r1.audio);
     if (!p2 || ttsAbbruch) return;
     var r2 = await p2;
     if (ttsAbbruch) return;
     if (r2 && r2.ok && r2.audio) await playServer(r2.audio); else await speakDevice(rest);
   }
+  // Fehler-Protokoll ans Backend (nur zur Diagnose, z. B. Samsung-Ton)
+  function jvLog(m) { try { if (!KEY) return; fetch('https://jarvis-api.dettlingluis.workers.dev/api/log', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Jarvis-Key': KEY }, body: JSON.stringify({ m: String(m).slice(0, 500), ua: navigator.userAgent.slice(0, 100) }) }); } catch (e) {} }
+  window.jvLog = jvLog;
+  window.addEventListener('error', function (e) { jvLog('JS-Fehler: ' + (e.message || '') + ' @' + (e.lineno || '')); });
   function unlockAudio() {
     try { if (hasTTS) { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } } catch (e) {}
     try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch (e) {}
@@ -1158,6 +1163,7 @@
       if (data.antwort) add('jv', clean(data.antwort));
       (data.anhaenge || []).forEach(function (a) { if (a.typ === 'label' && window.jarvisLabelKnopf) { var el = add('jv', ''); el.appendChild(window.jarvisLabelKnopf(a.nr, '📄 ' + (a.titel || 'DHL-Label') + ' öffnen')); } });
       try { window.dispatchEvent(new CustomEvent('jarvis-geantwortet')); } catch (e) {}
+      jvLog('Antwort da: active=' + active + ' fromVoice=' + !!payload.fromVoice + ' serverVoice=' + serverVoice + ' hasTTS=' + hasTTS);
       if (active || payload.fromVoice) {
         if (data.audio) await playServer(data.audio);
         else if (data.antwort && serverVoice) await speakNatural(data.antwort);
@@ -1533,8 +1539,8 @@
     $('stand').textContent = 'Aktualisiere …';
     try {
       var d = null;
-      if (API) { try { d = await backendDaten(extra); } catch (e) { console.warn('Backend nicht erreichbar, nehme n8n', e); } }
-      if (!d) throw new Error('Backend nicht erreichbar');
+      if (API) { try { d = await backendDaten(extra); } catch (e) { jvLog('backendDaten: ' + (e && e.message)); } }
+      if (!d) { jvLog('Daten laden fehlgeschlagen'); throw new Error('Backend nicht erreichbar'); }
       last = d; lastLoad = Date.now();
       try { store('jarvis_dash', JSON.stringify(d)); } catch (e) {}
       render(d, false);
