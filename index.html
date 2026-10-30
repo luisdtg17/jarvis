@@ -1086,15 +1086,23 @@
   }
   function speakDevice(text) {
     return new Promise(function (resolve) {
-      var fertig = false, ende = function () { if (fertig) return; fertig = true; bargeStop(); resolve(); };
+      var fertig = false, abbruch = false, ende = function () { if (fertig) return; fertig = true; bargeStop(); resolve(); };
       try {
         speechSynthesis.cancel();
-        var u = new SpeechSynthesisUtterance(clean(text));
-        u.lang = 'de-DE'; if (voice) u.voice = voice; u.rate = 1.03;
-        u.onend = ende; u.onerror = ende; u.onboundary = function () { if (window.jvPuls) window.jvPuls(1); };
+        // Android/Chrome bricht lange Texte ab → in Sätzen (max. ~180 Zeichen) nacheinander sprechen
+        var teile = (clean(text).match(/[^.!?]+[.!?]*\s*/g) || [clean(text)]).reduce(function (a, s) { s = s.trim(); if (!s) return a; if (a.length && (a[a.length - 1] + ' ' + s).length <= 180) a[a.length - 1] += ' ' + s; else a.push(s); return a; }, []);
+        var i = 0;
+        var weiter = function () {
+          if (abbruch || i >= teile.length) { ende(); return; }
+          var u = new SpeechSynthesisUtterance(teile[i++]);
+          u.lang = 'de-DE'; if (voice) u.voice = voice; u.rate = 1.03;
+          u.onend = weiter; u.onerror = function (e) { if (window.jvLog) window.jvLog('Gerätestimme-Fehler: ' + (e && e.error)); weiter(); };
+          u.onboundary = function () { if (window.jvPuls) window.jvPuls(1); };
+          speechSynthesis.speak(u);
+        };
         setState('speaking', 'Jarvis spricht … (sag „Stopp“ oder tippen)');
-        speechSynthesis.speak(u);
-        bargeStart(function () { try { speechSynthesis.cancel(); } catch (e) {} ende(); });
+        weiter();
+        bargeStart(function () { abbruch = true; try { speechSynthesis.cancel(); } catch (e) {} ende(); });
       } catch (e) { ende(); }
     });
   }
@@ -1122,7 +1130,7 @@
   async function speakNatural(text) {
     var api = window.jarvisApi && window.jarvisApi(); var t = clean(text);
     if (!api) return speakDevice(t);
-    var m = t.match(/^[\s\S]{25,}?[.!?](\s|$)/), s1 = m ? m[0].trim() : t, rest = m ? t.slice(m[0].length).trim() : '';
+    var m = t.length > 260 ? t.match(/^[\s\S]{25,}?[.!?](\s|$)/) : null, s1 = m ? m[0].trim() : t, rest = m ? t.slice(m[0].length).trim() : '';
     ttsAbbruch = false;
     var p1 = api('/api/tts', { text: s1 }).catch(function () { return null; });
     var p2 = rest ? api('/api/tts', { text: rest }).catch(function () { return null; }) : null;
