@@ -1227,12 +1227,13 @@
 
   function armStandby() {
     if (!standby || active) return;
-    setState('standby', SR ? 'Standby: sag „Jarvis“ oder klatsch zweimal' : 'Standby: zweimal klatschen oder antippen');
+    setState('standby', 'Standby: sag „Jarvis“ oder klatsch zweimal');
     startWake(); startClap();
   }
   function disarm() {
     try { if (wakeRec) { wakeRec.onend = null; wakeRec.abort(); } } catch (e) {}
-    wakeRec = null; cancelAnimationFrame(clapRaf); clearTimeout(clapRaf); clapRaf = 0;
+    wakeRec = null; wakeVadStop();
+    if (!IST_ANDROID) { cancelAnimationFrame(clapRaf); clearTimeout(clapRaf); clapRaf = 0; clapLaeuft = false; }
   }
   function wake(rest) {
     disarm();
@@ -1264,17 +1265,50 @@
     };
     try { r.start(); } catch (e) { wakeRec = null; }
   }
+  // Android: Wachwort per kurzer Aufnahme -> Backend /api/wake (Gemini erkennt „Jarvis“)
+  var clapLaeuft = false, wv = { on: false, start: 0, last: 0, rec: null, chunks: [], ruheBis: 0, zeiten: [] };
+  function wakeVadStop() { try { if (wv.rec && wv.rec.state !== 'inactive') { wv.rec.onstop = null; wv.rec.stop(); } } catch (e) {} wv.on = false; wv.rec = null; }
+  function wakeVad(rms, now) {
+    if (!IST_ANDROID || active || busy || !window.MediaRecorder || !clapStream) { if (wv.on) wakeVadStop(); return; }
+    var laut = rms > Math.max(0.008, noise * 3);
+    if (!wv.on) {
+      if (!laut || now < wv.ruheBis) return;
+      wv.zeiten = wv.zeiten.filter(function (t) { return now - t < 60000; });
+      if (wv.zeiten.length >= 20) return;
+      try { var r = new MediaRecorder(clapStream); } catch (e) { return; }
+      wv.rec = r; wv.chunks = []; wv.on = true; wv.start = now; wv.last = now;
+      r.ondataavailable = function (e) { if (e.data && e.data.size) wv.chunks.push(e.data); };
+      r.onstop = function () {
+        var dauer = wv.last - wv.start, mimeW = r.mimeType || 'audio/webm';
+        var blob = new Blob(wv.chunks, { type: mimeW }); wv.on = false; wv.rec = null;
+        if (dauer < 250 || blob.size < 1500 || active) return;
+        wv.zeiten.push(performance.now());
+        var api = window.jarvisApi && window.jarvisApi(); if (!api) return;
+        var fr = new FileReader();
+        fr.onloadend = function () {
+          api('/api/wake', { audio: String(fr.result).split(',')[1] || '', mime: mimeW.split(';')[0] }).then(function (res) {
+            if (res && res.wake && !active && standby) wake(res.rest || '');
+          }).catch(function () {});
+        };
+        fr.readAsDataURL(blob);
+      };
+      r.start(200);
+      return;
+    }
+    if (laut) wv.last = now;
+    if (now - wv.last > 700 || now - wv.start > 4000) { wv.ruheBis = now + 600; try { wv.rec.stop(); } catch (e) { wv.on = false; } }
+  }
   async function startClap() {
-    if (!standby || active) return;
+    if (!standby || clapLaeuft || (active && !IST_ANDROID)) return;
     try {
       if (!clapStream) clapStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') await audioCtx.resume();
       if (!clapAn) { var s = audioCtx.createMediaStreamSource(clapStream); clapAn = audioCtx.createAnalyser(); clapAn.fftSize = 512; clapBuf = new Float32Array(clapAn.fftSize); s.connect(clapAn); }
     } catch (e) { return; }
-    clapTimes = [];
+    clapTimes = []; clapLaeuft = true;
     (function loop() {
-      if (!standby || active) return;
+      if (!standby || (active && !IST_ANDROID)) { clapLaeuft = false; return; }
       clapAn.getFloatTimeDomainData(clapBuf);
       var peak = 0, sum = 0;
       for (var i = 0; i < clapBuf.length; i++) { var a = Math.abs(clapBuf[i]); if (a > peak) peak = a; sum += a * a; }
@@ -1283,8 +1317,12 @@
         lastClap = now;
         clapTimes = clapTimes.filter(function (t) { return now - t < 900; });
         clapTimes.push(now);
-        if (clapTimes.length >= 2 && now - clapTimes[clapTimes.length - 2] > 140) { clapTimes = []; wake(''); return; }
-      } else { noise = noise * 0.98 + rms * 0.02; }
+        if (clapTimes.length >= 2 && now - clapTimes[clapTimes.length - 2] > 140) {
+          clapTimes = [];
+          if (active) { if (IST_ANDROID) stopAll(); }
+          else { wakeVadStop(); wake(''); if (!IST_ANDROID) { clapLaeuft = false; return; } }
+        }
+      } else { noise = noise * 0.98 + rms * 0.02; wakeVad(rms, now); }
       clapRaf = document.hidden ? setTimeout(loop, 25) : requestAnimationFrame(loop); // im Hintergrund (Mac) weiter lauschen
     })();
   }
