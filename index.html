@@ -562,6 +562,18 @@
   #cp-body #log { flex: 1; min-height: 0; overflow-y: auto; max-height: none; }
   #cp-body #form { margin-top: 8px; }
   body.cp-offen { overflow: hidden; }
+  /* Tickets mit Antwort-Entwurf, einklappbare Karten */
+  #tk-liste li { display: block; }
+  .tk small { display: block; color: var(--muted); margin-top: 2px; }
+  .tk-e { white-space: pre-wrap; font: inherit; font-size: 13px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin: 8px 0; }
+  .tk-b { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .tk-b button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: none; color: var(--text); border-radius: 999px; padding: 6px 12px; }
+  .tk-b button[data-a="copy"] { background: var(--accent); color: #041012; border-color: var(--accent); font-weight: 600; }
+  details.klapp > summary { list-style: none; cursor: pointer; }
+  details.klapp > summary::-webkit-details-marker { display: none; }
+  details.klapp > summary h3::after { content: ' ▾'; color: var(--muted); }
+  details.klapp[open] > summary h3::after { content: ' ▴'; }
+  #foto-lbl { display: block; text-align: center; width: 100%; margin-bottom: 10px; box-sizing: border-box; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -574,6 +586,7 @@
     <div class="hello"><div><h2 id="greet">Hallo, Boss</h2><p id="today"></p></div><div class="wx" id="wx"></div></div>
     <div class="bar-row"><span id="stand">Lade Daten …</span><span><button id="notifBtn" type="button" hidden>Push aktivieren</button> <button id="reload" type="button">Aktualisieren</button></span></div>
     <div class="card"><h3>Heute zu tun <em id="n-todo"></em></h3><ul class="list todo" id="todo"><li class="empty">Lade …</li></ul><div class="tip" id="todo-tip">Aus Kaufland, Lager, Lexware und deinen Aufgaben · Haken = für heute erledigt</div></div>
+    <div class="card" id="card-tk" hidden><h3>Tickets &amp; Antworten <em id="n-tk"></em></h3><ul class="list" id="tk-liste"></ul><div class="tip">Antwort-Entwürfe von Jarvis – kopieren, im Kaufland-Ticket einfügen und selbst abschicken.</div></div>
     <div class="card" id="card-ziel"><h3>Monatsziel <em id="ziel-m"></em></h3><div id="ziel"></div></div>
     <div class="kpis">
       <div class="kpi"><span>Heute</span><b id="k-heute">–</b><small id="k-heute-s"></small></div>
@@ -583,8 +596,8 @@
     <div class="card"><h3>Versand <em id="n-versand"></em></h3><ul class="list" id="versand"><li class="empty">Lade …</li></ul>
       <p class="tip" id="versand-dhl"></p>
       <button type="button" id="versand-los" style="margin-top:8px;font:inherit;font-size:14px;font-weight:600;color:#001018;background:var(--accent);border:0;border-radius:999px;padding:9px 18px">Pipeline starten</button></div>
-    <div class="card"><h3>Termine · 14 Tage</h3><ul class="list" id="termine"></ul></div>
-    <div class="card"><h3>Letzte Verkäufe</h3><ul class="list" id="verkaeufe"></ul></div>
+    <details class="card klapp"><summary><h3>Termine · 14 Tage</h3></summary><ul class="list" id="termine"></ul></details>
+    <details class="card klapp"><summary><h3>Letzte Verkäufe</h3></summary><ul class="list" id="verkaeufe"></ul></details>
   </div>
 </section>
 
@@ -593,6 +606,7 @@
     <div class="card"><h3>Lohnt sich der Kauf?</h3>
       <div class="scan" id="scan"><video id="scan-v" playsinline muted></video><div class="frame"></div><div class="laser"></div></div>
       <button type="button" class="btn" id="scan-btn" style="width:100%;margin-bottom:10px">📷 Barcode scannen</button>
+<label class="btn ghost" id="foto-lbl">🖼️ Foto vom Produkt oder Preisschild<input type="file" id="foto-in" accept="image/*" hidden></label>
       <div class="ean-row"><input class="inp" id="ean-in" inputmode="numeric" placeholder="oder EAN eintippen" aria-label="EAN"><button type="button" class="btn ghost" id="ean-go">Prüfen</button></div>
       <div class="tip" id="scan-tip">Kamera auf den Strichcode halten – Jarvis sucht den Artikel auf Kaufland.</div>
     </div>
@@ -2530,6 +2544,22 @@
   $('scan-btn').addEventListener('click', function () { if (scanStream || zxReader) scanStop(); else scanStart(); });
   $('ean-go').addEventListener('click', function () { eanCheck($('ean-in').value); });
   $('ean-in').addEventListener('keydown', function (e) { if (e.key === 'Enter') eanCheck(this.value); });
+  // Einkaufs-Check per Foto (Produkt, Verpackung oder Preisschild)
+  $('foto-in').addEventListener('change', async function () {
+    var f = this.files && this.files[0]; this.value = ''; if (!f) return;
+    var box = $('ek-res'); box.hidden = false; box.innerHTML = '<div class="tip">Erkenne Produkt …</div>';
+    try {
+      var b = await bildKlein(f);
+      var r = await fetch(API + '/api/ean/foto', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Jarvis-Key': KEY }, body: JSON.stringify({ bild: b.data, mime: b.mime }) });
+      var j = await r.json();
+      if (!j.ok) { box.innerHTML = '<div class="tip">' + esc(j.fehler || 'Nicht erkannt') + '</div>'; return; }
+      ekRes = j; ekRes.ean = j.ean || 'foto'; ekRes.eigen = ekRes.eigen || {};
+      if (j.erkannt && j.erkannt.preis) store('jarvis_ek_' + ekRes.ean, String(j.erkannt.preis.toFixed(2)).replace('.', ','));
+      renderEk();
+      if (j.erkannt) box.insertAdjacentHTML('afterbegin', '<div class="tip">📷 Erkannt: ' + esc(j.erkannt.produkt || '?') + (j.erkannt.preis ? ' · Schild ' + j.erkannt.preis.toFixed(2).replace('.', ',') + ' €' : '') + (j.erkannt.sicher === false ? ' · unsicher, bitte prüfen' : '') + '</div>');
+      box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) { box.innerHTML = '<div class="tip">Fehler: ' + esc(e.message) + '</div>'; }
+  });
   async function eanCheck(ean) {
     ean = String(ean || '').replace(/\D/g, ''); if (ean.length < 8) { $('scan-tip').textContent = 'Bitte eine gültige EAN (8–13 Ziffern).'; return; }
     var box = $('ek-res'); box.hidden = false; box.innerHTML = '<div class="tip">Suche ' + ean + ' auf Kaufland …</div>';
@@ -3208,6 +3238,43 @@
   ['pointerdown', 'keydown'].forEach(function (ev) { document.addEventListener(ev, function () { zuletztBedient = Date.now(); }, true); });
   window.jarvisAktiv = function () { return document.visibilityState === 'visible' && Date.now() - zuletztBedient < 10 * 60000; };
   setInterval(function () { if (jarvisAktiv() && ($('v-dash').classList.contains('on') || $('v-lager').classList.contains('on') || $('v-geld').classList.contains('on'))) load(); }, 15 * 60000);
+})();
+</script>
+<script>
+// ---------- Tickets mit Antwort-Entwurf (Jarvis schickt nie selbst – du kopierst) ----------
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var API = 'https://jarvis-api.dettlingluis.workers.dev';
+  function key() { try { return localStorage.getItem('jarvis_key') || new URLSearchParams(location.search).get('key') || ''; } catch (e) { return ''; } }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  async function laden() {
+    var box = $('tk-liste'); if (!box) return;
+    try {
+      var r = await fetch(API + '/api/tickets', { headers: { 'X-Jarvis-Key': key() } });
+      var j = await r.json(), L = j.tickets || [];
+      $('n-tk').textContent = L.length || '';
+      $('card-tk').hidden = !L.length;
+      box.innerHTML = L.map(function (t) {
+        return '<li class="tk" data-s="' + esc(t.schluessel) + '"><b>' + esc(t.betreff || 'Ticket') + '</b><small>' + esc([t.kunde, t.order_id, t.status === 'label' ? 'Retourenlabel erstellt' : (t.status === 'erinnert' ? 'seit Tagen offen' : 'offen')].filter(Boolean).join(' · ')) + '</small>' +
+          (t.entwurf ? '<pre class="tk-e">' + esc(t.entwurf) + '</pre>' : '') +
+          '<div class="tk-b">' + (t.entwurf ? '<button type="button" data-a="copy">Antwort kopieren</button>' : '') + '<button type="button" data-a="neu">' + (t.entwurf ? 'Neu entwerfen' : 'Antwort entwerfen') + '</button></div></li>';
+      }).join('');
+    } catch (e) {}
+  }
+  document.addEventListener('click', async function (e) {
+    var b = e.target.closest('#tk-liste button'); if (!b) return;
+    var li = b.closest('li');
+    if (b.dataset.a === 'copy') {
+      var txt = li.querySelector('.tk-e').textContent;
+      try { await navigator.clipboard.writeText(txt); b.textContent = '✓ Kopiert'; } catch (x) { b.textContent = 'Kopieren ging nicht'; }
+      setTimeout(function () { b.textContent = 'Antwort kopieren'; }, 2000); return;
+    }
+    b.disabled = true; b.textContent = 'Schreibe …';
+    try { await fetch(API + '/api/antwort/entwurf', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Jarvis-Key': key() }, body: JSON.stringify({ schluessel: li.dataset.s }) }); await laden(); }
+    catch (x) { b.disabled = false; b.textContent = 'Fehler – nochmal'; }
+  });
+  laden();
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') laden(); });
 })();
 </script>
 <script>
