@@ -577,6 +577,38 @@
   details.klapp > summary h3::after { content: ' ▾'; color: var(--muted); }
   details.klapp[open] > summary h3::after { content: ' ▴'; }
   #foto-lbl { display: block; text-align: center; width: 100%; margin-bottom: 10px; box-sizing: border-box; cursor: pointer; }
+
+  /* ===== Jarvis-Hintergrund ===== */
+  #v-chat #jvbg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+  /* ===== Bento-Look: Glas-Bausteine wie ein Zukunfts-Dashboard (Farben bleiben) ===== */
+  .view:not(#v-chat) .card:not(.tr-card), .view:not(#v-chat) .kpi, #hudwin .hw, #hw-body .card, #hw-body .kpi {
+    border-radius: 20px;
+    background: linear-gradient(155deg, rgba(70,120,220,.16) 0%, rgba(16,24,40,.62) 42%, rgba(9,13,22,.78) 100%);
+    border: 1px solid rgba(130,185,255,.14);
+    box-shadow: 0 1px 0 rgba(255,255,255,.07) inset, 0 -1px 0 rgba(0,0,0,.35) inset, 0 22px 44px -22px rgba(0,0,0,.9), 0 0 30px -12px rgba(80,150,255,.25);
+    -webkit-backdrop-filter: blur(16px) saturate(150%); backdrop-filter: blur(16px) saturate(150%);
+  }
+  .view:not(#v-chat) .kpi::before, .view:not(#v-chat) .kpi::after { display: none; }
+  .view:not(#v-chat) .kpis { gap: 12px; }
+  .view:not(#v-chat) .kpi { padding: 14px 14px 30px; overflow: hidden; }
+  /* Mini-Kurve in jeder Kennzahl */
+  .view:not(#v-chat) .kpi { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 30' preserveAspectRatio='none'%3E%3Cpath d='M0 24 C14 22 18 12 30 15 S48 26 60 18 78 6 90 11 108 4 120 6' fill='none' stroke='%235fb4ff' stroke-opacity='.55' stroke-width='1.6'/%3E%3Cpath d='M0 24 C14 22 18 12 30 15 S48 26 60 18 78 6 90 11 108 4 120 6 V30 H0Z' fill='%235fb4ff' fill-opacity='.10'/%3E%3C/svg%3E"), linear-gradient(155deg, rgba(70,120,220,.16) 0%, rgba(16,24,40,.62) 42%, rgba(9,13,22,.78) 100%);
+    background-repeat: no-repeat; background-size: 100% 28px, 100% 100%; background-position: left bottom, 0 0; }
+  .view:not(#v-chat) .kpi span::before { content: ""; display: inline-block; width: 18px; height: 18px; margin: 0 8px -4px 0; border-radius: 6px;
+    background: linear-gradient(135deg, rgba(110,180,255,.9), rgba(70,110,255,.55)); box-shadow: 0 0 12px rgba(95,170,255,.55); }
+  .view:not(#v-chat) .card h3 { font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; letter-spacing: .02em; text-transform: none; font-size: 15px; color: #e3eeff; text-shadow: none; }
+  .view:not(#v-chat) .card h3::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: #5fb4ff; box-shadow: 0 0 10px #5fb4ff; flex: none; align-self: center; }
+  .view:not(#v-chat) .card h3 em { color: #9fc4f0; font-size: 13px; }
+  .view:not(#v-chat) ul.list li { border-radius: 12px; background: rgba(255,255,255,.025); margin-bottom: 6px; border: 1px solid rgba(130,185,255,.08); padding-left: 10px; padding-right: 10px; }
+  /* Bausteine bauen sich räumlich auf */
+  .view.on:not(#v-chat) .card, .view.on:not(#v-chat) .kpi { animation: bentoAuf .5s cubic-bezier(.2,.9,.2,1) both; transform-origin: 50% 100%; }
+  .view.on:not(#v-chat) .card:nth-child(2), .view.on:not(#v-chat) .kpi:nth-child(2) { animation-delay: .05s; }
+  .view.on:not(#v-chat) .card:nth-child(3), .view.on:not(#v-chat) .kpi:nth-child(3) { animation-delay: .1s; }
+  .view.on:not(#v-chat) .card:nth-child(4), .view.on:not(#v-chat) .kpi:nth-child(4) { animation-delay: .15s; }
+  .view.on:not(#v-chat) .card:nth-child(n+5) { animation-delay: .2s; }
+  @keyframes bentoAuf { from { opacity: 0; transform: perspective(900px) rotateX(14deg) translateY(18px) scale(.97); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .view.on:not(#v-chat) .card, .view.on:not(#v-chat) .kpi { animation: none; } }
 </style>
 </head>
 <body>
@@ -1172,7 +1204,7 @@
     } catch (e) { jvLog('jvOeffne: ' + (e && e.message)); }
   };
 
-  // ---------- Jarvis-Avatar: Hologramm-Mensch aus Partikeln ----------
+  // ---------- Jarvis-Avatar v2: Zukunfts-Hologramm mit Gehirn-Netz und Modulen ----------
   (function () {
     var orbEl = document.getElementById('orb'); if (!orbEl) return;
     var cv = document.createElement('canvas'); cv.id = 'jvbust'; cv.setAttribute('aria-hidden', 'true');
@@ -1183,142 +1215,260 @@
     function anwenden() { document.body.classList.toggle('av-mensch', modus() === 'mensch'); }
     anwenden();
     window.jvAvatar = function (m) { try { localStorage.setItem('jarvis_avatar', m); } catch (e) {} anwenden(); };
+    var rnd = (function () { var s = 7; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; })();
 
-    // Punktwolke: Kopf, Hals, Schultern – in horizontalen Ringen (Hologramm-Linien)
+    // --- Hülle: Kopf, Hals, Oberkörper als Partikel-Ringe ---
     var P = [];
     function ring(y, rx, rz, n, teil, sx) {
       for (var i = 0; i < n; i++) {
         var a = i / n * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
         var x = sx ? rx * (ca < 0 ? -1 : 1) * Math.pow(Math.abs(ca), 0.55) : rx * ca;
-        var z = rz * sa;
-        P.push([x, y, z, teil, Math.random()]);
+        P.push([x, y, rz * sa, teil, rnd()]);
       }
     }
-    // Kopf (y oben = positiv)
-    var KH = 34;
+    var KH = 30;
     for (var k = 0; k <= KH; k++) {
-      var v = 1 - 2 * k / KH;                 // 1 … -1
-      var r = Math.sqrt(Math.max(0, 1 - v * v));
-      var kinn = v < 0 ? 1 + 0.32 * v : 1;     // Kiefer wird schmaler
+      var v = 1 - 2 * k / KH, r = Math.sqrt(Math.max(0, 1 - v * v));
+      var kinn = v < 0 ? 1 + 0.32 * v : 1;
       var rx = 0.74 * r * kinn, rz = 0.86 * r * (v < 0 ? 1 + 0.12 * v : 1);
-      var n = Math.max(6, Math.round(78 * r));
-      var y = 0.98 + v * 1.0;
+      var n = Math.max(6, Math.round(64 * r)), y = 0.98 + v;
       for (var i = 0; i < n; i++) {
         var a = i / n * Math.PI * 2, x = rx * Math.cos(a), z = rz * Math.sin(a);
-        if (z > 0) {                          // Gesicht: Nase, Augenhöhlen, Wangen
-          var fx = Math.abs(x);
+        if (z > 0) { var fx = Math.abs(x);
           if (v > -0.35 && v < 0.15 && fx < 0.12) z += 0.16 * (1 - fx / 0.12) * (1 - Math.abs(v + 0.1) / 0.25);
-          if (v > 0.08 && v < 0.3 && fx > 0.12 && fx < 0.42) z -= 0.07;
-        }
-        P.push([x, y, z, 'kopf', Math.random()]);
+          if (v > 0.08 && v < 0.3 && fx > 0.12 && fx < 0.42) z -= 0.07; }
+        P.push([x, y, z, 'kopf', rnd()]);
       }
     }
-    // Hals
-    for (var h = 0; h < 5; h++) ring(-0.02 - h * 0.08, 0.34 + h * 0.012, 0.33, 46, 'hals');
-    // Schultern / Oberkörper
-    var SH = 30;
+    for (var h = 0; h < 5; h++) ring(-0.02 - h * 0.08, 0.34 + h * 0.012, 0.33, 40, 'hals');
+    var SH = 26;
     for (var s = 0; s <= SH; s++) {
       var q = s / SH, y2 = -0.4 - q * 1.6;
-      var sm = Math.min(1, q / 0.22); sm = Math.sin(sm * Math.PI / 2);   // Trapez/Schulter rund abfallend
-      var w = 0.44 + 1.5 * sm - 0.22 * Math.max(0, q - 0.35);          // unten leicht schmaler
-      var d = 0.34 + 0.24 * sm;
-      ring(y2, w, d, Math.round(56 + 100 * sm), 'koerper', true);
+      var sm = Math.min(1, q / 0.22); sm = Math.sin(sm * Math.PI / 2);
+      ring(y2, 0.44 + 1.5 * sm - 0.22 * Math.max(0, q - 0.35), 0.34 + 0.24 * sm, Math.round(50 + 90 * sm), 'koerper', true);
     }
-    // Strahlen links/rechts (wie Datenströme)
-    var S = [];
-    for (var j = 0; j < 520; j++) S.push({ seite: j % 2 ? 1 : -1, u: Math.random(), y: (Math.random() - 0.5) * 0.9, sp: 0.05 + Math.random() * 0.12, ph: Math.random() * 6.28 });
 
-    var W = 0, H = 0, dpr = 1;
+    // --- Gehirn: Neuronen-Netz in zwei Hälften ---
+    var N = [], E = [];
+    while (N.length < 96) {
+      var bx = (rnd() * 2 - 1) * 0.56, by = (rnd() * 2 - 1) * 0.42, bz = (rnd() * 2 - 1) * 0.6;
+      if (bx * bx / 0.31 + by * by / 0.18 + bz * bz / 0.36 > 1 || Math.abs(bx) < 0.05) continue;
+      N.push({ x: bx, y: 1.2 + by, z: bz - 0.04, f: 0 });
+    }
+    N.forEach(function (a, i) {
+      var d = N.map(function (b, j) { return { j: j, d: (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z) }; })
+        .filter(function (o) { return o.j !== i && (Math.abs(N[o.j].x) > 0.05 && (N[o.j].x > 0) === (a.x > 0) || o.d < 0.05); })
+        .sort(function (u, w) { return u.d - w.d; }).slice(0, 3);
+      d.forEach(function (o) { if (o.j > i || !E.some(function (e) { return e[0] === o.j && e[1] === i; })) E.push([i, o.j]); });
+    });
+    var IMP = []; // laufende Impulse {e, u, sp, rueck}
+
+    // --- Module im Oberkörper ---
+    var MOD = [['NEXUS', -0.62, -0.92], ['KAUFLAND', 0, -0.92], ['LEXWARE', 0.62, -0.92], ['DEALS', -0.62, -1.36], ['VOICE', 0, -1.36], ['MEMORY', 0.62, -1.36]];
+    var modAkt = MOD.map(function () { return 0; }), modNext = 0;
+
+    var W = 0, H = 0, dpr = 1, glow = 0, mund = 0, last = 0;
     function groesse() {
       var r = cv.getBoundingClientRect(); dpr = Math.min(1.5, window.devicePixelRatio || 1);
-      var w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
-      if (w && (w !== W || h !== H)) { W = cv.width = w; H = cv.height = h; }
+      var w = Math.round(r.width * dpr), hh = Math.round(r.height * dpr);
+      if (w && (w !== W || hh !== H)) { W = cv.width = w; H = cv.height = hh; }
     }
-    var glow = 0, mund = 0;
     function frame(t) {
       requestAnimationFrame(frame);
       if (!document.body.classList.contains('av-mensch') || document.hidden) return;
       var vc = document.getElementById('v-chat'); if (vc && !vc.classList.contains('on')) return;
-      if (t - (frame.letzt || 0) < 30) return; frame.letzt = t; // max. ~30 Bilder/s
+      if (t - last < 30) return; var dt = Math.min(100, t - last); last = t;
       groesse(); if (!W) return;
       var st = orbEl.className || '';
       var spricht = /speaking/.test(st), denkt = /thinking/.test(st), hoert = /listening/.test(st);
-      glow += ((denkt ? 1 : spricht ? 0.85 : hoert ? 0.6 : 0.45) - glow) * 0.05;
+      var arbeit = denkt ? 1 : spricht ? 0.7 : hoert ? 0.45 : 0.2;
+      glow += (arbeit - glow) * 0.06;
       var mz = spricht ? Math.max(0, Math.sin(t / 85) * 0.6 + Math.sin(t / 37) * 0.4) : 0;
       mund += (mz - mund) * 0.35;
       ctx.clearRect(0, 0, W, H);
       var cx = W / 2, cy = H * 0.52, sc = W * 0.165, cam = 6.5;
       var rot = reduce ? 0 : Math.sin(t / 4200) * 0.38 + (hoert ? Math.sin(t / 900) * 0.05 : 0);
       var neig = reduce ? 0 : Math.sin(t / 5300) * 0.05 + (hoert ? 0.06 : 0);
-      var atem = reduce ? 0 : Math.sin(t / 1400) * 0.012;
       var cr = Math.cos(rot), sr = Math.sin(rot), cn = Math.cos(neig), sn = Math.sin(neig);
       function proj(x, y, z) {
         var X = x * cr + z * sr, Z = -x * sr + z * cr;
         var Y = y * cn - Z * sn; Z = y * sn + Z * cn;
         var f = cam / (cam - Z);
-        return [cx + X * sc * f, cy - (Y - 0.15) * sc * f * (1 + atem), Z, f];
+        return [cx + X * sc * f, cy - (Y - 0.15) * sc * f, Z, f];
       }
+      var px = Math.max(1, Math.round(1.2 * dpr));
       ctx.globalCompositeOperation = 'lighter';
-      // inneres Leuchten im Kopf (warm, wie Energie-Kern)
-      var kp = proj(0, 1.02, 0.15);
-      var gr = ctx.createRadialGradient(kp[0], kp[1], 0, kp[0], kp[1], sc * 1.25);
-      var ga = (0.2 + 0.32 * glow + (denkt ? 0.15 * Math.sin(t / 160) : 0)).toFixed(3);
-      gr.addColorStop(0, 'rgba(255,190,90,' + ga + ')'); gr.addColorStop(0.45, 'rgba(255,140,40,' + (ga * 0.45).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(255,120,30,0)');
-      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(kp[0], kp[1], sc * 1.25, 0, 6.283); ctx.fill();
-      // Brust-Kern
-      var bp = proj(0, -0.9, 0.2);
-      var g2 = ctx.createRadialGradient(bp[0], bp[1], 0, bp[0], bp[1], sc * 0.9);
-      g2.addColorStop(0, 'rgba(255,170,70,' + (0.18 + 0.2 * glow).toFixed(3) + ')'); g2.addColorStop(1, 'rgba(255,140,40,0)');
-      ctx.fillStyle = g2; ctx.beginPath(); ctx.arc(bp[0], bp[1], sc * 0.9, 0, 6.283); ctx.fill();
-      // Partikel
-      var px = Math.max(1, Math.round(1.3 * dpr));
+
+      // Projektor-Sockel unter dem Körper
+      var so = proj(0, -2.08, 0);
+      ctx.lineWidth = 1 * dpr;
+      for (var ri = 0; ri < 3; ri++) {
+        var rr = sc * (1.25 + ri * 0.26), a0 = (t / (2600 + ri * 900)) * (ri % 2 ? -1 : 1);
+        ctx.strokeStyle = 'rgba(95,180,255,' + (0.2 - ri * 0.05).toFixed(2) + ')';
+        ctx.beginPath(); ctx.ellipse(so[0], so[1], rr, rr * 0.18, 0, 0, 6.283); ctx.stroke();
+        ctx.strokeStyle = 'rgba(160,220,255,.55)'; ctx.lineWidth = 2 * dpr;
+        ctx.beginPath(); ctx.ellipse(so[0], so[1], rr, rr * 0.18, 0, a0, a0 + 0.9); ctx.stroke(); ctx.lineWidth = 1 * dpr;
+      }
+
+      // Scan-Linie
+      var scanY = 2.1 - ((t / 3600) % 1) * 4.3;
+
+      // Hülle (dezent, damit man hineinsieht)
       for (var i = 0; i < P.length; i++) {
         var p = P[i], x = p[0], y = p[1], z = p[2];
-        if (p[3] === 'kopf' && z > 0.3 && y > 0.33 && y < 0.5 && Math.abs(x) < 0.3) { y -= mund * 0.06 * (1 - Math.abs(x) / 0.3); }
-        var q2 = proj(x, y, z);
-        var tiefe = (q2[2] + 1) / 2;                       // 0 hinten … 1 vorne
+        if (p[3] === 'kopf' && z > 0.3 && y > 0.33 && y < 0.5 && Math.abs(x) < 0.3) y -= mund * 0.06 * (1 - Math.abs(x) / 0.3);
+        var q2 = proj(x, y, z), tiefe = (q2[2] + 1) / 2;
         var flack = reduce ? 1 : 0.75 + 0.25 * Math.sin(t / 300 + p[4] * 40);
-        var a = (0.12 + 0.62 * tiefe) * flack;
-        if (p[3] === 'koerper') a *= Math.max(0, 1 - (-0.55 - p[1]) / 1.7);
-        var warm = p[3] === 'kopf' && tiefe > 0.55 && y > 0.4 && y < 1.6 && Math.abs(x) < 0.45 ? glow * 0.6 : 0;
-        var R = Math.round(110 + 145 * warm), G = Math.round(185 - 15 * warm), B = Math.round(255 - 170 * warm);
-        ctx.fillStyle = 'rgba(' + R + ',' + G + ',' + B + ',' + a.toFixed(3) + ')';
+        var al = (0.06 + 0.42 * tiefe) * flack;
+        if (p[3] === 'koerper') al *= Math.max(0, 1 - (-0.55 - p[1]) / 1.7);
+        var nah = Math.abs(y - scanY) < 0.07 ? 1 : 0;
+        ctx.fillStyle = nah ? 'rgba(200,240,255,' + Math.min(1, al * 2.6).toFixed(3) + ')' : 'rgba(110,185,255,' + al.toFixed(3) + ')';
         ctx.fillRect(q2[0], q2[1], px, px);
       }
-      // Augen
-      [-0.27, 0.27].forEach(function (ex) {
-        var e = proj(ex, 1.08, 0.66); if (e[2] < 0) return;
-        var eg = ctx.createRadialGradient(e[0], e[1], 0, e[0], e[1], sc * 0.075);
-        var ea = (0.35 + 0.3 * glow + (hoert ? 0.1 * Math.sin(t / 200) : 0)).toFixed(3);
-        eg.addColorStop(0, 'rgba(200,240,255,' + ea + ')'); eg.addColorStop(1, 'rgba(120,200,255,0)');
-        ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(e[0], e[1], sc * 0.075, 0, 6.283); ctx.fill();
-      });
-      // Mund beim Sprechen
-      if (mund > 0.05) {
-        var m = proj(0, 0.42, 0.7);
-        ctx.fillStyle = 'rgba(255,200,120,' + (0.25 + 0.5 * mund).toFixed(3) + ')';
-        ctx.beginPath(); ctx.ellipse(m[0], m[1], sc * 0.16, sc * (0.015 + 0.05 * mund), 0, 0, 6.283); ctx.fill();
+
+      // Gehirn-Leuchten
+      var kp = proj(0, 1.2, 0);
+      var gr = ctx.createRadialGradient(kp[0], kp[1], 0, kp[0], kp[1], sc * 0.95);
+      gr.addColorStop(0, 'rgba(255,180,80,' + (0.12 + 0.3 * glow).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(255,140,40,0)');
+      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(kp[0], kp[1], sc * 0.95, 0, 6.283); ctx.fill();
+
+      // Neuronen: Verbindungen
+      var NP = N.map(function (n) { return proj(n.x, n.y, n.z); });
+      ctx.lineWidth = 0.8 * dpr;
+      for (var e = 0; e < E.length; e++) {
+        var A = NP[E[e][0]], B = NP[E[e][1]];
+        ctx.strokeStyle = 'rgba(120,200,255,' + (0.1 + 0.16 * glow).toFixed(3) + ')';
+        ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke();
       }
-      // Datenströme links/rechts auf Schulterhöhe
-      var stark = spricht ? 1 : denkt ? 0.8 : 0.45;
-      for (var k2 = 0; k2 < S.length; k2++) {
-        var s2 = S[k2]; if (!reduce) s2.u += s2.sp * 0.016 * (0.6 + stark);
-        if (s2.u > 1) { s2.u = 0; s2.y = (Math.random() - 0.5) * 0.9; }
-        var dx = 1.55 + s2.u * 3.4, wy = s2.y + Math.sin(s2.u * 9 + t / 400 + s2.ph) * 0.12 * (spricht ? 1 + mund : 1);
-        var sp = proj(s2.seite * dx, -0.75 + wy, 0);
-        var al = Math.sin(s2.u * Math.PI) * 0.7 * stark;
-        ctx.fillStyle = 'rgba(160,215,255,' + al.toFixed(3) + ')';
+      // Impulse erzeugen + laufen lassen
+      if (!reduce) {
+        var rate = 0.4 + glow * 7;
+        for (var sI = 0; sI < rate * dt / 100; sI++) if (rnd() < 0.5) IMP.push({ e: Math.floor(rnd() * E.length), u: 0, sp: 0.0016 + rnd() * 0.002, rueck: rnd() < 0.5 });
+        if (IMP.length > 160) IMP.splice(0, IMP.length - 160);
+      }
+      IMP = IMP.filter(function (im) {
+        im.u += im.sp * dt; var ed = E[im.e], a = im.rueck ? ed[1] : ed[0], b = im.rueck ? ed[0] : ed[1];
+        if (im.u >= 1) { N[b].f = 1; return false; }
+        var A = NP[a], B = NP[b], ix = A[0] + (B[0] - A[0]) * im.u, iy = A[1] + (B[1] - A[1]) * im.u;
+        ctx.fillStyle = denkt ? 'rgba(255,205,120,.95)' : 'rgba(170,230,255,.9)';
+        ctx.beginPath(); ctx.arc(ix, iy, 1.5 * dpr, 0, 6.283); ctx.fill(); return true;
+      });
+      // Neuronen: Knoten
+      for (var ni = 0; ni < N.length; ni++) {
+        var nd = N[ni], Q = NP[ni]; nd.f *= 0.92;
+        var rN = (1 + nd.f * 2.4) * dpr;
+        ctx.fillStyle = nd.f > 0.2 ? 'rgba(255,215,140,' + (0.5 + 0.5 * nd.f).toFixed(3) + ')' : 'rgba(150,215,255,' + (0.35 + 0.3 * glow).toFixed(3) + ')';
+        ctx.beginPath(); ctx.arc(Q[0], Q[1], rN, 0, 6.283); ctx.fill();
+      }
+
+      // Visier (statt Augen)
+      ctx.lineWidth = 2.2 * dpr; ctx.beginPath();
+      var vis = 0;
+      for (var vx = -0.5; vx <= 0.5001; vx += 0.05) {
+        var vz = Math.sqrt(Math.max(0, 1 - (vx / 0.72) * (vx / 0.72))) * 0.78, Vq = proj(vx, 1.04, vz);
+        if (vis++) ctx.lineTo(Vq[0], Vq[1]); else ctx.moveTo(Vq[0], Vq[1]);
+      }
+      ctx.strokeStyle = 'rgba(140,225,255,' + (0.45 + 0.4 * glow + (hoert ? 0.15 * Math.sin(t / 180) : 0)).toFixed(3) + ')'; ctx.stroke();
+      ctx.lineWidth = 6 * dpr; ctx.strokeStyle = 'rgba(95,190,255,' + (0.08 + 0.12 * glow).toFixed(3) + ')'; ctx.stroke();
+
+      // Mund
+      if (mund > 0.05) { var m = proj(0, 0.42, 0.7);
+        ctx.fillStyle = 'rgba(255,200,120,' + (0.25 + 0.5 * mund).toFixed(3) + ')';
+        ctx.beginPath(); ctx.ellipse(m[0], m[1], sc * 0.15, sc * (0.012 + 0.045 * mund), 0, 0, 6.283); ctx.fill(); }
+
+      // Wirbelsäule: Datenleitung Gehirn → Brust
+      var s1 = proj(0, 0.75, -0.05), s2 = proj(0, -1.6, 0.05);
+      ctx.strokeStyle = 'rgba(95,190,255,.35)'; ctx.lineWidth = 1.4 * dpr;
+      ctx.beginPath(); ctx.moveTo(s1[0], s1[1]); ctx.lineTo(s2[0], s2[1]); ctx.stroke();
+      for (var dp = 0; dp < 5; dp++) { var u2 = ((t / (900 - glow * 500)) + dp / 5) % 1;
+        ctx.fillStyle = 'rgba(200,240,255,' + (0.4 + 0.5 * glow).toFixed(2) + ')';
+        ctx.beginPath(); ctx.arc(s1[0] + (s2[0] - s1[0]) * u2, s1[1] + (s2[1] - s1[1]) * u2, 1.8 * dpr, 0, 6.283); ctx.fill(); }
+
+      // Module im Oberkörper
+      if (!reduce && rnd() < 0.02 + glow * 0.18) { modAkt[modNext] = 1; modNext = (modNext + 1 + Math.floor(rnd() * 3)) % MOD.length; }
+      ctx.font = '600 ' + Math.round(sc * 0.075) + 'px ui-monospace, Menlo, monospace'; ctx.textAlign = 'center';
+      for (var mi = 0; mi < MOD.length; mi++) {
+        var md = MOD[mi], gx = md[1], gy = md[2], hs = 0.12, ak = modAkt[mi]; modAkt[mi] *= 0.95;
+        var c1 = proj(gx - hs, gy + hs, 0.32), c2 = proj(gx + hs, gy + hs, 0.32), c3 = proj(gx + hs, gy - hs, 0.32), c4 = proj(gx - hs, gy - hs, 0.32);
+        var lin = proj(gx, gy, 0.32);
+        ctx.strokeStyle = 'rgba(95,180,255,' + (0.14 + 0.1 * glow).toFixed(3) + ')'; ctx.lineWidth = 0.8 * dpr;
+        ctx.beginPath(); ctx.moveTo(lin[0], lin[1]); ctx.lineTo(s2[0] + (s1[0] - s2[0]) * 0.3, lin[1]); ctx.stroke();
+        ctx.fillStyle = ak > 0.15 ? 'rgba(255,190,100,' + (0.12 + 0.3 * ak).toFixed(3) + ')' : 'rgba(60,130,230,' + (0.05 + 0.06 * glow).toFixed(3) + ')';
+        ctx.beginPath(); ctx.moveTo(c1[0], c1[1]); ctx.lineTo(c2[0], c2[1]); ctx.lineTo(c3[0], c3[1]); ctx.lineTo(c4[0], c4[1]); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = ak > 0.15 ? 'rgba(255,205,130,' + (0.5 + 0.5 * ak).toFixed(3) + ')' : 'rgba(120,195,255,' + (0.3 + 0.2 * glow).toFixed(3) + ')';
+        ctx.lineWidth = 1 * dpr; ctx.stroke();
+        ctx.fillStyle = ak > 0.15 ? 'rgba(255,225,170,.9)' : 'rgba(150,210,255,' + (0.35 + 0.25 * glow).toFixed(3) + ')';
+        ctx.fillText(md[0], lin[0], c3[1] + sc * 0.11);
+      }
+      ctx.textAlign = 'start';
+
+      // Datenströme links/rechts
+      if (!frame.S) { frame.S = []; for (var j = 0; j < 420; j++) frame.S.push({ seite: j % 2 ? 1 : -1, u: rnd(), y: (rnd() - 0.5) * 0.9, sp: 0.05 + rnd() * 0.12, ph: rnd() * 6.28 }); }
+      var stark = spricht ? 1 : denkt ? 0.8 : 0.4;
+      for (var k2 = 0; k2 < frame.S.length; k2++) {
+        var s3 = frame.S[k2]; if (!reduce) s3.u += s3.sp * dt / 1000 * (0.6 + stark);
+        if (s3.u > 1) { s3.u = 0; s3.y = (rnd() - 0.5) * 0.9; }
+        var dx = 1.55 + s3.u * 3.4, wy = s3.y + Math.sin(s3.u * 9 + t / 400 + s3.ph) * 0.12 * (spricht ? 1 + mund : 1);
+        var sp = proj(s3.seite * dx, -0.75 + wy, 0);
+        ctx.fillStyle = 'rgba(160,215,255,' + (Math.sin(s3.u * Math.PI) * 0.65 * stark).toFixed(3) + ')';
         ctx.fillRect(sp[0], sp[1], px, px);
       }
-      // Denken: Ring um den Kopf
+
+      // Denken: Ringe um den Kopf
       if (denkt && !reduce) {
-        ctx.strokeStyle = 'rgba(255,190,100,.55)'; ctx.lineWidth = 1.5 * dpr;
-        for (var d = 0; d < 3; d++) {
-          var a0 = t / (380 + d * 120) * (d % 2 ? -1 : 1) + d * 2;
-          ctx.beginPath(); ctx.ellipse(kp[0], kp[1] + sc * 0.1, sc * (1.05 + d * 0.08), sc * (0.28 + d * 0.03), 0, a0, a0 + 1.6); ctx.stroke();
-        }
+        ctx.strokeStyle = 'rgba(255,190,100,.5)'; ctx.lineWidth = 1.4 * dpr;
+        for (var d = 0; d < 3; d++) { var a1 = t / (380 + d * 120) * (d % 2 ? -1 : 1) + d * 2;
+          ctx.beginPath(); ctx.ellipse(kp[0], kp[1] + sc * 0.15, sc * (1.05 + d * 0.08), sc * (0.26 + d * 0.03), 0, a1, a1 + 1.6); ctx.stroke(); }
       }
       ctx.globalCompositeOperation = 'source-over';
+    }
+    requestAnimationFrame(frame);
+  })();
+
+  // ---------- Jarvis-Hintergrund: Daten-Landschaft aus Punkten + HUD-Zahlen ----------
+  (function () {
+    var vc = document.getElementById('v-chat'); if (!vc) return;
+    var cv = document.createElement('canvas'); cv.id = 'jvbg'; cv.setAttribute('aria-hidden', 'true');
+    vc.insertBefore(cv, vc.firstChild);
+    var ctx = cv.getContext('2d'); if (!ctx) return;
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var W = 0, H = 0, last = 0, NX = 84, NZ = 40;
+    var zahlen = [], zt = 0;
+    function neueZahlen() { zahlen = []; for (var i = 0; i < 26; i++) zahlen.push((Math.random() * 99999).toFixed(Math.random() < 0.5 ? 0 : 2).padStart(8, '0') + (Math.random() < 0.3 ? '  ' + (Math.random() * 999).toFixed(1) : '')); }
+    neueZahlen();
+    function hoehe(x, z, t) {
+      var g = Math.exp(-(x * x * 2.2 + (z - 0.55) * (z - 0.55) * 5));
+      var w = Math.sin(x * 7 + t * 0.00025) * Math.cos(z * 6 - t * 0.0002) * 0.12 + Math.sin(x * 17 + z * 11 + t * 0.0004) * 0.04;
+      return g * (0.95 + 0.35 * Math.sin(x * 23 + z * 19)) + w * (0.4 + g);
+    }
+    function frame(t) {
+      requestAnimationFrame(frame);
+      if (document.hidden || !vc.classList.contains('on')) return;
+      if (t - last < 66) return; last = t;           // ~15 Bilder/s reicht für den Hintergrund
+      var r = cv.getBoundingClientRect(), w = Math.round(r.width), h = Math.round(r.height);
+      if (w !== W || h !== H) { W = cv.width = w; H = cv.height = h; }
+      if (!W) return;
+      ctx.clearRect(0, 0, W, H);
+      var tt = reduce ? 0 : t;
+      var hor = H * 0.8, sc = W * 1.0;
+      for (var iz = 0; iz < NZ; iz++) {
+        var z = iz / (NZ - 1);                       // 0 vorne … 1 hinten
+        var tief = 1 / (0.55 + z * 1.6);
+        for (var ix = 0; ix < NX; ix++) {
+          var x = ix / (NX - 1) * 2 - 1;
+          var hh = hoehe(x, z, tt);
+          var sx = W / 2 + x * sc * tief * 0.62, sy = hor + (1 - z) * H * 0.16 * tief - hh * H * 0.3 * tief;
+          var a = (0.08 + 0.55 * hh) * (0.55 + 0.45 * (1 - z));
+          ctx.fillStyle = 'rgba(190,215,255,' + Math.min(0.6, a).toFixed(3) + ')';
+          ctx.fillRect(sx, sy, 1.2, 1.2);
+        }
+      }
+      // HUD-Zahlen links/rechts
+      if (t - zt > 1800) { zt = t; neueZahlen(); }
+      ctx.font = '9px ui-monospace, Menlo, monospace'; ctx.fillStyle = 'rgba(150,190,240,.16)';
+      for (var i = 0; i < 13; i++) { ctx.fillText(zahlen[i], 8, H * 0.2 + i * 12); ctx.textAlign = 'right'; ctx.fillText(zahlen[i + 13], W - 8, H * 0.24 + i * 12); ctx.textAlign = 'left'; }
+      ctx.strokeStyle = 'rgba(150,190,240,.08)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, H * 0.17); ctx.lineTo(W, H * 0.17); ctx.moveTo(0, H * 0.86); ctx.lineTo(W, H * 0.86); ctx.stroke();
     }
     requestAnimationFrame(frame);
   })();
