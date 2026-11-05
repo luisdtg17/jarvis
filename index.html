@@ -911,6 +911,7 @@
       return .05 + .03 * Math.sin(t / 900);
     }
     function frame(t) {
+      if (document.body.classList.contains('av-mensch') && !bootT) { requestAnimationFrame(frame); return; } // Avatar aktiv → Globus nicht zeichnen (spart Akku/Leistung)
       var W = cv.width, H = cv.height, cx = W / 2, cy = H / 2, R = W * 0.335;
       puls *= 0.9;
       var bootP = bootT ? Math.min(1, (performance.now() - bootT) / 1100) : 1; if (bootP < 1) { R *= 0.4 + 0.6 * (1 - Math.pow(1 - bootP, 3)); }
@@ -1229,14 +1230,16 @@
 
     var W = 0, H = 0, dpr = 1;
     function groesse() {
-      var r = cv.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
+      var r = cv.getBoundingClientRect(); dpr = Math.min(1.5, window.devicePixelRatio || 1);
       var w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
       if (w && (w !== W || h !== H)) { W = cv.width = w; H = cv.height = h; }
     }
     var glow = 0, mund = 0;
     function frame(t) {
       requestAnimationFrame(frame);
-      if (!document.body.classList.contains('av-mensch')) return;
+      if (!document.body.classList.contains('av-mensch') || document.hidden) return;
+      var vc = document.getElementById('v-chat'); if (vc && !vc.classList.contains('on')) return;
+      if (t - (frame.letzt || 0) < 30) return; frame.letzt = t; // max. ~30 Bilder/s
       groesse(); if (!W) return;
       var st = orbEl.className || '';
       var spricht = /speaking/.test(st), denkt = /thinking/.test(st), hoert = /listening/.test(st);
@@ -1348,7 +1351,7 @@
         else if (data.antwort && hasTTS) await speakDevice(data.antwort);
       }
     } catch (e) {
-      add('sys', 'Keine Verbindung zu Jarvis (' + e.message + '). Bitte nochmal versuchen.');
+      add('sys', 'Keine Verbindung zu Jarvis (' + e.message + '). Bitte nochmal versuchen.'); jvLog('Senden-Fehler: ' + e.message);
     }
     busy = false;
     if (active) listen(); else if (standby) armStandby(); else setState('idle', 'Bereit');
@@ -1369,6 +1372,7 @@
       if (shown) { if (!liveEl) liveEl = add('me live', shown); else liveEl.textContent = shown; log.scrollTop = log.scrollHeight; }
     };
     rec.onerror = function (ev) {
+      jvLog('SR-Fehler: ' + ev.error);
       if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
         add('sys', 'Mikrofon oder Spracherkennung ist nicht erlaubt. iPhone: Einstellungen → Apps → Safari → Mikrofon → Erlauben, und Siri & Diktieren einschalten.');
         active = false; setState('idle', 'Bereit');
@@ -1376,6 +1380,7 @@
     };
     rec.onend = function () {
       var t = (finalText || (liveEl ? liveEl.textContent : '')).trim();
+      jvLog('SR Ende: ' + t.length + ' Zeichen, active=' + active);
       if (liveEl) { liveEl.classList.remove('live'); liveEl.textContent = t; if (!t) liveEl.remove(); }
       rec = null;
       if (!active) { if (standby) armStandby(); else setState('idle', 'Bereit'); return; }
@@ -1383,7 +1388,7 @@
       else if (standby) { active = false; armStandby(); }
       else listen();
     };
-    try { rec.start(); setState('listening', 'Ich höre zu …'); }
+    try { rec.start(); setState('listening', 'Ich höre zu …'); jvLog('SR gestartet'); }
     catch (e) { add('sys', 'Spracherkennung konnte nicht starten.'); active = false; setState('idle', 'Bereit'); }
   }
 
@@ -1577,6 +1582,7 @@
   }
 
   orb.addEventListener('click', async function () {
+    jvLog('Orb-Tipp: active=' + active + ' busy=' + busy + ' SR=' + !!SR + ' dragged=' + orbDragged);
     if (orbDragged) return;
     if (active) { stopAll(); return; }
     if (!KEY) { add('sys', 'Bitte den vollständigen Jarvis-Link mit Schlüssel einmal öffnen.'); return; }
