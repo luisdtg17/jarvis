@@ -1151,6 +1151,22 @@
     try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch (e) {}
   }
 
+  // Sprachbefehl „öffne Lager/Umsätze/…“ → Tab bzw. Fenster öffnen
+  window.jvOeffne = function (z) {
+    try {
+      z = String(z || '');
+      if (z.indexOf('w:') === 0) {
+        var chat = document.getElementById('v-chat');
+        if (chat && !chat.classList.contains('on')) { var nb = document.querySelector('nav.tabs button[data-v="v-chat"]'); if (nb) nb.click(); }
+        var b = document.querySelector('#hud-tools button[data-w="' + z.slice(2) + '"]');
+        if (b) setTimeout(function () { b.click(); }, 200);
+        return;
+      }
+      var t = document.querySelector('nav.tabs button[data-v="' + z + '"]');
+      if (t) t.click();
+    } catch (e) { jvLog('jvOeffne: ' + (e && e.message)); }
+  };
+
   // ---------- Senden ----------
   async function send(payload) {
     busy = true;
@@ -1169,6 +1185,7 @@
       if (!data) throw new Error('Jarvis-Backend gerade nicht erreichbar');
       if (data.frage && payload.audio) add('me', data.frage);
       if (data.antwort) add('jv', clean(data.antwort));
+      if (data.oeffne && window.jvOeffne) window.jvOeffne(data.oeffne);
       (data.anhaenge || []).forEach(function (a) { if (a.typ === 'label' && window.jarvisLabelKnopf) { var el = add('jv', ''); el.appendChild(window.jarvisLabelKnopf(a.nr, '📄 ' + (a.titel || 'DHL-Label') + ' öffnen')); } });
       try { window.dispatchEvent(new CustomEvent('jarvis-geantwortet')); } catch (e) {}
       jvLog('Antwort da: active=' + active + ' fromVoice=' + !!payload.fromVoice + ' serverVoice=' + serverVoice + ' hasTTS=' + hasTTS);
