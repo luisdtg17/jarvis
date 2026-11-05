@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var vc = document.getElementById('v-chat'); if (!vc) return;
-  var MQ = window.matchMedia('(min-width: 900px) and (orientation: landscape)');
+  var MQ = window.matchMedia('(min-width: 900px) and (min-height: 600px) and (orientation: landscape)');
   var API = 'https://jarvis-api.dettlingluis.workers.dev';
   function key() { try { return localStorage.getItem('jarvis_key') || ''; } catch (e) { return ''; } }
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
