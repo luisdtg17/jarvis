@@ -131,20 +131,31 @@
   vc.addEventListener('pointermove', function (e) { if (!aktiv()) return; var r = cv.getBoundingClientRect(); zeiger.x = e.clientX - r.left; zeiger.y = e.clientY - r.top; zeiger.ziel = 1; zeiger.zeit = performance.now(); }, { passive: true });
   vc.addEventListener('pointerdown', function (e) { if (!aktiv()) return; var r = cv.getBoundingClientRect(); zeiger.x = e.clientX - r.left; zeiger.y = e.clientY - r.top; zeiger.ziel = 1; zeiger.zeit = performance.now(); }, { passive: true });
   var handAn = false, handLm = null, handVideo = null;
-  $('cc-hand').addEventListener('click', async function () {
-    var btn = this;
-    if (handAn) { handAn = false; btn.setAttribute('aria-pressed', 'false'); if (handVideo && handVideo.srcObject) handVideo.srcObject.getTracks().forEach(function (t) { t.stop(); }); return; }
+  function handPref() { try { return localStorage.getItem('cc_hand') !== 'aus'; } catch (e) { return true; } }
+  var handLaedt = false;
+  $('cc-hand').addEventListener('click', function () {
+    if (handAn) { try { localStorage.setItem('cc_hand', 'aus'); } catch (e) {} handAn = false; this.setAttribute('aria-pressed', 'false'); if (handVideo && handVideo.srcObject) handVideo.srcObject.getTracks().forEach(function (t) { t.stop(); }); return; }
+    try { localStorage.setItem('cc_hand', 'an'); } catch (e) {} handStart();
+  });
+  // Hand-Erkennung startet automatisch (immer an), sobald die iPad-Ansicht offen ist – braucht iOS eine Berührung, startet sie beim ersten Antippen
+  function handAuto() { if (!handAn && !handLaedt && handPref() && aktiv()) handStart(); }
+  setTimeout(handAuto, 2500); setInterval(handAuto, 15000);
+  document.addEventListener('pointerdown', function () { if (!handAn && handPref() && aktiv()) handStart(); }, { passive: true });
+  async function handStart() {
+    if (handLaedt || handAn) return; handLaedt = true;
+    var btn = $('cc-hand');
     btn.textContent = '✋ LÄDT …';
     try {
-      var vis = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
+      if (!handLm) { var vis = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
       var fs = await vis.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
-      handLm = await vis.HandLandmarker.createFromOptions(fs, { baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task', delegate: 'GPU' }, runningMode: 'VIDEO', numHands: 1 });
+      handLm = await vis.HandLandmarker.createFromOptions(fs, { baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task', delegate: 'GPU' }, runningMode: 'VIDEO', numHands: 1 }); }
       handVideo = document.createElement('video'); handVideo.playsInline = true; handVideo.muted = true;
       handVideo.srcObject = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 }, audio: false });
       await handVideo.play();
       handAn = true; btn.setAttribute('aria-pressed', 'true'); btn.textContent = '✋ HAND';
-    } catch (e) { btn.textContent = '✋ HAND'; btn.setAttribute('aria-pressed', 'false'); if (window.jvLog) window.jvLog('Hand-Erkennung: ' + (e && e.message)); alertKurz('Hand-Erkennung ging nicht: ' + (e && e.message || 'Kamera?')); }
-  });
+    } catch (e) { btn.textContent = '✋ HAND'; btn.setAttribute('aria-pressed', 'false'); if (window.jvLog) window.jvLog('Hand-Erkennung: ' + (e && e.message)); }
+    handLaedt = false;
+  }
   function alertKurz(t) { var s = $('cc-sub'); if (s) s.textContent = t; }
   var letzteHand = 0;
   function handFrame(t) {
@@ -152,7 +163,7 @@
     try {
       var r = handLm.detectForVideo(handVideo, t), lm = r && r.landmarks && r.landmarks[0];
       if (lm) { var spitze = lm[8], gross = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y);
-        zeiger.x = (1 - spitze.x) * W; zeiger.y = spitze.y * H; zeiger.ziel = Math.max(0.25, Math.min(1, (gross - 0.08) / 0.22)); zeiger.zeit = t; }
+        zeiger.x = (1 - spitze.x) * W; zeiger.y = spitze.y * H; zeiger.ziel = Math.max(0.3, Math.min(1, (gross - 0.06) / 0.18)); zeiger.zeit = t; }
     } catch (e) {}
   }
 
