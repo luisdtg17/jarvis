@@ -1134,7 +1134,7 @@
   async function speakNatural(text) {
     var api = window.jarvisApi && window.jarvisApi(); var t = clean(text);
     if (!api) return speakDevice(t);
-    var m = t.length > 260 ? t.match(/^[\s\S]{25,}?[.!?](\s|$)/) : null, s1 = m ? m[0].trim() : t, rest = m ? t.slice(m[0].length).trim() : '';
+    var m = t.length > 60 ? t.match(/^[\s\S]{12,}?[.!?](\s|$)/) : null, s1 = m ? m[0].trim() : t, rest = m ? t.slice(m[0].length).trim() : '';
     ttsAbbruch = false;
     var p1 = api('/api/tts', { text: s1 }).catch(function () { return null; });
     var p2 = rest ? api('/api/tts', { text: rest }).catch(function () { return null; }) : null;
