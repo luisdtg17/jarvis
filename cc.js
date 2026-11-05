@@ -65,11 +65,13 @@
   function zeilen(id) { var e = $(id); return e ? e.innerText.split('\n').map(function (s) { return s.trim(); }).filter(Boolean) : []; }
   function nachLabel(arr, label) { var i = arr.findIndex(function (s) { return s.toUpperCase().indexOf(label) === 0; }); return i >= 0 ? arr[i + 1] || '' : ''; }
   function euro(s) { var m = String(s || '').replace(/\./g, '').replace(',', '.').match(/-?\d+(\.\d+)?/); return m ? Number(m[0]) : 0; }
+  function paare(id) { var e = $(id), o = {}; if (!e) return o; [].forEach.call(e.querySelectorAll('div'), function (d) { var s = d.querySelector(':scope > span'), b = d.querySelector(':scope > b'); if (s && b) o[s.textContent.trim().toUpperCase()] = b.textContent.replace(/\u00a0/g, ' ').trim(); }); return o; }
   function datenApp() {
-    var l = zeilen('hud-l'), f = zeilen('hud-fin');
-    var gew = f[1] || '', lager = nachLabel(f, 'LAGER'), ust = f.find(function (s) { return /^UST/i.test(s); }), ustW = ust ? f[f.indexOf(ust) + 1] : '';
-    var verk = (f.find(function (s) { return /VERKÄUFE HEUTE/i.test(s); }) || '').replace(/VERKÄUFE HEUTE/i, '').trim();
-    $('cc-kpi').innerHTML = [['HEUTE', nachLabel(l, 'HEUTE')], ['7 TAGE', nachLabel(l, '7 TAGE')], ['GEWINN MONAT', gew], ['LAGER', lager], [ust || 'UST', ustW], ['VERKÄUFE HEUTE', verk], ['TO-DO', nachLabel(l, 'TO-DO')]]
+    var l = paare('hud-l'), f = paare('hud-fin'), fk = Object.keys(f);
+    var gk = fk.find(function (k) { return /^GEWINN/.test(k); }), uk = fk.find(function (k) { return /^UST/.test(k); });
+    var gew = gk ? f[gk] : '', lager = f['LAGER'] || '', ust = uk || 'UST', ustW = uk ? f[uk] : '';
+    var vm = ($('hud-fin') ? $('hud-fin').textContent : '').match(/(\d+)\s*VERKÄUFE HEUTE/i), verk = vm ? vm[1] : '';
+    $('cc-kpi').innerHTML = [['HEUTE', l['HEUTE']], ['7 TAGE', l['7 TAGE']], ['GEWINN MONAT', gew], ['LAGER', lager], [ust, ustW], ['VERKÄUFE HEUTE', verk], ['TO-DO', l['TO-DO']]]
       .filter(function (k) { return k[1]; }).map(function (k) { return '<span style="margin-right:16px">' + esc(k[0]) + '<b>' + esc(k[1]) + '</b></span>'; }).join('');
     var g = euro(gew), p = Math.max(0, Math.min(1, g / 10000));
     $('cc-ring').setAttribute('stroke-dashoffset', String(239 * (1 - p))); $('cc-proz').textContent = Math.round(p * 100) + '%';
@@ -77,11 +79,11 @@
     var tag = new Date().getDate(), tage = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - tag;
     $('cc-gew-s').innerHTML = 'noch ' + tage + ' Tage<br>Ø ' + Math.max(0, Math.round((10000 - g) / Math.max(1, tage))).toLocaleString('de-DE') + ' €/Tag nötig';
     function liste(id, ziel, max) { var e = $(id); var lis = e ? [].slice.call(e.querySelectorAll('li')) : [];
-      $(ziel).innerHTML = lis.length ? lis.slice(0, max).map(function (li) { var t = li.innerText.split('\n').filter(Boolean); return '<div class="cc-li"><span>' + esc(t[0]) + '</span>' + (t[1] ? '<i>' + esc(t[1].slice(0, 18)) + '</i>' : '') + '</div>'; }).join('') : '<div class="cc-leer">' + esc(e ? e.innerText.trim().slice(0, 80) || '—' : '—') + '</div>';
+      $(ziel).innerHTML = lis.length ? lis.slice(0, max).map(function (li) { var t = li.children.length ? [].map.call(li.children, function (c) { return c.textContent.trim(); }).filter(Boolean) : [li.textContent.trim()]; return '<div class="cc-li"><span>' + esc(t[0]) + '</span>' + (t[1] ? '<i>' + esc(t[1].slice(0, 18)) + '</i>' : '') + '</div>'; }).join('') : '<div class="cc-leer">' + esc(e ? e.textContent.trim().slice(0, 80) || '—' : '—') + '</div>';
       return lis.length; }
     var n = liste('aufgaben', 'cc-aufg', 5); $('cc-n-aufg').textContent = n ? n + ' OFFEN' : '';
     liste('preischeck', 'cc-pc', 4);
-    var b = $('briefing'); $('cc-term').innerHTML = '<div class="cc-leer" style="color:#a9c4e6">' + esc(b ? b.innerText.trim().slice(0, 160) : '—') + '</div>';
+    var b = $('briefing'); $('cc-term').innerHTML = '<div class="cc-leer" style="color:#a9c4e6">' + esc(b ? b.textContent.trim().slice(0, 160) : '—') + '</div>';
   }
   function zeitKurz(z) { var d = new Date(z); return isNaN(d) ? '' : d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
   async function datenBackend() {
