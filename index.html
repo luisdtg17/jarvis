@@ -943,7 +943,7 @@
       return .05 + .03 * Math.sin(t / 900);
     }
     function frame(t) {
-      if (document.body.classList.contains('av-mensch') && !bootT) { requestAnimationFrame(frame); return; } // Avatar aktiv → Globus nicht zeichnen (spart Akku/Leistung)
+      if ((document.body.classList.contains('av-mensch') || window.ccAktiv) && !bootT) { requestAnimationFrame(frame); return; } // Avatar aktiv → Globus nicht zeichnen (spart Akku/Leistung)
       var W = cv.width, H = cv.height, cx = W / 2, cy = H / 2, R = W * 0.335;
       puls *= 0.9;
       var bootP = bootT ? Math.min(1, (performance.now() - bootT) / 1100) : 1; if (bootP < 1) { R *= 0.4 + 0.6 * (1 - Math.pow(1 - bootP, 3)); }
@@ -1303,7 +1303,7 @@
     }
     function frame(t) {
       requestAnimationFrame(frame);
-      if (!document.body.classList.contains('av-mensch') || document.hidden) return;
+      if (!document.body.classList.contains('av-mensch') || document.hidden || window.ccAktiv) return;
       var vc = document.getElementById('v-chat'); if (vc && !vc.classList.contains('on')) return;
       if (t - last < 30) return; var dt = Math.min(100, t - last); last = t;
       groesse(); if (!W) return;
@@ -3699,6 +3699,6 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') schliessen(); });
 })();
 </script>
-<script src="cc.js?v=5"></script>
+<script src="cc.js?v=6"></script>
 </body>
 </html>

@@ -35,6 +35,8 @@
     'body.cc-on #stage{position:absolute !important;left:50%;top:9%;transform:translateX(-50%);z-index:4;padding:0}',
     'body.cc-on #orb{width:30vw !important;height:52vh !important;margin:0 !important;border-radius:40% !important;animation:none !important;background:transparent !important;border:0 !important;box-shadow:none !important}',
     'body.cc-on #orb canvas{opacity:0 !important}',
+    'body.cc-handy #orb canvas:not(.cc-h){opacity:0 !important}',
+    'body.cc-handy #orb .cc-h{position:absolute;left:-18%;top:-14%;width:136%;height:128%;pointer-events:none;opacity:1 !important}',
     'body.cc-on #form{position:absolute;left:14px;bottom:10px;width:270px;z-index:6;margin:0}',
     'body.cc-on #auftraege{position:absolute;right:14px;bottom:10px;width:270px;z-index:6}'
   ].join('\n');
@@ -53,11 +55,14 @@
     '<div class="cc-st" id="cc-st"><i></i>STATUS: BEREIT</div><div class="cc-sub" id="cc-sub"></div>';
   vc.insertBefore(cc, vc.firstChild);
   var cv = cc.querySelector('canvas'), ctx = cv.getContext('2d');
+  var cvI = cv, ctxI = ctx, cvH = null, ctxH = null, modusAlt = '';
+  function ipad() { return MQ.matches; }
+  function handyCanvas() { if (cvH) return; var o = document.getElementById('orb'); if (!o) return; cvH = document.createElement('canvas'); cvH.className = 'cc-h'; cvH.setAttribute('aria-hidden', 'true'); o.appendChild(cvH); ctxH = cvH.getContext('2d'); }
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
 
-  function aktiv() { return MQ.matches && vc.classList.contains('on'); }
-  function umschalten() { document.body.classList.toggle('cc-on', MQ.matches); }
+  function aktiv() { return vc.classList.contains('on'); }
+  function umschalten() { document.body.classList.toggle('cc-on', MQ.matches); document.body.classList.toggle('cc-handy', !MQ.matches); window.ccAktiv = true; handyCanvas(); }
   umschalten(); if (MQ.addEventListener) MQ.addEventListener('change', umschalten); else MQ.addListener(umschalten);
   window.addEventListener('resize', umschalten);
 
@@ -97,8 +102,8 @@
       $('cc-deals').innerHTML = top.map(function (x) { return '<div class="cc-li"><span>' + esc(String(x.titel || '').replace(/^\d+°\s*-\s*/, '').slice(0, 42)) + '</span><i>+' + Math.round(x.gewinn) + ' €</i></div>'; }).join('') || '<div class="cc-leer">Gerade keine Deals mit Gewinn.</div>';
     } catch (e) { $('cc-deals').innerHTML = '<div class="cc-leer">Deals gerade nicht erreichbar.</div>'; }
   }
-  setInterval(function () { if (aktiv()) datenApp(); }, 4000);
-  setInterval(function () { if (aktiv()) datenBackend(); }, 90000);
+  setInterval(function () { if (aktiv() && ipad()) datenApp(); }, 4000);
+  setInterval(function () { if (aktiv() && ipad()) datenBackend(); }, 600000);
   setTimeout(function () { datenApp(); datenBackend(); }, 1500);
   setInterval(function () { var u = $('cc-uhr'); if (u) u.textContent = new Date().toLocaleTimeString('de-DE'); }, 1000);
 
@@ -138,9 +143,9 @@
     try { localStorage.setItem('cc_hand', 'an'); } catch (e) {} handStart();
   });
   // Hand-Erkennung startet automatisch (immer an), sobald die iPad-Ansicht offen ist – braucht iOS eine Berührung, startet sie beim ersten Antippen
-  function handAuto() { if (!handAn && !handLaedt && handPref() && aktiv()) handStart(); }
+  function handAuto() { if (!handAn && !handLaedt && handPref() && aktiv() && ipad()) handStart(); }
   setTimeout(handAuto, 2500); setInterval(handAuto, 15000);
-  document.addEventListener('pointerdown', function () { if (!handAn && handPref() && aktiv()) handStart(); }, { passive: true });
+  document.addEventListener('pointerdown', function () { if (!handAn && handPref() && aktiv() && ipad()) handStart(); }, { passive: true });
   async function handStart() {
     if (handLaedt || handAn) return; handLaedt = true;
     var btn = $('cc-hand');
@@ -173,28 +178,28 @@
   var bergeLayer = document.createElement('canvas'), gctx = bergeLayer.getContext('2d');
   var G = null;                                       // Geometrie
   function geometrie() {
-    var cx = W / 2, hy = H * 0.3, hrx = H * 0.083, hry = H * 0.108, sh = H * 0.52;
+    var HY = !ipad(), cx = W / 2, hy = H * (HY ? 0.3 : 0.3), hrx = H * (HY ? 0.1 : 0.083), hry = H * (HY ? 0.13 : 0.108), sh = H * (HY ? 0.6 : 0.52), sb = HY ? W * 0.3 : H * 0.21, fy = H * (HY ? 0.76 : 0.66);
     function hw(y) {
       if (y < hy + hry * 0.92) { var t = (y - hy) / hry, w = hrx * Math.sqrt(Math.max(0, 1 - t * t)); if (t > 0.25) w *= 1 - 0.3 * (t - 0.25) / 0.75; if (t > -0.1 && t < 0.25) w *= 1 + 0.03 * Math.sin((t + 0.1) / 0.35 * Math.PI); return w; }
       var nt = hy + hry * 0.92;
-      if (y < sh) { var q = (y - nt) / (sh - nt); return hrx * 0.5 + hrx * 0.22 * q + H * 0.21 * Math.pow(Math.max(0, q - 0.35) / 0.65, 1.25); }
-      var q2 = (y - sh) / (H * 0.2); return hrx * 0.72 + H * 0.21 + H * 0.035 * Math.sin(Math.min(1, q2 * 1.6) * Math.PI) * (q2 < 0.62 ? 1 : 0) - H * 0.05 * Math.max(0, q2 - 0.62);
+      if (y < sh) { var q = (y - nt) / (sh - nt); return hrx * 0.5 + hrx * 0.22 * q + sb * Math.pow(Math.max(0, q - 0.35) / 0.65, 1.25); }
+      var q2 = (y - sh) / (H * 0.2); return hrx * 0.72 + sb + H * 0.035 * Math.sin(Math.min(1, q2 * 1.6) * Math.PI) * (q2 < 0.62 ? 1 : 0) - H * 0.05 * Math.max(0, q2 - 0.62);
     }
-    var lines = []; for (var y = hy - hry + 2; y < H * 0.86; y += Math.max(2.6, H * 0.0042)) lines.push(y);
+    var lines = []; for (var y = hy - hry + 2; y < H * (HY ? 0.97 : 0.86); y += Math.max(2.6, H * 0.0042)) lines.push(y);
     var aura = []; for (var i = 0; i < 1700; i++) { var a = rnd() * 6.283, r = 1 + Math.pow(rnd(), 2.3) * 1.0; aura.push({ a: a, r: r, sp: (rnd() - 0.5) * 0.0004, ph: rnd() * 6.28, b: rnd() }); }
     var flow = []; for (var f = 0; f < 420; f++) flow.push({ li: Math.floor(rnd() * lines.length), u: rnd(), sp: 0.0001 + rnd() * 0.00025, dir: rnd() < 0.5 ? 1 : -1 });
     var Z = [['KAUFLAND', '#ff5a7a', -0.95], ['LEXWARE', '#b36bff', -0.45], ['NEXUS · LAGER', '#45d6a0', 0.85], ['DEALS', '#ffb44a', 2.35], ['GEDÄCHTNIS', '#5fd0ff', 3.2], ['SPRACHE', '#ff7ad9', -2.35]];
-    var cl = Z.map(function (z, zi) { var d = H * (0.2 + (zi % 2) * 0.05), zx = Math.max(W * 0.31, Math.min(W * 0.69, cx + Math.cos(z[2]) * d * 1.35)), zy = Math.max(H * 0.13, Math.min(H * 0.62, hy - H * 0.02 + Math.sin(z[2]) * d));
+    var cl = Z.map(function (z, zi) { var d = H * (0.2 + (zi % 2) * 0.05), zx = Math.max(W * (HY ? 0.14 : 0.31), Math.min(W * (HY ? 0.86 : 0.69), cx + Math.cos(z[2]) * d * (HY ? 1.1 : 1.35))), zy = Math.max(H * (HY ? 0.1 : 0.13), Math.min(H * 0.62, hy - H * 0.02 + Math.sin(z[2]) * d));
       var nodes = []; for (var n = 0; n < 30; n++) nodes.push({ x: zx + (rnd() - 0.5) * H * 0.14, y: zy + (rnd() - 0.5) * H * 0.1, f: 0 });
       var edges = []; nodes.forEach(function (n, i) { for (var k = 1; k <= 3; k++) { var j = (i + k * 7) % nodes.length; edges.push([i, j]); } });
       var fib = []; for (var q = 0; q < 18; q++) fib.push({ sx: (rnd() - 0.5) * hrx * 1.1, sy: (rnd() - 0.5) * hry * 0.8, mx: (rnd() - 0.5) * H * 0.18, my: (rnd() - 0.5) * H * 0.18, tx: (rnd() - 0.5) * H * 0.1, ty: (rnd() - 0.5) * H * 0.07, u: rnd() });
       return { name: z[0], col: z[1], x: zx, y: zy, nodes: nodes, edges: edges, fib: fib, a: 0, ph: zi * 0.9 }; });
-    G = { cx: cx, hy: hy, hrx: hrx, hry: hry, sh: sh, hw: hw, lines: lines, aura: aura, flow: flow, cl: cl, venen: [], venT: 0 };
+    G = { HY: HY, fy: fy, cx: cx, hy: hy, hrx: hrx, hry: hry, sh: sh, hw: hw, lines: lines, aura: aura, flow: flow, cl: cl, venen: [], venT: 0 };
     // Berge einmal vorzeichnen
     bergeLayer.width = cv.width; bergeLayer.height = cv.height; gctx.setTransform(DPR, 0, 0, DPR, 0, 0); gctx.clearRect(0, 0, W, H);
     gctx.globalCompositeOperation = 'lighter';
     for (var st = 0; st < 260; st++) { gctx.fillStyle = 'rgba(160,200,255,' + (rnd() * 0.45).toFixed(2) + ')'; gctx.fillRect(rnd() * W, rnd() * H * 0.7, 1, 1); }
-    [-1, 1].forEach(function (seite) {
+    if (!HY) [-1, 1].forEach(function (seite) {
       for (var k = 0; k < 16000; k++) { var u = rnd(), xx = seite < 0 ? u * W * 0.36 : W - u * W * 0.36;
         var ridge = H * 0.58 + H * 0.14 * u - H * 0.24 * Math.pow(Math.sin(u * Math.PI * 1.2 + 0.4 + seite * 0.3), 2) * (0.55 + 0.45 * Math.sin(u * 13 + seite)) - H * 0.035 * Math.sin(u * 37 + seite);
         var yy = ridge + Math.pow(rnd(), 1.7) * H * 0.32, al = 0.08 + 0.8 * Math.exp(-(yy - ridge) / (H * 0.045));
@@ -216,7 +221,9 @@
     requestAnimationFrame(frame);
     if (!aktiv() || document.hidden) return;
     if (t - last < 33) return; var dt = Math.min(100, t - last); last = t;
-    if (!groesse()) return; if (!adern.length) adernNeu();
+    var mo = ipad() ? 'i' : 'h'; if (mo === 'h' && !cvH) handyCanvas(); if (mo !== modusAlt) { modusAlt = mo; W = 0; adern = []; if (mo === 'i') { cv = cvI; ctx = ctxI; } else { cv = cvH; ctx = ctxH; } }
+    if (!cv) return;
+    if (!groesse()) return; if (!adern.length && !G.HY) adernNeu();
     handFrame(t);
     var orb = $('orb'), st = orb ? orb.className : '', denkt = /thinking/.test(st), spricht = /speaking/.test(st), hoert = /listening/.test(st);
     var stEl = $('cc-st'); if (stEl) { var txt = denkt ? 'ANALYSIERT · KOMBINIERT DATEN' : spricht ? 'SPRICHT' : hoert ? 'HÖRT ZU' : /standby/.test(st) ? 'STANDBY · SAG „JARVIS“' : 'BEREIT'; var col = denkt ? '#f6c26b' : spricht ? '#7fd0ff' : '#45d6a0'; var html = '<i style="background:' + col + ';box-shadow:0 0 10px ' + col + '"></i>STATUS: ' + txt; if (stEl.innerHTML !== html) stEl.innerHTML = html; }
@@ -229,8 +236,8 @@
     turn += (zielTurn - turn) * 0.05;
 
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clearRect(0, 0, W, H);
-    var bg = ctx.createRadialGradient(W / 2, H * 0.42, 0, W / 2, H * 0.42, W * 0.6); bg.addColorStop(0, 'rgba(18,46,115,' + (0.45 + 0.15 * glow) + ')'); bg.addColorStop(1, 'rgba(3,5,11,0)'); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bergeLayer, 0, 0); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (!G.HY) { var bg = ctx.createRadialGradient(W / 2, H * 0.42, 0, W / 2, H * 0.42, W * 0.6); bg.addColorStop(0, 'rgba(18,46,115,' + (0.45 + 0.15 * glow) + ')'); bg.addColorStop(1, 'rgba(3,5,11,0)'); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); }
+    if (G.HY) { ctx.clearRect(0, 0, W, H); } else { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bergeLayer, 0, 0); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
     ctx.globalCompositeOperation = 'lighter';
     // Adern
     adern.forEach(function (a) { ctx.strokeStyle = 'rgba(255,185,85,' + (a.a * (0.6 + 0.4 * Math.sin(t / 700 + a.ph))).toFixed(3) + ')'; ctx.lineWidth = 1.1; ctx.beginPath(); a.p.forEach(function (p, i) { if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }); ctx.stroke(); });
@@ -256,7 +263,7 @@
     var L = G.lines;
     for (var li = 0; li < L.length; li++) {
       var y = L[li], w = G.hw(y) * (1 + atem); if (w < 1.5) continue;
-      var inKopf = y < hy + hry * 0.92, brust = y > G.sh, fade = y > H * 0.66 ? Math.max(0, 1 - (y - H * 0.66) / (H * 0.2)) : 1;
+      var inKopf = y < hy + hry * 0.92, brust = y > G.sh, fade = y > G.fy ? Math.max(0, 1 - (y - G.fy) / (H * 0.2)) : 1;
       var sx = inKopf ? kopfX : cx + turn * hrx * 0.08 * Math.max(0, 1 - (y - hy) / (H * 0.3));
       var nah = zeiger.s > 0.02 ? Math.max(0, 1 - Math.abs(y - zeiger.y) / (H * 0.12)) * zeiger.s : 0;
       ctx.beginPath();
@@ -273,12 +280,12 @@
     // Licht-Teilchen fließen über die Linien
     for (var fl = 0; fl < G.flow.length; fl++) { var q = G.flow[fl]; if (!reduce) q.u += q.sp * dt * (1 + glow); if (q.u > 1) q.u -= 1;
       var yq = L[q.li], wq = G.hw(yq); if (wq < 2) continue; var ff = (q.dir > 0 ? q.u : 1 - q.u) * 2 - 1, inK = yq < hy + hry * 0.92, sxq = inK ? kopfX : cx;
-      var fade2 = yq > H * 0.66 ? Math.max(0, 1 - (yq - H * 0.66) / (H * 0.2)) : 1;
+      var fade2 = yq > G.fy ? Math.max(0, 1 - (yq - G.fy) / (H * 0.2)) : 1;
       ctx.fillStyle = 'rgba(210,240,255,' + ((0.35 + 0.5 * Math.pow(Math.abs(ff), 2)) * fade2).toFixed(3) + ')'; ctx.fillRect(sxq + ff * wq, yq + (inK ? hry * 0.06 * (1 - ff * ff) : 0), 1.8, 1.8); }
     // Brustbögen + Energie-Kern
-    for (var b2 = 0; b2 < 9; b2++) [-1, 1].forEach(function (sd) { ctx.strokeStyle = 'rgba(110,190,255,' + ((0.42 - b2 * 0.04) * (0.8 + 0.2 * glow)).toFixed(3) + ')'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(cx + sd * H * 0.115, H * 0.64, H * (0.05 + b2 * 0.016), H * (0.037 + b2 * 0.011), 0, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke(); });
-    var kr = H * (0.03 + 0.006 * Math.sin(t / 500)) * (1 + glow * 0.4), core = ctx.createRadialGradient(cx, H * 0.61, 0, cx, H * 0.61, kr * 2.2); core.addColorStop(0, 'rgba(200,240,255,.95)'); core.addColorStop(0.35, 'rgba(95,180,255,.5)'); core.addColorStop(1, 'rgba(60,140,255,0)');
-    ctx.fillStyle = core; ctx.beginPath(); ctx.arc(cx, H * 0.61, kr * 2.2, 0, 6.283); ctx.fill();
+    for (var b2 = 0; b2 < 9; b2++) [-1, 1].forEach(function (sd) { ctx.strokeStyle = 'rgba(110,190,255,' + ((0.42 - b2 * 0.04) * (0.8 + 0.2 * glow)).toFixed(3) + ')'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(cx + sd * H * 0.115, G.sh + H * 0.12, H * (0.05 + b2 * 0.016), H * (0.037 + b2 * 0.011), 0, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke(); });
+    var kr = H * (0.03 + 0.006 * Math.sin(t / 500)) * (1 + glow * 0.4), core = ctx.createRadialGradient(cx, (G.sh + H * 0.09), 0, cx, (G.sh + H * 0.09), kr * 2.2); core.addColorStop(0, 'rgba(200,240,255,.95)'); core.addColorStop(0.35, 'rgba(95,180,255,.5)'); core.addColorStop(1, 'rgba(60,140,255,0)');
+    ctx.fillStyle = core; ctx.beginPath(); ctx.arc(cx, (G.sh + H * 0.09), kr * 2.2, 0, 6.283); ctx.fill();
     // Energie-Adern im Hals
     if (!G.venen.length || t - G.venT > 140) { G.venT = t; venen(); }
     ctx.strokeStyle = 'rgba(255,195,100,' + (0.5 + 0.4 * glow) + ')'; ctx.lineWidth = 1.2;
