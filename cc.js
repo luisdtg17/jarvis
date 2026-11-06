@@ -133,8 +133,7 @@
   // ---------- Hand / Finger ----------
   var zeiger = { x: 0, y: 0, s: 0, ziel: 0 };          // s = Stärke 0..1 (wie nah)
   cc.addEventListener('pointerdown', function () {}, { passive: true });
-  vc.addEventListener('pointermove', function (e) { if (!aktiv()) return; var r = cv.getBoundingClientRect(); zeiger.x = e.clientX - r.left; zeiger.y = e.clientY - r.top; zeiger.ziel = 1; zeiger.zeit = performance.now(); }, { passive: true });
-  vc.addEventListener('pointerdown', function (e) { if (!aktiv()) return; var r = cv.getBoundingClientRect(); zeiger.x = e.clientX - r.left; zeiger.y = e.clientY - r.top; zeiger.ziel = 1; zeiger.zeit = performance.now(); }, { passive: true });
+  var handPts = null, handPtsZeit = 0, funken = [];
   var handAn = false, handLm = null, handVideo = null;
   function handPref() { try { return localStorage.getItem('cc_hand') !== 'aus'; } catch (e) { return true; } }
   var handLaedt = false;
@@ -164,17 +163,17 @@
   function alertKurz(t) { var s = $('cc-sub'); if (s) s.textContent = t; }
   var letzteHand = 0;
   function handFrame(t) {
-    if (!handAn || !handLm || !handVideo || handVideo.readyState < 2 || t - letzteHand < 66) return; letzteHand = t;
+    if (!handAn || !handLm || !handVideo || handVideo.readyState < 2 || t - letzteHand < 80) return; letzteHand = t;
     try {
       var r = handLm.detectForVideo(handVideo, t), lm = r && r.landmarks && r.landmarks[0];
-      if (lm) { var spitze = lm[8], gross = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y);
+      if (lm) { handPts = lm.map(function (p) { return [(1 - p.x) * W, p.y * H]; }); handPtsZeit = t; var spitze = lm[8], gross = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y);
         zeiger.x = (1 - spitze.x) * W; zeiger.y = spitze.y * H; zeiger.ziel = Math.max(0.3, Math.min(1, (gross - 0.06) / 0.18)); zeiger.zeit = t; }
     } catch (e) {}
   }
 
   // ---------- Jarvis zeichnen ----------
   var W = 0, H = 0, DPR = 1, rs = 7, rnd = function () { rs = (rs * 16807) % 2147483647; return (rs - 1) / 2147483646; };
-  var bloom = document.createElement('canvas'), bctx = bloom.getContext('2d');
+  var bloom = document.createElement('canvas'), bctx = bloom.getContext('2d'), bloom2 = document.createElement('canvas'), b2ctx = bloom2.getContext('2d');
   var bergeLayer = document.createElement('canvas'), gctx = bergeLayer.getContext('2d');
   var G = null;                                       // Geometrie
   function geometrie() {
@@ -186,7 +185,7 @@
       var q2 = (y - sh) / (H * 0.2); return hrx * 0.72 + sb + H * 0.035 * Math.sin(Math.min(1, q2 * 1.6) * Math.PI) * (q2 < 0.62 ? 1 : 0) - H * 0.05 * Math.max(0, q2 - 0.62);
     }
     var lines = []; for (var y = hy - hry + 2; y < H * (HY ? 0.97 : 0.86); y += Math.max(2.6, H * 0.0042)) lines.push(y);
-    var aura = []; for (var i = 0; i < 1700; i++) { var a = rnd() * 6.283, r = 1 + Math.pow(rnd(), 2.3) * 1.0; aura.push({ a: a, r: r, sp: (rnd() - 0.5) * 0.0004, ph: rnd() * 6.28, b: rnd() }); }
+    var aura = []; for (var i = 0; i < 2600; i++) { var a = rnd() * 6.283, r = 1 + Math.pow(rnd(), 2.3) * 1.0; aura.push({ a: a, r: r, sp: (rnd() - 0.5) * 0.0004, ph: rnd() * 6.28, b: rnd() }); }
     var flow = []; for (var f = 0; f < 420; f++) flow.push({ li: Math.floor(rnd() * lines.length), u: rnd(), sp: 0.0001 + rnd() * 0.00025, dir: rnd() < 0.5 ? 1 : -1 });
     var Z = [['KAUFLAND', '#ff5a7a', -0.95], ['LEXWARE', '#b36bff', -0.45], ['NEXUS · LAGER', '#45d6a0', 0.85], ['DEALS', '#ffb44a', 2.35], ['GEDÄCHTNIS', '#5fd0ff', 3.2], ['SPRACHE', '#ff7ad9', -2.35]];
     var cl = Z.map(function (z, zi) { var d = H * (0.2 + (zi % 2) * 0.05), zx = Math.max(W * (HY ? 0.14 : 0.31), Math.min(W * (HY ? 0.86 : 0.69), cx + Math.cos(z[2]) * d * (HY ? 1.1 : 1.35))), zy = Math.max(H * (HY ? 0.1 : 0.13), Math.min(H * 0.62, hy - H * 0.02 + Math.sin(z[2]) * d));
@@ -208,8 +207,8 @@
   }
   function groesse() {
     var r = cv.getBoundingClientRect(); var w = Math.round(r.width), h = Math.round(r.height); if (!w || !h) return false;
-    var d = Math.min(1.5, window.devicePixelRatio || 1);
-    if (w !== W || h !== H || d !== DPR) { W = w; H = h; DPR = d; cv.width = Math.round(w * d); cv.height = Math.round(h * d); bloom.width = Math.round(w / 4); bloom.height = Math.round(h / 4); geometrie(); }
+    var d = Math.min(2, window.devicePixelRatio || 1);
+    if (w !== W || h !== H || d !== DPR) { W = w; H = h; DPR = d; cv.width = Math.round(w * d); cv.height = Math.round(h * d); bloom.width = Math.round(w / 3); bloom.height = Math.round(h / 3); bloom2.width = Math.round(w / 7); bloom2.height = Math.round(h / 7); geometrie(); }
     return true;
   }
   var glow = 0.3, denkA = 0, sprech = 0, turn = 0, last = 0;
@@ -253,7 +252,7 @@
       if (zeiger.s > 0.02) { var dx = px - zeiger.x, dy = py - zeiger.y, d2 = dx * dx + dy * dy, R = H * 0.18; if (d2 < R * R) { var k = (1 - Math.sqrt(d2) / R) * zeiger.s * H * 0.05; var dd = Math.sqrt(d2) || 1; px += dx / dd * k; py += dy / dd * k; } }
       var al = (2.05 - rr) * (0.28 + 0.3 * glow) * (0.6 + 0.4 * Math.sin(t / 400 + p.ph * 3));
       ctx.fillStyle = 'rgba(' + (110 + p.b * 80 | 0) + ',' + (185 + p.b * 55 | 0) + ',255,' + Math.max(0, al).toFixed(3) + ')';
-      ctx.fillRect(px, py, 1.3, 1.3);
+      ctx.fillRect(px, py, 1.1, 1.1);
     }
     // Gesichts-Glut
     var fx = cx + turn * hrx * 0.42, fy = hy + hry * 0.08, fr = hrx * (0.95 + 0.08 * glow + 0.1 * sprech);
@@ -275,7 +274,7 @@
       var gr = ctx.createLinearGradient(sx - w, 0, sx + w, 0), kante = 0.95 * fade, mitte;
       if (inKopf && y > hy - hry * 0.6 && y < hy + hry * 0.8) mitte = 'rgba(255,170,75,' + ((0.5 + 0.2 * glow) * fade) + ')'; else mitte = 'rgba(70,150,255,' + (0.14 * fade) + ')';
       gr.addColorStop(0, 'rgba(150,220,255,' + kante + ')'); gr.addColorStop(0.16, 'rgba(90,170,255,' + (0.42 * fade) + ')'); gr.addColorStop(0.5 + turn * 0.12, mitte); gr.addColorStop(0.84, 'rgba(90,170,255,' + (0.42 * fade) + ')'); gr.addColorStop(1, 'rgba(150,220,255,' + kante + ')');
-      ctx.strokeStyle = gr; ctx.lineWidth = 1; ctx.stroke();
+      ctx.strokeStyle = gr; ctx.lineWidth = G.HY ? 1 : 0.85; ctx.stroke();
     }
     // Licht-Teilchen fließen über die Linien
     for (var fl = 0; fl < G.flow.length; fl++) { var q = G.flow[fl]; if (!reduce) q.u += q.sp * dt * (1 + glow); if (q.u > 1) q.u -= 1;
@@ -311,16 +310,24 @@
       var bk = ctx.createRadialGradient(bx, by, 0, bx, by, H * 0.09); bk.addColorStop(0, 'rgba(255,240,210,' + (0.45 * denkA) + ')'); bk.addColorStop(0.3, 'rgba(255,180,80,' + (0.3 * denkA) + ')'); bk.addColorStop(1, 'rgba(255,140,40,0)');
       ctx.fillStyle = bk; ctx.beginPath(); ctx.arc(bx, by, H * 0.09, 0, 6.283); ctx.fill();
     }
-    // Finger-Licht
-    if (zeiger.s > 0.03) { var zg = ctx.createRadialGradient(zeiger.x, zeiger.y, 0, zeiger.x, zeiger.y, H * 0.06); zg.addColorStop(0, 'rgba(180,230,255,' + (0.45 * zeiger.s) + ')'); zg.addColorStop(1, 'rgba(95,180,255,0)'); ctx.fillStyle = zg; ctx.beginPath(); ctx.arc(zeiger.x, zeiger.y, H * 0.06, 0, 6.283); ctx.fill(); }
+    // Hand: ganz viele kleine Lichtpunkte, die mit den Fingern mitgehen und wieder verglühen
+    var handDa = handPts && t - handPtsZeit < 400;
+    if (handDa && !reduce) { for (var hp = 0; hp < handPts.length; hp++) { var tip = hp === 4 || hp === 8 || hp === 12 || hp === 16 || hp === 20, nn = tip ? 7 : 2;
+        for (var sp2 = 0; sp2 < nn; sp2++) { if (funken.length > 1400) break; var an = Math.random() * 6.283, v = (0.15 + Math.random() * 0.9) * (tip ? 1.4 : 0.8);
+          funken.push({ x: handPts[hp][0] + (Math.random() - 0.5) * 10, y: handPts[hp][1] + (Math.random() - 0.5) * 10, vx: Math.cos(an) * v, vy: Math.sin(an) * v - 0.25, l: 0, m: 500 + Math.random() * 900, s: Math.random() < 0.15 ? 2.2 : 1.2, g: Math.random() < 0.18 }); } }
+      ctx.strokeStyle = 'rgba(150,215,255,.16)'; ctx.lineWidth = 1; var KN = [[0,1,2,3,4],[0,5,6,7,8],[5,9,10,11,12],[9,13,14,15,16],[13,17,18,19,20],[0,17]];
+      KN.forEach(function (k) { ctx.beginPath(); k.forEach(function (ix, j) { var q = handPts[ix]; if (j) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); }); ctx.stroke(); }); }
+    funken = funken.filter(function (f) { f.l += dt; if (f.l > f.m) return false; f.x += f.vx * dt * 0.06; f.y += f.vy * dt * 0.06; f.vx *= 0.985; f.vy *= 0.985; var a = 1 - f.l / f.m;
+      ctx.fillStyle = f.g ? 'rgba(255,205,130,' + (a * 0.95).toFixed(3) + ')' : 'rgba(' + (170 + a * 80 | 0) + ',230,255,' + (a * 0.95).toFixed(3) + ')'; ctx.fillRect(f.x, f.y, f.s, f.s); return true; });
 
     // Bloom: verkleinert + weich drübergelegt
     ctx.globalCompositeOperation = 'source-over';
     bctx.clearRect(0, 0, bloom.width, bloom.height);
-    try { bctx.filter = 'blur(3px)'; } catch (e) {}
-    bctx.drawImage(cv, 0, 0, bloom.width, bloom.height);
-    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.42 + 0.12 * glow;
-    ctx.drawImage(bloom, 0, 0, cv.width, cv.height);
+    bctx.imageSmoothingQuality = 'high'; b2ctx.imageSmoothingQuality = 'high'; b2ctx.clearRect(0, 0, bloom2.width, bloom2.height);
+    bctx.drawImage(cv, 0, 0, bloom.width, bloom.height); b2ctx.drawImage(bloom, 0, 0, bloom2.width, bloom2.height);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.22 + 0.08 * glow; ctx.drawImage(bloom, 0, 0, cv.width, cv.height);
+    ctx.globalAlpha = 0.3 + 0.1 * glow; ctx.drawImage(bloom2, 0, 0, cv.width, cv.height);
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
 
     // Etiketten (nach dem Bloom, gestochen scharf)
