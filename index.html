@@ -1192,6 +1192,7 @@
     try {
       z = String(z || '');
       if (z.indexOf('avatar:') === 0) { if (window.jvAvatar) window.jvAvatar(z.slice(7)); return; }
+      if (z.indexOf('cc:') === 0) { if (window.ccFokus) window.ccFokus(z.slice(3) === 'fokus'); return; }
       if (z.indexOf('w:') === 0) {
         var chat = document.getElementById('v-chat');
         if (chat && !chat.classList.contains('on')) { var nb = document.querySelector('nav.tabs button[data-v="v-chat"]'); if (nb) nb.click(); }
@@ -1782,6 +1783,7 @@
     listen();
   });
 
+  window.addEventListener('jarvis-sagen', function (e) { var t = String(e.detail || '').trim(); if (!t || busy) return; unlockAudio(); send({ text: t, fromVoice: true }); }); // Gesten/Anwesenheit: Jarvis antwortet gesprochen
   window.addEventListener('jarvis-senden', function (e) { var t = String(e.detail || '').trim(); if (!t || busy) return; add('me', t); unlockAudio(); send({ text: t, fromVoice: false }); });
   window.addEventListener('jarvis-zeigen', function (e) { var d = e.detail || {}; var el = add('jv', d.text || ''); if (d.cls) el.classList.add(d.cls); });
   window.addEventListener('jarvis-geantwortet', function () {});
@@ -3706,6 +3708,7 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') schliessen(); });
 })();
 </script>
-<script src="cc.js?v=10"></script>
+<script src="cc.js?v=11"></script>
+<script src="cc2.js?v=1"></script>
 </body>
 </html>

@@ -147,21 +147,23 @@
       el = el && el.closest ? el.closest('#cc .cc-p') : null;
       if (el) { if (el._home == null) el._home = el.getAttribute('style') || ''; var er = el.getBoundingClientRect();
         greif = { el: el, dx: curS[0] - (er.left - r.left), dy: curS[1] - (er.top - r.top), w: er.width, h: er.height };
-        el.classList.remove('cc-gross'); el.classList.add('cc-greif'); el.style.transition = 'none'; el.style.right = 'auto'; el.style.width = (el.offsetWidth) + 'px';
+        el.classList.remove('cc-gross'); el.style.transform = ''; el.classList.add('cc-greif'); el.style.transition = 'none'; el.style.right = 'auto'; el.style.width = (el.offsetWidth) + 'px';
         el.style.left = (er.left - r.left) + 'px'; el.style.top = (er.top - r.top) + 'px'; blip(1400); }
     }
-    if (greif && zu) { greif.el.style.left = (curS[0] - greif.dx) + 'px'; greif.el.style.top = (curS[1] - greif.dy) + 'px'; }
+    if (greif && zu) { greif.vx = (greif.vx || 0) * 0.6 + (curS[0] - (greif.lx == null ? curS[0] : greif.lx)) * 0.4; greif.lx = curS[0]; greif.el.style.left = (curS[0] - greif.dx) + 'px'; greif.el.style.top = (curS[1] - greif.dy) + 'px'; }
     if (greif && !zu) {
-      var e2 = greif.el, mitte = curS && curS[0] > W * 0.27 && curS[0] < W * 0.73;
-      e2.classList.remove('cc-greif'); e2.style.transition = 'left .35s ease, top .35s ease, transform .35s ease';
-      if (mitte) { e2.classList.add('cc-gross'); e2.style.left = (W / 2 - e2.offsetWidth / 2) + 'px'; e2.style.top = (H * 0.42 - e2.offsetHeight / 2) + 'px'; blip(900); }
+      var e2 = greif.el, wurf = Math.abs(greif.vx || 0) > W * 0.025, kopf = curS && Math.hypot(curS[0] - W / 2, curS[1] - H * 0.3) < H * 0.16, mitte = !wurf && curS && curS[0] > W * 0.27 && curS[0] < W * 0.73;
+      e2.classList.remove('cc-greif'); e2.style.transition = 'left .35s ease, top .35s ease, transform .35s ease'; e2.dataset.zoom = '';
+      if (kopf && !wurf) { var txt = e2.innerText.replace(/\s+/g, ' ').slice(0, 400); e2.setAttribute('style', e2._home); blip(1500); try { window.dispatchEvent(new CustomEvent('jarvis-sagen', { detail: 'Erklär mir kurz in maximal 3 Sätzen, was mir dieses Fenster gerade sagt und was ich tun sollte: ' + txt })); } catch (er) {} }
+      else if (mitte) { e2.classList.add('cc-gross'); e2.style.left = (W / 2 - e2.offsetWidth / 2) + 'px'; e2.style.top = (H * 0.42 - e2.offsetHeight / 2) + 'px'; blip(900); }
       else { e2.classList.remove('cc-gross'); e2.setAttribute('style', e2._home); blip(700); }
       greif = null;
     }
     if (!da) curS = null;
   }
+  var verkaufT = -1e9; window.ccFx = { blip: function (f) { blip(f); }, verkauf: function () { verkaufT = performance.now(); } };
   function blip(f) { var a = AC; if (!a || a.state !== 'running' || !ton) return; var o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, a.currentTime); g.gain.exponentialRampToValueAtTime(0.05, a.currentTime + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.12); o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + 0.14); }
-  var handAn = false, handLm = null, handVideo = null;
+  var handAn = false, handLm = null, handVideo = null, faceDet = null, faceZug = false;
   function handPref() { try { return localStorage.getItem('cc_hand') !== 'aus'; } catch (e) { return true; } }
   var handLaedt = false;
   $('cc-hand').addEventListener('click', function () {
@@ -180,7 +182,8 @@
     try {
       if (!handLm) { var vis = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
       var fs = await vis.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
-      handLm = await vis.HandLandmarker.createFromOptions(fs, { baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task', delegate: 'GPU' }, runningMode: 'VIDEO', numHands: 1 }); }
+      handLm = await vis.HandLandmarker.createFromOptions(fs, { baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task', delegate: 'GPU' }, runningMode: 'VIDEO', numHands: 2 }); window.ccVis = vis; window.ccFs = fs; }
+      if (!faceDet && window.ccVis) { try { faceDet = await window.ccVis.FaceDetector.createFromOptions(window.ccFs, { baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite', delegate: 'GPU' }, runningMode: 'VIDEO' }); } catch (e) { if (window.jvLog) window.jvLog('Gesicht: ' + e.message); } }
       handVideo = document.createElement('video'); handVideo.playsInline = true; handVideo.muted = true;
       handVideo.srcObject = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 }, audio: false });
       await handVideo.play();
@@ -194,6 +197,8 @@
     if (!handAn || !handLm || !handVideo || handVideo.readyState < 2 || t - letzteHand < 80) return; letzteHand = t;
     try {
       var r = handLm.detectForVideo(handVideo, t), lm = r && r.landmarks && r.landmarks[0];
+      window.ccHand = { lm: lm || null, alle: (r && r.landmarks) || [], t: t };
+      if (faceDet && (faceZug = !faceZug)) { try { var fr = faceDet.detectForVideo(handVideo, t + 0.5), fd = fr && fr.detections && fr.detections[0]; if (fd && fd.boundingBox) { var bb = fd.boundingBox, vw = handVideo.videoWidth || 320, vh = handVideo.videoHeight || 240; window.ccFace = { x: 1 - (bb.originX + bb.width / 2) / vw, y: (bb.originY + bb.height / 2) / vh, t: t }; } else window.ccFace = { x: null, t: t }; } catch (e) {} }
       if (lm) { handPts = lm.map(function (p) { return [(1 - p.x) * W, p.y * H]; }); handPtsZeit = t; var spitze = lm[8], gross = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y);
         zeiger.x = (1 - spitze.x) * W; zeiger.y = spitze.y * H; zeiger.ziel = Math.max(0.3, Math.min(1, (gross - 0.06) / 0.18)); zeiger.zeit = t;
         // Faust = greifen, Hand auf = loslassen
@@ -250,12 +255,13 @@
 
   function frame(t) {
     requestAnimationFrame(frame);
+    if (!aktiv() && ipad() && handAn && !document.hidden) { handFrame(t); if (window.ccGesten) window.ccGesten(t, false); return; } // Gesten auch in anderen Tabs
     if (!aktiv() || document.hidden) return;
     if (t - last < 33) return; var dt = Math.min(100, t - last); last = t;
     var mo = ipad() ? 'i' : 'h'; if (mo === 'h' && !cvH) handyCanvas(); if (mo !== modusAlt) { modusAlt = mo; W = 0; adern = []; if (mo === 'i') { cv = cvI; ctx = ctxI; } else { cv = cvH; ctx = ctxH; } }
     if (!cv) return;
     if (!groesse()) return; if (!adern.length && !G.HY) adernNeu();
-    handFrame(t); if (ipad()) greifen(t);
+    handFrame(t); if (ipad()) { greifen(t); if (window.ccGesten) window.ccGesten(t, true); }
     var orb = $('orb'), st = orb ? orb.className : '', denkt = /thinking/.test(st), spricht = /speaking/.test(st), hoert = /listening/.test(st);
     var stEl = $('cc-st'); if (stEl) { var txt = denkt ? 'ANALYSIERT · KOMBINIERT DATEN' : spricht ? 'SPRICHT' : hoert ? 'HÖRT ZU' : /standby/.test(st) ? 'STANDBY · SAG „JARVIS“' : 'BEREIT'; var col = denkt ? '#f6c26b' : spricht ? '#7fd0ff' : '#45d6a0'; var html = '<i style="background:' + col + ';box-shadow:0 0 10px ' + col + '"></i>STATUS: ' + txt; if (stEl.innerHTML !== html) stEl.innerHTML = html; }
     tonFrame(t, denkt);
@@ -263,7 +269,7 @@
     denkA += ((denkt ? 1 : 0) - denkA) * (denkt ? 0.05 : 0.03);
     var sz = spricht ? Math.max(0, Math.sin(t / 90) * 0.6 + Math.sin(t / 41) * 0.4) : 0; sprech += (sz - sprech) * 0.3;
     if (zeiger.zeit && t - zeiger.zeit > 1200) zeiger.ziel = 0; zeiger.s += (zeiger.ziel - zeiger.s) * 0.08;
-    var zielTurn = zeiger.s > 0.05 ? Math.max(-1, Math.min(1, (zeiger.x - G.cx) / (W * 0.3))) * zeiger.s : (reduce ? 0 : Math.sin(t / 5200) * 0.25);
+    var zielTurn = zeiger.s > 0.05 ? Math.max(-1, Math.min(1, (zeiger.x - G.cx) / (W * 0.3))) * zeiger.s : (window.ccFace && window.ccFace.x != null && t - window.ccFace.t < 1500 ? Math.max(-1, Math.min(1, (window.ccFace.x - 0.5) * 1.8)) : (reduce ? 0 : Math.sin(t / 5200) * 0.25));
     turn += (zielTurn - turn) * 0.05;
 
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clearRect(0, 0, W, H);
@@ -352,6 +358,8 @@
     funken = funken.filter(function (f) { f.l += dt; if (f.l > f.m) return false; f.x += f.vx * dt * 0.06; f.y += f.vy * dt * 0.06; f.vx *= 0.985; f.vy *= 0.985; var a = 1 - f.l / f.m;
       ctx.fillStyle = f.g ? 'rgba(255,205,130,' + (a * 0.95).toFixed(3) + ')' : 'rgba(' + (170 + a * 80 | 0) + ',230,255,' + (a * 0.95).toFixed(3) + ')'; ctx.fillRect(f.x, f.y, f.s, f.s); return true; });
 
+    // Live-Verkauf: goldener Strahl aus dem Kern
+    if (t - verkaufT < 1800) { var vp = (t - verkaufT) / 1800, ky = G.sh + H * 0.09; ctx.strokeStyle = 'rgba(255,210,120,' + (1 - vp).toFixed(3) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, ky); ctx.lineTo(cx, ky - (ky - 30) * Math.min(1, vp * 2.2)); ctx.stroke(); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, ky, H * 0.04 + vp * H * 0.3, 0, 6.283); ctx.stroke(); }
     // Greif-Cursor zwischen Daumen und Zeigefinger
     if (curS && ipad()) { ctx.strokeStyle = handPinch ? 'rgba(255,205,130,.95)' : 'rgba(170,230,255,.75)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(curS[0], curS[1], handPinch ? 9 : 17, 0, 6.283); ctx.stroke();
       if (!handPinch) { ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(curS[0], curS[1], 26, t / 300, t / 300 + 1.6); ctx.stroke(); } }
