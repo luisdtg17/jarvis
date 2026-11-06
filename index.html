@@ -1638,6 +1638,7 @@
     if (!IST_ANDROID) { cancelAnimationFrame(clapRaf); clearTimeout(clapRaf); clapRaf = 0; clapLaeuft = false; }
   }
   function wake(rest) {
+    jvLog('Wachwort erkannt');
     disarm();
     unlockAudio();
     active = true;
@@ -1660,7 +1661,7 @@
       }
     };
     var t0 = Date.now();
-    r.onerror = function (ev) { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed' || ev.error === 'audio-capture') { wakeAus = true; if (!wakeGemeldet) { wakeGemeldet = true; add('sys', 'Mikrofon für „Jarvis“ nicht erlaubt – Standby hört nur auf Klatschen. Mikro erlauben und App neu öffnen.'); } } };
+    r.onerror = function (ev) { jvLog('Wachwort-Fehler: ' + ev.error); if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed' || ev.error === 'audio-capture') { wakeAus = true; if (!wakeGemeldet) { wakeGemeldet = true; add('sys', 'Mikrofon für „Jarvis“ nicht erlaubt – Standby hört nur auf Klatschen. Mikro erlauben und App neu öffnen.'); } } };
     r.onend = function () {
       wakeRec = null; if (wakeAus || !standby || active) return;
       wakePause = (Date.now() - t0 < 1500) ? Math.min(30000, (wakePause || 250) * 2) : 250; // ständig abbrechende Erkennung → immer längere Pausen (keine Dauer-Töne)
@@ -1768,7 +1769,7 @@
 
   orb.addEventListener('click', async function () {
     jvLog('Orb-Tipp: active=' + active + ' busy=' + busy + ' SR=' + !!SR + ' dragged=' + orbDragged);
-    if (orbDragged) return;
+    if (orbDragged && !window.ccAktiv) return; orbDragged = false; // neuer Jarvis: Tippen zählt immer, kein Drehen der alten Kugel
     if (active) { stopAll(); return; }
     if (!KEY) { add('sys', 'Bitte den vollständigen Jarvis-Link mit Schlüssel einmal öffnen.'); return; }
     unlockAudio();
