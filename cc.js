@@ -109,7 +109,7 @@
 
   // Untertitel: letzte Nachricht im Chat
   var logEl = $('log');
-  function untertitel() { if (!logEl) return; var m = logEl.querySelectorAll('.msg.jv, .msg.me'); var l = m[m.length - 1]; $('cc-sub').textContent = l ? (l.classList.contains('me') ? '„' + l.textContent.slice(0, 140) + '“' : l.textContent.slice(0, 220)) : ''; }
+  function untertitel() { if (!logEl) return; var m = [].filter.call(logEl.querySelectorAll('.msg.jv, .msg.me'), function (x) { var t = x.textContent; return t && t.indexOf('{"') < 0 && !/^🧠/.test(t.trim()); }); var l = m[m.length - 1]; $('cc-sub').textContent = l ? (l.classList.contains('me') ? '„' + l.textContent.slice(0, 140) + '“' : l.textContent.slice(0, 220)) : ''; }
   if (logEl && window.MutationObserver) new MutationObserver(untertitel).observe(logEl, { childList: true, subtree: true, characterData: true });
   untertitel();
 
