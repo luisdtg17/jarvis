@@ -1196,18 +1196,25 @@
   async function speakNatural(text) {
     var api = window.jarvisApi && window.jarvisApi(); var t = clean(text);
     if (!api || Date.now() < ttsPause) return speakDevice(t); // HD-Stimme gerade am Limit → direkt Gerätestimme, ohne Wartezeit
-    var m = t.length > 50 ? (t.match(/^[\s\S]{12,70}?[.!?](\s|$)/) || t.match(/^[\s\S]{20,70}?[,;:–](\s|$)/)) : null, s1 = m ? m[0].trim() : t, rest = m ? t.slice(m[0].length).trim() : '';
+    // In Sätze teilen: erster Teil kurz (schneller Start), Rest in Blöcken – alle Teile werden GLEICHZEITIG erzeugt → keine Pausen dazwischen
+    var saetze = (t.match(/[^.!?…]+[.!?…]*\s*/g) || [t]).map(function (s) { return s.trim(); }).filter(Boolean);
+    if (saetze.length > 1 && saetze[0].length < 15) saetze.splice(0, 2, saetze[0] + ' ' + saetze[1]);
+    var bl = [];
+    saetze.forEach(function (s) { var n = bl.length; if (n >= 3 && (n >= 4 || (bl[n - 1] + ' ' + s).length <= 200)) bl[n - 1] += ' ' + s; else bl.push(s); });
+    if (!bl.length) return;
     ttsAbbruch = false;
-    var p1 = api('/api/tts', { text: s1 }).catch(function () { return null; });
-    var p2 = rest ? api('/api/tts', { text: rest }).catch(function () { return null; }) : null;
-    var r1 = await p1;
-    if (!r1 || !r1.ok || !r1.audio) { r1 = await api('/api/tts', { text: s1 }).catch(function () { return null; }); }
-    if (!r1 || !r1.ok || !r1.audio) { jvLog('TTS vom Backend fehlgeschlagen, nehme Gerätestimme'); ttsPause = Date.now() + 180000; return speakDevice(t); }
-    await playServer(r1.audio);
-    if (!p2 || ttsAbbruch) return;
-    var r2 = await p2;
-    if (ttsAbbruch) return;
-    if (r2 && r2.ok && r2.audio) await playServer(r2.audio); else await speakDevice(rest);
+    var holen = function (s) { return api('/api/tts', { text: s }).catch(function () { return null; }); };
+    var ps = bl.map(holen);
+    for (var i = 0; i < bl.length; i++) {
+      if (ttsAbbruch) return;
+      var r = await ps[i];
+      if ((!r || !r.ok || !r.audio) && !ttsAbbruch) r = await holen(bl[i]);
+      if (ttsAbbruch) return;
+      if (r && r.ok && r.audio) { await playServer(r.audio); continue; }
+      jvLog('TTS vom Backend fehlgeschlagen (Teil ' + (i + 1) + '/' + bl.length + '), nehme Gerätestimme');
+      if (i === 0) ttsPause = Date.now() + 180000;
+      await speakDevice(bl.slice(i).join(' ')); return;
+    }
   }
   // Fehler-Protokoll ans Backend (nur zur Diagnose, z. B. Samsung-Ton)
   function jvLog(m) { try { if (!KEY) return; fetch('https://jarvis-api.dettlingluis.workers.dev/api/log', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Jarvis-Key': KEY }, body: JSON.stringify({ m: String(m).slice(0, 500), ua: navigator.userAgent.slice(0, 100) }) }); } catch (e) {} }
