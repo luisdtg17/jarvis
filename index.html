@@ -1104,8 +1104,9 @@
   // ---------- Stopp-Wort: während Jarvis spricht, hört er auf „Stopp“, „Halt“, „Ruhe“ … ----------
   var bargeRec = null, STOPP = /(^|\s)(stopp?|halt|ruhe|sei still|abbrechen|warte mal|jarvis stopp?)(\s|$|[.!,])/i;
   function bargeStop() { var r = bargeRec; bargeRec = null; try { if (r) { r.onend = null; r.onresult = null; r.abort(); } } catch (e) {} }
+  var IST_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
   function bargeStart(beenden) {
-    if (!SR) return;
+    if (!SR || IST_IOS) return; // iOS: Mithören während Jarvis spricht stört Lautsprecher + Mikro → aus (Stoppen per Tippen/Geste)
     bargeStop();
     try {
       var r = new SR(); bargeRec = r;
