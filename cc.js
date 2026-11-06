@@ -116,16 +116,17 @@
   untertitel();
 
   // ---------- Ton (Web Audio, selbst erzeugt) ----------
-  var AC = null, ton = true, hum = null, humG = null, naechsterBlip = 0;
+  var AC = null, ton = true, hum = null, humG = null, naechsterBlip = 0, tonZuletzt = 0;
   function audio() { if (AC) return AC; try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} return AC; }
-  document.addEventListener('pointerdown', function () { var a = audio(); if (a && a.state === 'suspended') a.resume(); }, { passive: true });
+  document.addEventListener('pointerdown', function () { if (MQ.matches) audio(); }, { passive: true }); // Ton-Effekte nur auf dem iPad
   $('cc-ton').addEventListener('click', function () { ton = !ton; this.setAttribute('aria-pressed', ton ? 'true' : 'false'); });
   function tonFrame(t, denkt) {
-    var a = AC; if (!a || a.state !== 'running') return;
-    if (!hum) { hum = a.createOscillator(); humG = a.createGain(); var f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 300; hum.type = 'sawtooth'; hum.frequency.value = 55; humG.gain.value = 0; hum.connect(f); f.connect(humG); humG.connect(a.destination); hum.start(); }
-    humG.gain.setTargetAtTime(ton && denkt ? 0.018 : 0, a.currentTime, 0.25);
+    var a = AC; if (!a) return;
+    // Kein Dauer-Ton mehr: Audio nur kurz an, sonst pausiert (iOS-Mikro/Spracherkennung wird sonst gestört)
+    if (!denkt || !ton) { if (a.state === 'running' && t - tonZuletzt > 1500) { try { a.suspend(); } catch (e) {} } return; }
+    if (a.state !== 'running') { try { a.resume(); } catch (e) {} return; }
     if (ton && denkt && t > naechsterBlip) {
-      naechsterBlip = t + 70 + Math.random() * 220;
+      naechsterBlip = t + 140 + Math.random() * 320; tonZuletzt = t;
       var o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = 900 + Math.random() * 2200;
       g.gain.setValueAtTime(0.0001, a.currentTime); g.gain.exponentialRampToValueAtTime(0.025, a.currentTime + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.07);
       o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + 0.09);
@@ -162,7 +163,7 @@
     if (!da) curS = null;
   }
   var verkaufT = -1e9; window.ccFx = { blip: function (f) { blip(f); }, verkauf: function () { verkaufT = performance.now(); } };
-  function blip(f) { var a = AC; if (!a || a.state !== 'running' || !ton) return; var o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, a.currentTime); g.gain.exponentialRampToValueAtTime(0.05, a.currentTime + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.12); o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + 0.14); }
+  function blip(f) { var a = AC; if (!a || !ton || /listening/.test(($('orb') || {}).className || '')) return; if (a.state !== 'running') { try { a.resume(); } catch (e) {} } tonZuletzt = performance.now(); var o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, a.currentTime); g.gain.exponentialRampToValueAtTime(0.05, a.currentTime + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.12); o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + 0.14); }
   var handAn = false, handLm = null, handVideo = null, faceDet = null, faceZug = false;
   function handPref() { try { return localStorage.getItem('cc_hand') !== 'aus'; } catch (e) { return true; } }
   var handLaedt = false;
@@ -264,7 +265,7 @@
     handFrame(t); if (ipad()) { greifen(t); if (window.ccGesten) window.ccGesten(t, true); }
     var orb = $('orb'), st = orb ? orb.className : '', denkt = /thinking/.test(st), spricht = /speaking/.test(st), hoert = /listening/.test(st);
     var stEl = $('cc-st'); if (stEl) { var txt = denkt ? 'ANALYSIERT · KOMBINIERT DATEN' : spricht ? 'SPRICHT' : hoert ? 'HÖRT ZU' : /standby/.test(st) ? 'STANDBY · SAG „JARVIS“' : 'BEREIT'; var col = denkt ? '#f6c26b' : spricht ? '#7fd0ff' : '#45d6a0'; var html = '<i style="background:' + col + ';box-shadow:0 0 10px ' + col + '"></i>STATUS: ' + txt; if (stEl.innerHTML !== html) stEl.innerHTML = html; }
-    tonFrame(t, denkt);
+    if (ipad()) tonFrame(t, denkt);
     glow += ((denkt ? 1 : spricht ? 0.85 : hoert ? 0.65 : 0.45) - glow) * 0.06;
     denkA += ((denkt ? 1 : 0) - denkA) * (denkt ? 0.05 : 0.03);
     var sz = spricht ? Math.max(0, Math.sin(t / 90) * 0.6 + Math.sin(t / 41) * 0.4) : 0; sprech += (sz - sprech) * 0.3;
