@@ -1549,6 +1549,7 @@
       }
       var shown = (finalText + ' ' + interim).trim();
       if (shown) { if (!liveEl) liveEl = add('me live', shown); else liveEl.textContent = shown; log.scrollTop = log.scrollHeight; }
+      var r0 = rec; if (r0) { clearTimeout(r0._still); if (shown) r0._still = setTimeout(function () { try { r0.stop(); } catch (e) {} }, 1300); }
     };
     rec.onerror = function (ev) {
       jvLog('SR-Fehler: ' + ev.error);
@@ -1650,7 +1651,8 @@
       for (var i = ev.resultIndex; i < ev.results.length; i++) {
         var t = ev.results[i][0].transcript;
         if (!/jarvis|dschawis|tscharwis/i.test(t)) continue;
-        if (ev.results[i].isFinal) { wake(t.split(/jarvis|dschawis|tscharwis/i).pop()); return; }
+        if (ev.results[i].isFinal) { clearTimeout(r._w); wake(t.split(/jarvis|dschawis|tscharwis/i).pop()); return; }
+        else { clearTimeout(r._w); (function (tt) { r._w = setTimeout(function () { if (wakeRec === r) wake(tt.split(/jarvis|dschawis|tscharwis/i).pop()); }, 700); })(t); }
       }
     };
     var t0 = Date.now();
@@ -3699,6 +3701,6 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') schliessen(); });
 })();
 </script>
-<script src="cc.js?v=8"></script>
+<script src="cc.js?v=9"></script>
 </body>
 </html>
