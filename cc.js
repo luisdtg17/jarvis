@@ -136,7 +136,7 @@
   var zeiger = { x: 0, y: 0, s: 0, ziel: 0 };          // s = Stärke 0..1 (wie nah)
   cc.addEventListener('pointerdown', function () {}, { passive: true });
   var handPts = null, handPtsZeit = 0, funken = [];
-  // Fenster greifen: Daumen + Zeigefinger zusammen = greifen, auseinander = loslassen. In der Mitte loslassen = groß, am Rand = zurück an seinen Platz
+  // Fenster greifen: Faust machen = greifen, Hand öffnen = loslassen. In der Mitte loslassen = groß, am Rand = zurück an seinen Platz
   var greif = null, handPinch = false, handCur = null, curS = null;
   function greifen(t) {
     var da = handPts && handCur && t - handPtsZeit < 450;
@@ -169,9 +169,10 @@
     try { localStorage.setItem('cc_hand', 'an'); } catch (e) {} handStart();
   });
   // Hand-Erkennung startet automatisch (immer an), sobald die iPad-Ansicht offen ist – braucht iOS eine Berührung, startet sie beim ersten Antippen
-  function handAuto() { if (!handAn && !handLaedt && handPref() && aktiv() && ipad()) handStart(); }
+  var handNein = false;
+  function handAuto() { if (!handAn && !handLaedt && !handNein && handPref() && aktiv() && ipad()) handStart(); }
   setTimeout(handAuto, 2500); setInterval(handAuto, 15000);
-  document.addEventListener('pointerdown', function () { if (!handAn && handPref() && aktiv() && ipad()) handStart(); }, { passive: true });
+  document.addEventListener('pointerdown', function (e) { if (e.target && e.target.closest && e.target.closest('#orb, #form, button')) return; if (!handAn && handPref() && aktiv() && ipad()) setTimeout(handStart, 50); }, { passive: true });
   async function handStart() {
     if (handLaedt || handAn) return; handLaedt = true;
     var btn = $('cc-hand');
@@ -184,7 +185,7 @@
       handVideo.srcObject = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 }, audio: false });
       await handVideo.play();
       handAn = true; btn.setAttribute('aria-pressed', 'true'); btn.textContent = '✋ HAND';
-    } catch (e) { btn.textContent = '✋ HAND'; btn.setAttribute('aria-pressed', 'false'); if (window.jvLog) window.jvLog('Hand-Erkennung: ' + (e && e.message)); }
+    } catch (e) { btn.textContent = '✋ HAND'; btn.setAttribute('aria-pressed', 'false'); if (window.jvLog) window.jvLog('Hand-Erkennung: ' + (e && e.message)); if (/denied|NotAllowed/i.test(String(e && (e.name + ' ' + e.message)))) handNein = true; }
     handLaedt = false;
   }
   function alertKurz(t) { var s = $('cc-sub'); if (s) s.textContent = t; }
@@ -195,8 +196,10 @@
       var r = handLm.detectForVideo(handVideo, t), lm = r && r.landmarks && r.landmarks[0];
       if (lm) { handPts = lm.map(function (p) { return [(1 - p.x) * W, p.y * H]; }); handPtsZeit = t; var spitze = lm[8], gross = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y);
         zeiger.x = (1 - spitze.x) * W; zeiger.y = spitze.y * H; zeiger.ziel = Math.max(0.3, Math.min(1, (gross - 0.06) / 0.18)); zeiger.zeit = t;
-        var pd = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y) / (gross || 0.1); handPinch = handPinch ? pd < 0.55 : pd < 0.3;
-        handCur = [((1 - lm[4].x) + (1 - lm[8].x)) / 2 * W, (lm[4].y + lm[8].y) / 2 * H]; }
+        // Faust = greifen, Hand auf = loslassen
+        var spr = [8, 12, 16, 20].reduce(function (s, i) { return s + Math.hypot(lm[i].x - lm[0].x, lm[i].y - lm[0].y); }, 0) / 4 / (gross || 0.1);
+        handPinch = handPinch ? spr < 1.4 : spr < 1.08;
+        handCur = [(1 - lm[9].x) * W, lm[9].y * H]; }
     } catch (e) {}
   }
 

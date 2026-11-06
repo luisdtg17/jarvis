@@ -1533,10 +1533,11 @@
       add('sys', 'Keine Verbindung zu Jarvis (' + e.message + '). Bitte nochmal versuchen.'); jvLog('Senden-Fehler: ' + e.message);
     }
     busy = false;
-    if (active) listen(); else if (standby) armStandby(); else setState('idle', 'Bereit');
+    if (active) setTimeout(function () { if (active && !rec && !busy) listen(); }, 400); else if (standby) armStandby(); else setState('idle', 'Bereit');
   }
 
   // ---------- Zuhören: iPhone-Spracherkennung ----------
+  var srFehl = false, srVersuch = 0;
   function listenSR() {
     finalText = ''; liveEl = null;
     rec = new SR();
@@ -1553,6 +1554,7 @@
     };
     rec.onerror = function (ev) {
       jvLog('SR-Fehler: ' + ev.error);
+      if (ev.error === 'aborted' || ev.error === 'no-speech' || ev.error === 'audio-capture' || ev.error === 'network') srFehl = true;
       if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
         add('sys', 'Mikrofon oder Spracherkennung ist nicht erlaubt. iPhone: Einstellungen → Apps → Safari → Mikrofon → Erlauben, und Siri & Diktieren einschalten.');
         active = false; setState('idle', 'Bereit');
@@ -1564,9 +1566,11 @@
       if (liveEl) { liveEl.classList.remove('live'); liveEl.textContent = t; if (!t) liveEl.remove(); }
       rec = null;
       if (!active) { if (standby) armStandby(); else setState('idle', 'Bereit'); return; }
-      if (t) send({ text: t, fromVoice: true });
-      else if (standby) { active = false; armStandby(); }
-      else listen();
+      var fehl = srFehl; srFehl = false;
+      if (t) { srVersuch = 0; send({ text: t, fromVoice: true }); }
+      else if (fehl && srVersuch < 4) { srVersuch++; setTimeout(function () { if (active && !rec && !busy) listen(); }, 500); } // iOS bricht manchmal ab → kurz warten und neu zuhören
+      else if (standby) { srVersuch = 0; active = false; armStandby(); }
+      else { srVersuch = 0; listen(); }
     };
     try { rec.start(); setState('listening', 'Ich höre zu …'); jvLog('SR gestartet'); }
     catch (e) { add('sys', 'Spracherkennung konnte nicht starten.'); active = false; setState('idle', 'Bereit'); }
@@ -3701,6 +3705,6 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') schliessen(); });
 })();
 </script>
-<script src="cc.js?v=9"></script>
+<script src="cc.js?v=10"></script>
 </body>
 </html>
