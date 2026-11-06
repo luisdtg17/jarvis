@@ -1122,7 +1122,9 @@
   }
   function speakDevice(text) {
     return new Promise(function (resolve) {
-      var fertig = false, abbruch = false, ende = function () { if (fertig) return; fertig = true; bargeStop(); resolve(); };
+      var fertig = false, abbruch = false, ende = function () { if (fertig) return; fertig = true; clearTimeout(notbremse); bargeStop(); resolve(); };
+      // Sicherheitsnetz: iOS meldet das Ende manchmal nie → nach max. Sprechdauer trotzdem weitermachen
+      var notbremse = setTimeout(function () { if (window.jvLog) window.jvLog('Gerätestimme: Zeitlimit'); try { speechSynthesis.cancel(); } catch (e) {} ende(); }, Math.max(5000, clean(text).length * 95 + 2500));
       try {
         speechSynthesis.cancel();
         // Android/Chrome bricht lange Texte ab → in Sätzen (max. ~180 Zeichen) nacheinander sprechen
@@ -1155,23 +1157,25 @@
         try { if (!spkAn) { spkAn = audioCtx.createAnalyser(); spkAn.fftSize = 512; spkBuf = new Float32Array(spkAn.fftSize); spkAn.connect(audioCtx.destination); } src.connect(spkAn); } catch (e) { src.connect(audioCtx.destination); }
         currentSource = src;
         setState('speaking', 'Jarvis spricht … (sag „Stopp“ oder tippen)');
-        src.onended = function () { currentSource = null; bargeStop(); resolve(); };
+        var sicher = 0;
+        src.onended = function () { clearTimeout(sicher); currentSource = null; bargeStop(); resolve(); };
         src.start();
+        sicher = setTimeout(function () { jvLog('Ton: Zeitlimit'); try { src.stop(); } catch (e) {} currentSource = null; bargeStop(); resolve(); }, (ab.duration || 10) * 1000 + 2000);
         bargeStart(function () { ttsAbbruch = true; try { src.stop(); } catch (e) {} });
       } catch (e) { jvLog('Ton-Fehler: ' + (e && e.message) + ' audioCtx=' + (audioCtx && audioCtx.state)); resolve(); }
     });
   }
   // Natürliche Stimme (Gemini) – erster Satz sofort, Rest lädt parallel → flüssig ohne lange Pause
-  var ttsAbbruch = false;
+  var ttsAbbruch = false, ttsPause = 0;
   async function speakNatural(text) {
     var api = window.jarvisApi && window.jarvisApi(); var t = clean(text);
-    if (!api) return speakDevice(t);
+    if (!api || Date.now() < ttsPause) return speakDevice(t); // HD-Stimme gerade am Limit → direkt Gerätestimme, ohne Wartezeit
     var m = t.length > 50 ? (t.match(/^[\s\S]{12,70}?[.!?](\s|$)/) || t.match(/^[\s\S]{20,70}?[,;:–](\s|$)/)) : null, s1 = m ? m[0].trim() : t, rest = m ? t.slice(m[0].length).trim() : '';
     ttsAbbruch = false;
     var p1 = api('/api/tts', { text: s1 }).catch(function () { return null; });
     var p2 = rest ? api('/api/tts', { text: rest }).catch(function () { return null; }) : null;
     var r1 = await p1;
-    if (!r1 || !r1.ok || !r1.audio) { jvLog('TTS vom Backend fehlgeschlagen, nehme Gerätestimme'); return speakDevice(t); }
+    if (!r1 || !r1.ok || !r1.audio) { jvLog('TTS vom Backend fehlgeschlagen, nehme Gerätestimme'); ttsPause = Date.now() + 1800000; return speakDevice(t); }
     await playServer(r1.audio);
     if (!p2 || ttsAbbruch) return;
     var r2 = await p2;
