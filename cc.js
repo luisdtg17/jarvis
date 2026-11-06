@@ -47,14 +47,14 @@
   // ---------- Aufbau ----------
   var cc = document.createElement('div'); cc.id = 'cc'; cc.setAttribute('aria-hidden', 'false');
   cc.innerHTML = '<canvas class="cc-c" aria-hidden="true"></canvas>' +
-    '<div class="cc-bar"><span style="font:800 12px ui-monospace,Menlo,monospace;letter-spacing:.3em;color:#cfe5ff">JARVIS // COMMAND CENTER</span><span id="cc-kpi"></span><button type="button" id="cc-hand" aria-pressed="false">✋ HAND</button><button type="button" id="cc-ton" aria-pressed="true">♪ TON</button><span class="cc-uhr" id="cc-uhr">--:--:--</span></div>' +
+    '<div class="cc-bar"><span style="font:800 12px ui-monospace,Menlo,monospace;letter-spacing:.3em;color:#cfe5ff">JARVIS</span><span id="cc-kpi"></span><button type="button" id="cc-hand" aria-pressed="false">✋ HAND</button><button type="button" id="cc-ton" aria-pressed="true">♪ TON</button><span class="cc-uhr" id="cc-uhr">--:--:--</span></div>' +
     '<div class="cc-p" style="left:14px;top:52px;width:23%"><h5>HEUTE ZU TUN <em id="cc-n-aufg"></em></h5><div id="cc-aufg"></div></div>' +
     '<div class="cc-p" style="left:14px;top:41%;width:23%"><h5>KAUFLAND PREIS-CHECK</h5><div id="cc-pc"></div></div>' +
     '<div class="cc-p" style="left:14px;top:70%;width:23%"><h5>TERMINE</h5><div id="cc-term"></div></div>' +
     '<div class="cc-p" style="right:14px;top:52px;width:23%"><h5>MONATSZIEL <em>10.000 €</em></h5><div style="display:flex;align-items:center;gap:12px"><svg width="96" height="96" viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="48" fill="none" stroke="rgba(95,180,255,.3)" stroke-dasharray="1.5 5"/><circle cx="52" cy="52" r="38" fill="none" stroke="rgba(95,180,255,.13)" stroke-width="9"/><circle id="cc-ring" cx="52" cy="52" r="38" fill="none" stroke="#5fb4ff" stroke-width="9" stroke-linecap="round" stroke-dasharray="239" stroke-dashoffset="239" transform="rotate(-90 52 52)" style="filter:drop-shadow(0 0 7px #5fb4ff);transition:stroke-dashoffset 1.2s"/><text id="cc-proz" x="52" y="57" text-anchor="middle" font-family="ui-monospace,Menlo" font-weight="800" font-size="19" fill="#fff">0%</text></svg><div><div class="cc-v" id="cc-gew">–</div><div class="cc-s" id="cc-gew-s"></div></div></div></div>' +
     '<div class="cc-p" style="right:14px;top:31%;width:23%"><h5>AKTIVITÄTS-PROTOKOLL</h5><div id="cc-log"></div></div>' +
     '<div class="cc-p" style="right:14px;top:66%;width:23%"><h5>LIVE-DEALS <em>SCANNER</em></h5><div id="cc-deals"></div></div>' +
-    '<div class="cc-st" id="cc-st"><i></i>STATUS: BEREIT</div><div class="cc-sub" id="cc-sub"></div>';
+    '<div class="cc-st" id="cc-st"><i></i>Bereit</div><div class="cc-sub" id="cc-sub"></div>';
   vc.insertBefore(cc, vc.firstChild);
   var cv = cc.querySelector('canvas'), ctx = cv.getContext('2d');
   var cvI = cv, ctxI = ctx, cvH = null, ctxH = null, modusAlt = '';
@@ -264,7 +264,7 @@
     if (!groesse()) return; if (!adern.length && !G.HY) adernNeu();
     handFrame(t); if (ipad()) { greifen(t); if (window.ccGesten) window.ccGesten(t, true); }
     var orb = $('orb'), st = orb ? orb.className : '', denkt = /thinking/.test(st), spricht = /speaking/.test(st), hoert = /listening/.test(st);
-    var stEl = $('cc-st'); if (stEl) { var txt = denkt ? 'ANALYSIERT · KOMBINIERT DATEN' : spricht ? 'SPRICHT' : hoert ? 'HÖRT ZU' : /standby/.test(st) ? 'STANDBY · SAG „JARVIS“' : 'BEREIT'; var col = denkt ? '#f6c26b' : spricht ? '#7fd0ff' : '#45d6a0'; var html = '<i style="background:' + col + ';box-shadow:0 0 10px ' + col + '"></i>STATUS: ' + txt; if (stEl.innerHTML !== html) stEl.innerHTML = html; }
+    var stEl = $('cc-st'); if (stEl) { var txt = denkt ? 'Denkt nach …' : spricht ? 'Jarvis spricht' : hoert ? 'Hört zu …' : /standby/.test(st) ? 'Bereit · sag „Jarvis“' : 'Bereit'; var col = denkt ? '#f6c26b' : spricht ? '#7fd0ff' : '#45d6a0'; var html = '<i style="background:' + col + ';box-shadow:0 0 10px ' + col + '"></i>' + txt; if (stEl.innerHTML !== html) stEl.innerHTML = html; }
     if (ipad()) tonFrame(t, denkt);
     glow += ((denkt ? 1 : spricht ? 0.85 : hoert ? 0.65 : 0.45) - glow) * 0.06;
     denkA += ((denkt ? 1 : 0) - denkA) * (denkt ? 0.05 : 0.03);
@@ -274,6 +274,13 @@
     turn += (zielTurn - turn) * 0.05;
 
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clearRect(0, 0, W, H);
+    var kernY = G.sh + H * 0.09, cx = G.cx;
+    if (window.jvAv3) { // neuer Avatar: Mensch aus Licht
+      ctx.globalCompositeOperation = 'source-over';
+      var avSc = G.HY ? Math.min(W / 41, H / 50) : H / 50, avCy = G.HY ? H * 0.37 : H * 0.37;
+      var av = window.jvAv3(ctx, { cx: W / 2, cy: avCy, sc: avSc, t: t / 1000, turn: turn, denk: denkA, sprech: Math.min(1, sprech * 1.6 + (spricht ? 0.4 : 0)), glow: glow, dpr: 1 });
+      cx = av.kernX; kernY = av.kernY;
+    } else {
     if (!G.HY) { var bg = ctx.createRadialGradient(W / 2, H * 0.42, 0, W / 2, H * 0.42, W * 0.6); bg.addColorStop(0, 'rgba(18,46,115,' + (0.45 + 0.15 * glow) + ')'); bg.addColorStop(1, 'rgba(3,5,11,0)'); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); }
     if (G.HY) { ctx.clearRect(0, 0, W, H); } else { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bergeLayer, 0, 0); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
     ctx.globalCompositeOperation = 'lighter';
@@ -349,6 +356,7 @@
       var bk = ctx.createRadialGradient(bx, by, 0, bx, by, H * 0.09); bk.addColorStop(0, 'rgba(255,240,210,' + (0.45 * denkA) + ')'); bk.addColorStop(0.3, 'rgba(255,180,80,' + (0.3 * denkA) + ')'); bk.addColorStop(1, 'rgba(255,140,40,0)');
       ctx.fillStyle = bk; ctx.beginPath(); ctx.arc(bx, by, H * 0.09, 0, 6.283); ctx.fill();
     }
+    } // Ende alter Avatar
     // Hand: ganz viele kleine Lichtpunkte, die mit den Fingern mitgehen und wieder verglühen
     var handDa = handPts && t - handPtsZeit < 400;
     if (handDa && !reduce) { for (var hp = 0; hp < handPts.length; hp++) { var tip = hp === 4 || hp === 8 || hp === 12 || hp === 16 || hp === 20, nn = tip ? 7 : 2;
@@ -360,7 +368,7 @@
       ctx.fillStyle = f.g ? 'rgba(255,205,130,' + (a * 0.95).toFixed(3) + ')' : 'rgba(' + (170 + a * 80 | 0) + ',230,255,' + (a * 0.95).toFixed(3) + ')'; ctx.fillRect(f.x, f.y, f.s, f.s); return true; });
 
     // Live-Verkauf: goldener Strahl aus dem Kern
-    if (t - verkaufT < 1800) { var vp = (t - verkaufT) / 1800, ky = G.sh + H * 0.09; ctx.strokeStyle = 'rgba(255,210,120,' + (1 - vp).toFixed(3) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, ky); ctx.lineTo(cx, ky - (ky - 30) * Math.min(1, vp * 2.2)); ctx.stroke(); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, ky, H * 0.04 + vp * H * 0.3, 0, 6.283); ctx.stroke(); }
+    if (t - verkaufT < 1800) { var vp = (t - verkaufT) / 1800, ky = kernY; ctx.strokeStyle = 'rgba(255,210,120,' + (1 - vp).toFixed(3) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, ky); ctx.lineTo(cx, ky - (ky - 30) * Math.min(1, vp * 2.2)); ctx.stroke(); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, ky, H * 0.04 + vp * H * 0.3, 0, 6.283); ctx.stroke(); }
     // Greif-Cursor zwischen Daumen und Zeigefinger
     if (curS && ipad()) { ctx.strokeStyle = handPinch ? 'rgba(255,205,130,.95)' : 'rgba(170,230,255,.75)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(curS[0], curS[1], handPinch ? 9 : 17, 0, 6.283); ctx.stroke();
       if (!handPinch) { ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(curS[0], curS[1], 26, t / 300, t / 300 + 1.6); ctx.stroke(); } }
@@ -375,7 +383,7 @@
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
 
     // Etiketten (nach dem Bloom, gestochen scharf)
-    if (denkA > 0.02) { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '700 ' + Math.round(H * 0.012 + 3) + 'px ui-monospace, Menlo, monospace';
+    if (denkA > 0.02 && !window.jvAv3) { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '700 ' + Math.round(H * 0.012 + 3) + 'px ui-monospace, Menlo, monospace';
       G.cl.forEach(function (c) { if (c.a <= 0) return; ctx.globalAlpha = c.a; var tw = ctx.measureText(c.name).width + 14, lx = c.x - tw / 2, ly = c.y - H * 0.075;
         ctx.fillStyle = 'rgba(4,8,18,.85)'; ctx.fillRect(lx, ly, tw, H * 0.022 + 3); ctx.strokeStyle = c.col; ctx.lineWidth = 1; ctx.strokeRect(lx, ly, tw, H * 0.022 + 3);
         ctx.fillStyle = '#eaf4ff'; ctx.fillText(c.name, lx + 7, ly + H * 0.016 + 2); });

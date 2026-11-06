@@ -1,0 +1,79 @@
+/* Jarvis Design 3 – ruhig, edel, Glas. Überschreibt das alte HUD-Design. */
+:root { --g-card: rgba(18,28,48,.55); --g-line: rgba(140,190,255,.13); --g-txt: #e9f1ff; --g-mut: #8094b3; --g-acc: #7cc8ff; --g-gold: #ffb768; --g-ok: #4fd8a4; }
+html, body { background: #04070e !important; }
+body, .hud-top, .hud-fin, .hud-tools, .mono, #status, #v-chat #status, #hud-l, #hud-l span, #hud-l b { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif !important; }
+header h1 { font-weight: 600; letter-spacing: .42em; color: #dfeaff; }
+.voice button { background: rgba(255,255,255,.05) !important; border: 1px solid var(--g-line) !important; border-radius: 99px !important; padding: 7px 13px !important; font-weight: 500; color: #c9d7ee !important; }
+
+/* ----- Handy-Ansicht ----- */
+body:not(.cc-on) #v-chat #jvbg, body:not(.cc-on) #v-chat > .hud-cn, body:not(.cc-on) #v-chat .hud-r { display: none !important; }
+body:not(.cc-on) #v-chat::before { background: radial-gradient(80% 45% at 50% 30%, rgba(40,100,200,.16), rgba(4,7,14,0) 70%) !important; }
+body:not(.cc-on) #v-chat { display: flex; flex-direction: column; }
+body:not(.cc-on) #v-chat #stage { order: 1; padding: 0 !important; gap: 4px; }
+body:not(.cc-on) #v-chat .hud-top { order: 2; padding: 2px 0 0 !important; display: block !important; }
+body:not(.cc-on) #v-chat .hud-fin { order: 3; }
+body:not(.cc-on) #v-chat #auftraege { order: 4; }
+body:not(.cc-on) #v-chat #log { order: 5; }
+body:not(.cc-on) #v-chat #form { order: 6; }
+
+/* Avatar groß und frei */
+body:not(.cc-on) #v-chat #orb { width: min(100%, 440px) !important; height: min(52vh, 440px) !important; margin: 0 !important; border-radius: 0 !important; }
+body:not(.cc-on) #v-chat.hat-af #orb { height: min(36vh, 300px) !important; }
+body.cc-handy #orb .cc-h { left: -6% !important; top: -4% !important; width: 112% !important; height: 108% !important; }
+
+/* Status unter dem Avatar */
+body:not(.cc-on) #v-chat #status { font-size: 15px !important; font-weight: 500; letter-spacing: .01em !important; text-transform: none !important; color: #fff !important; text-shadow: none !important; margin-top: -14px; }
+
+/* Schnellzugriff: Glas-Chips in einer Reihe */
+body:not(.cc-on) #stage .hud-tools { position: static !important; transform: none !important; flex-direction: row !important; order: 3; width: 100%; gap: 7px !important; padding: 6px 0 4px !important; overflow-x: auto; }
+body:not(.cc-on) #stage .hud-tools button { flex: 1 0 auto !important; width: auto !important; min-width: 0 !important; padding: 8px 12px !important; border-radius: 99px !important; background: rgba(255,255,255,.045) !important; border: 1px solid var(--g-line) !important; color: #c9d7ee !important; font-size: 12px !important; letter-spacing: 0 !important; font-weight: 500; flex-direction: row !important; gap: 6px; text-transform: none; animation: none !important; }
+body:not(.cc-on) #stage .hud-tools button::after { display: none !important; }
+body:not(.cc-on) #stage .hud-tools svg { width: 15px !important; height: 15px !important; stroke: var(--g-acc) !important; filter: none !important; }
+body:not(.cc-on) #stage .hud-tools sup { position: static !important; font-size: 10.5px !important; color: var(--g-gold) !important; margin-left: 2px; }
+
+/* Kennzahlen als 3 Glas-Kacheln */
+body:not(.cc-on) #hud-l { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 8px !important; }
+body:not(.cc-on) #hud-l > div { display: block !important; background: var(--g-card); border: 1px solid var(--g-line); border-radius: 16px; padding: 9px 12px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+body:not(.cc-on) #hud-l span { display: block; width: auto !important; font-size: 11px !important; letter-spacing: 0 !important; color: var(--g-mut) !important; text-transform: capitalize; margin-bottom: 2px; }
+body:not(.cc-on) #hud-l b { font-size: 18px !important; font-weight: 600 !important; letter-spacing: -.01em; color: #f2f7ff; }
+body:not(.cc-on) #hud-l b.r { color: var(--g-gold) !important; }
+
+/* Gewinn-Karte */
+.hud-fin { border-radius: 18px !important; border: 1px solid var(--g-line) !important; background: linear-gradient(160deg, rgba(124,200,255,.08), rgba(18,28,48,.55)) !important; box-shadow: none !important; padding: 12px 14px !important; margin: 8px 0 !important; width: 100% !important; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.hud-fin::before, .hud-fin::after { display: none !important; }
+.hud-fin span { letter-spacing: .04em !important; color: var(--g-mut) !important; }
+
+/* Chat */
+#v-chat .msg { border-radius: 18px !important; font-size: 15px; line-height: 1.4; }
+#v-chat .msg.jv { background: linear-gradient(160deg, rgba(124,200,255,.10), rgba(18,28,48,.6)) !important; border: 1px solid var(--g-line) !important; color: #dce8fb; }
+#v-chat .msg.me { background: rgba(124,200,255,.16) !important; color: #eef6ff; }
+#v-chat .msg.sys { color: var(--g-mut); }
+#form input { border-radius: 99px !important; background: rgba(255,255,255,.05) !important; border: 1px solid var(--g-line) !important; padding: 12px 16px !important; }
+#form button.send { border-radius: 99px !important; background: linear-gradient(180deg, #8fd2ff, #3d8fe6) !important; color: #04101f !important; border: 0 !important; font-weight: 600; padding: 0 18px !important; }
+
+/* Navigation */
+nav.tabs { background: rgba(6,10,18,.88) !important; border-top: 1px solid var(--g-line) !important; -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+nav.tabs button[aria-selected="true"] { color: var(--g-acc) !important; }
+#nav-ind { display: none !important; }
+
+/* ----- iPad Command Center ----- */
+#cc .cc-p { border-radius: 22px !important; padding: 15px 17px !important; background: var(--g-card) !important; border: 1px solid var(--g-line) !important; box-shadow: 0 20px 50px -30px rgba(0,0,0,.8) !important; -webkit-backdrop-filter: blur(16px) !important; backdrop-filter: blur(16px) !important; }
+#cc h5 { font: 600 11px -apple-system, system-ui, sans-serif !important; letter-spacing: .1em !important; color: var(--g-mut) !important; margin-bottom: 10px !important; }
+#cc h5 em { color: var(--g-acc) !important; letter-spacing: 0 !important; font-weight: 500; }
+#cc .cc-li { font: 400 13px/1.35 -apple-system, system-ui, sans-serif !important; color: #d6e2f5 !important; padding: 7px 0 !important; border-top: 1px solid rgba(140,190,255,.07) !important; }
+#cc .cc-li b { color: var(--g-ok) !important; font-weight: 600; } #cc .cc-li i { color: var(--g-gold) !important; }
+#cc .cc-leer { font: 400 12.5px -apple-system, system-ui, sans-serif !important; color: var(--g-mut) !important; }
+#cc .cc-v { font: 600 30px -apple-system, system-ui, sans-serif !important; letter-spacing: -.02em; }
+#cc .cc-s { font: 400 12px -apple-system, system-ui, sans-serif !important; color: var(--g-mut) !important; }
+#cc .cc-bar { border-bottom: 0 !important; font: 500 12px -apple-system, system-ui, sans-serif !important; letter-spacing: 0 !important; color: var(--g-mut) !important; top: 10px !important; height: 40px !important; }
+#cc .cc-bar > span:first-child { font: 600 13px -apple-system, system-ui, sans-serif !important; letter-spacing: .42em !important; color: #dfeaff !important; }
+#cc .cc-bar b { color: #f2f7ff !important; font-weight: 600; }
+#cc .cc-bar button { font: 500 12px -apple-system, system-ui, sans-serif !important; letter-spacing: 0 !important; border-radius: 99px !important; padding: 6px 12px !important; background: rgba(255,255,255,.05) !important; border: 1px solid var(--g-line) !important; color: #c9d7ee !important; box-shadow: none !important; }
+#cc .cc-bar button[aria-pressed=true] { background: rgba(124,200,255,.16) !important; color: var(--g-acc) !important; }
+#cc .cc-bar .cc-uhr { font: 300 28px -apple-system, system-ui, sans-serif !important; text-shadow: none !important; letter-spacing: .02em; }
+#cc .cc-st { font: 500 18px -apple-system, system-ui, sans-serif !important; letter-spacing: .01em !important; color: #fff !important; bottom: 74px !important; }
+#cc .cc-st i { width: 8px !important; height: 8px !important; }
+#cc .cc-sub { font: 400 14px/1.4 -apple-system, system-ui, sans-serif !important; color: var(--g-mut) !important; text-shadow: none !important; bottom: 30px !important; }
+body.cc-on #form input { background: rgba(14,22,38,.75) !important; }
+body.cc-on header h1 { visibility: hidden; }
+#jv-boot { display: none !important; }
