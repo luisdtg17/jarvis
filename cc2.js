@@ -177,7 +177,7 @@
       if (px > rc.left && px < rc.right && py > rc.top && py < rc.bottom) { gf.scrollTop += (a.y - alt[alt.length - 1].y) * cr.height * 1.6; } }
 
     // 1: Hand flach hinhalten (ruhig, 1 Sekunde) → Jarvis hört zu
-    if (a.name === 'offen' && !orbAktiv()) {
+    if (false) { /* Hand flach = zuhören: entfernt (zu unzuverlässig) */
       if (!palmPos || Math.hypot(a.x - palmPos.x, a.y - palmPos.y) > 0.05) { palmPos = { x: a.x, y: a.y }; offenSeit = t; }
       palmProg = Math.min(1, (t - offenSeit) / 1000);
       if (palmProg >= 1 && bereit('zuhoeren', t, 4000)) { palmProg = 0; offenSeit = t + 99999; zeige('🎙 ICH HÖRE ZU'); blip(1200); orbTipp(); }
@@ -187,7 +187,7 @@
     // 4: Zeigefinger hoch (psst) → still
     if (a.name === 'zeige' && /speaking|listening|thinking/.test(orbStatus()) && bereit('psst', t, 2500)) { zeige('🤫 PSST'); orbTipp(); return; }
     // 5: Peace → Ton an/aus
-    if (a.name === 'peace' && bereit('peace', t, 2500)) { var bt = $('cc-ton'); if (bt) { bt.click(); zeige(bt.getAttribute('aria-pressed') === 'true' ? '♪ TON AN' : '♪ TON AUS'); } return; }
+    if (false) { /* Peace = Ton an/aus: entfernt */ var bt = $('cc-ton'); if (bt) { bt.click(); zeige(bt.getAttribute('aria-pressed') === 'true' ? '♪ TON AN' : '♪ TON AUS'); } return; }
     // 6: Daumen hoch / runter → Ja / Nein auf Jarvis' Frage
     if ((a.name === 'daumen_hoch' || a.name === 'daumen_runter') && bereit('daumen', t, 3000)) {
       var ja = a.name === 'daumen_hoch', frage = /\?\s*$/.test(letzteJarvis().trim());
