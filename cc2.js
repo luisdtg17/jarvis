@@ -111,9 +111,9 @@
     } else if (!weg && window.ccFace && t - zuletztDa > 60000) { weg = true; document.body.classList.add('cc-dim'); }
   }
   function zurueck(abwesend) {
-    var heute = new Date().toISOString().slice(0, 10), h = new Date().getHours(), gem = ''; try { gem = localStorage.getItem('cc_morgen') || ''; } catch (e) {}
-    if (h >= 5 && h < 12 && gem !== heute) { try { localStorage.setItem('cc_morgen', heute); } catch (e) {} zeige('☀️ GUTEN MORGEN'); sagen('Guten Morgen, ich sitze jetzt am Schreibtisch. Gib mir ein kurzes Morgen-Briefing: Verkäufe seit gestern, Termine heute, wichtigste To-dos. Maximal 3 Sätze.'); return; }
-    if (abwesend > 120000 && performance.now() - begruesst > 1800000 && !orbAktiv()) { begruesst = performance.now(); zeige('WILLKOMMEN ZURÜCK'); sagen('Ich bin gerade zurück an den Schreibtisch gekommen. Begrüß mich in einem kurzen, lockeren Satz und sag, ob sich in der Zwischenzeit etwas Wichtiges getan hat.'); }
+    var d0 = new Date(), heute = d0.getFullYear() + '-' + (d0.getMonth() + 1) + '-' + d0.getDate(), h = d0.getHours(), gem = ''; try { gem = localStorage.getItem('cc_morgen') || ''; } catch (e) {}
+    if (h >= 10 && gem !== heute && !orbAktiv()) { /* nur 1x am Tag: das erste Mal ab 10 Uhr am iPad */ try { localStorage.setItem('cc_morgen', heute); } catch (e) {} zeige('☀️ GUTEN MORGEN'); sagen('Guten Morgen, ich sitze jetzt am Schreibtisch. Gib mir ein kurzes Morgen-Briefing: Verkäufe seit gestern, Termine heute, wichtigste To-dos. Maximal 3 Sätze.'); return; }
+    /* kein Willkommen-zurück mehr bei jedem Aufstehen */
   }
 
   // ---------- Gesten ----------
