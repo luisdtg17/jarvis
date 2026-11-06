@@ -1573,12 +1573,12 @@
     } catch (e) {
       add('sys', 'Keine Verbindung zu Jarvis (' + e.message + '). Bitte nochmal versuchen.'); jvLog('Senden-Fehler: ' + e.message);
     }
-    busy = false;
+    busy = false; gespraechT = Date.now();
     if (active) setTimeout(function () { if (active && !rec && !busy) listen(); }, 400); else if (standby) armStandby(); else setState('idle', 'Bereit');
   }
 
   // ---------- Zuhören: iPhone-Spracherkennung ----------
-  var srFehl = false, srVersuch = 0;
+  var srFehl = false, srVersuch = 0, gespraechT = 0; // gespraechT: letzte Aktivität im Gespräch → nach 1 min Ruhe zurück in Standby
   function listenSR() {
     finalText = ''; liveEl = null;
     rec = new SR();
@@ -1608,10 +1608,9 @@
       rec = null;
       if (!active) { if (standby) armStandby(); else setState('idle', 'Bereit'); return; }
       var fehl = srFehl; srFehl = false;
-      if (t) { srVersuch = 0; send({ text: t, fromVoice: true }); }
-      else if (fehl && srVersuch < 4) { srVersuch++; setTimeout(function () { if (active && !rec && !busy) listen(); }, 500); } // iOS bricht manchmal ab → kurz warten und neu zuhören
-      else if (standby) { srVersuch = 0; active = false; armStandby(); }
-      else { srVersuch = 0; listen(); }
+      if (t) { srVersuch = 0; gespraechT = Date.now(); send({ text: t, fromVoice: true }); }
+      else if (Date.now() - gespraechT < 60000) { srVersuch++; setTimeout(function () { if (active && !rec && !busy) listen(); }, fehl ? 500 : 250); } // bis 1 min Ruhe: weiter zuhören
+      else { srVersuch = 0; jvLog('Gespräch beendet: 1 min Ruhe'); active = false; if (standby) armStandby(); else setState('idle', 'Bereit'); } // danach nur noch „Jarvis“ oder zweimal klatschen
     };
     try { rec.start(); setState('listening', 'Ich höre zu …'); jvLog('SR gestartet'); }
     catch (e) { add('sys', 'Spracherkennung konnte nicht starten.'); active = false; setState('idle', 'Bereit'); }
@@ -1682,7 +1681,7 @@
     jvLog('Wachwort erkannt');
     disarm();
     unlockAudio();
-    active = true;
+    active = true; gespraechT = Date.now();
     rest = (rest || '').replace(/^[\s,.!?:-]+/, '').trim();
     if (rest.split(/\s+/).length >= 2) { add('me', rest); send({ text: rest, fromVoice: true }); }
     else if (hasTTS && !serverVoice) { speakDevice('Ja, Boss?').then(function () { if (active) listen(); }); }
@@ -1743,6 +1742,7 @@
     if (laut) wv.last = now;
     if (now - wv.last > 700 || now - wv.start > 4000) { wv.ruheBis = now + 600; try { wv.rec.stop(); } catch (e) { wv.on = false; } }
   }
+  window.jvNativeKlatsch = function () { if (standby && !active && !busy) { jvLog('Klatschen erkannt (App)'); wake(''); } }; // iOS-App: Klatschen wird nativ erkannt
   async function startClap() {
     if (!standby || clapLaeuft || (active && !IST_ANDROID)) return;
     try {
@@ -1815,7 +1815,7 @@
     if (!KEY) { add('sys', 'Bitte den vollständigen Jarvis-Link mit Schlüssel einmal öffnen.'); return; }
     unlockAudio();
     disarm();
-    active = true;
+    active = true; gespraechT = Date.now();
     if (!SR) {
       try { await ensureMic(); }
       catch (e) { active = false; add('sys', 'Mikrofon nicht verfügbar (' + (e.name || e.message) + '). In den Einstellungen für Safari erlauben.'); setState('idle', 'Bereit'); return; }
