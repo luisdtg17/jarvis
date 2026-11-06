@@ -854,7 +854,8 @@
   var IST_ANDROID = /Android/i.test(navigator.userAgent);
   if (IST_ANDROID) SR = null; // Android: Browser-Spracherkennung liefert nichts bzw. kollidiert mit dem Klatsch-Mikro → eigene Aufnahme nutzen
   var hasTTS = 'speechSynthesis' in window;
-  var serverVoice = store('jarvis_voice') !== 'device' || !hasTTS; // Standard: natürliche Gemini-Stimme
+  var IOS_GER = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  var serverVoice = IOS_GER || store('jarvis_voice') !== 'device' || !hasTTS; // Standard: natürliche Gemini-Stimme
   var active = false, state = 'idle', busy = false;
   var rec = null, liveEl = null, finalText = '';
   var audioCtx = null, currentSource = null;
@@ -864,6 +865,7 @@
   paintVoice();
   voiceBtn.addEventListener('click', function () {
     if (!hasTTS) return;
+    if (IOS_GER) { serverVoice = true; paintVoice(); add('sys', 'Auf iPhone/iPad bleibt die HD-Stimme an (die iPhone-Stimme ist in Safari unzuverlässig).'); return; }
     serverVoice = !serverVoice; store('jarvis_voice', serverVoice ? 'server' : 'device'); paintVoice();
     add('sys', serverVoice ? 'HD-Stimme an (Gemini, kostenlos – bei Tageslimit automatisch iPhone-Stimme).' : 'iPhone-Stimme an (kostenlos).');
   });
@@ -1133,14 +1135,17 @@
         var i = 0;
         var weiter = function () {
           if (abbruch || i >= teile.length) { ende(); return; }
-          var u = new SpeechSynthesisUtterance(teile[i++]);
-          u.lang = 'de-DE'; if (voice) u.voice = voice; u.rate = 1.03;
+          var u = new SpeechSynthesisUtterance(teile[i++]); (window.__jvU = window.__jvU || []).push(u); if (window.__jvU.length > 20) window.__jvU.shift();
+          u.lang = 'de-DE'; if (voice && speechSynthesis.getVoices().indexOf(voice) >= 0) u.voice = voice; u.rate = 1.03;
+          var gestartet = false; u.onstart = function () { gestartet = true; };
+          setTimeout(function () { if (gestartet || fertig || abbruch) return; if (window.jvLog) window.jvLog('Gerätestimme startet nicht → Neuversuch'); try { speechSynthesis.cancel(); } catch (e) {} setTimeout(function () { var u2 = new SpeechSynthesisUtterance(u.text); window.__jvU.push(u2); u2.lang = 'de-DE'; u2.rate = 1.03; u2.onend = weiter; u2.onerror = function () { weiter(); }; try { speechSynthesis.resume(); speechSynthesis.speak(u2); } catch (e) { weiter(); } }, 150); }, 2200);
           u.onend = weiter; u.onerror = function (e) { if (window.jvLog) window.jvLog('Gerätestimme-Fehler: ' + (e && e.error)); weiter(); };
           u.onboundary = function () { if (window.jvPuls) window.jvPuls(1); };
+          try { speechSynthesis.resume(); } catch (e) {}
           speechSynthesis.speak(u);
         };
         setState('speaking', 'Jarvis spricht … (sag „Stopp“ oder tippen)');
-        weiter();
+        setTimeout(weiter, 120);
         bargeStart(function () { abbruch = true; try { speechSynthesis.cancel(); } catch (e) {} ende(); });
       } catch (e) { ende(); }
     });
@@ -1149,7 +1154,8 @@
     return new Promise(async function (resolve) {
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') await audioCtx.resume();
+        if (audioCtx.state !== 'running') { try { await Promise.race([audioCtx.resume(), new Promise(function (r) { setTimeout(r, 600); })]); } catch (e) {} }
+        if (audioCtx.state !== 'running') { jvLog('Ton: audioCtx=' + audioCtx.state + ' → Audio-Element'); await spieleElement(b64); resolve(); return; }
         var bin = atob(b64), bytes = new Uint8Array(bin.length);
         for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
         jvLog('Ton: audioCtx=' + audioCtx.state + ' bytes=' + bytes.length);
@@ -1163,7 +1169,26 @@
         src.start();
         sicher = setTimeout(function () { jvLog('Ton: Zeitlimit'); try { src.stop(); } catch (e) {} currentSource = null; bargeStop(); resolve(); }, (ab.duration || 10) * 1000 + 2000);
         bargeStart(function () { ttsAbbruch = true; try { src.stop(); } catch (e) {} });
-      } catch (e) { jvLog('Ton-Fehler: ' + (e && e.message) + ' audioCtx=' + (audioCtx && audioCtx.state)); resolve(); }
+      } catch (e) { jvLog('Ton-Fehler: ' + (e && e.message) + ' audioCtx=' + (audioCtx && audioCtx.state) + ' → Audio-Element'); try { await spieleElement(b64); } catch (e2) {} resolve(); }
+    });
+  }
+  var audioEl = null;
+  function spieleElement(b64) {
+    return new Promise(function (resolve) {
+      try {
+        if (!audioEl) { audioEl = new Audio(); audioEl.setAttribute('playsinline', ''); }
+        var bin = atob(b64), bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        var url = URL.createObjectURL(new Blob([bytes], { type: 'audio/wav' }));
+        var fertig = false, ende = function () { if (fertig) return; fertig = true; clearTimeout(sicher); try { URL.revokeObjectURL(url); } catch (e) {} currentSource = null; resolve(); };
+        var sicher = setTimeout(function () { jvLog('Audio-Element: Zeitlimit'); try { audioEl.pause(); } catch (e) {} ende(); }, 60000);
+        audioEl.onended = ende; audioEl.onerror = function () { jvLog('Audio-Element: Fehler'); ende(); };
+        audioEl.onloadedmetadata = function () { if (isFinite(audioEl.duration)) { clearTimeout(sicher); sicher = setTimeout(function () { try { audioEl.pause(); } catch (e) {} ende(); }, audioEl.duration * 1000 + 2000); } };
+        currentSource = { stop: function () { try { audioEl.pause(); } catch (e) {} ende(); } };
+        setState('speaking', 'Jarvis spricht … (tippen zum Stoppen)');
+        audioEl.src = url;
+        var p = audioEl.play(); if (p && p.catch) p.catch(function (e) { jvLog('Audio-Element blockiert: ' + (e && e.name)); ende(); });
+      } catch (e) { resolve(); }
     });
   }
   // Natürliche Stimme (Gemini) – erster Satz sofort, Rest lädt parallel → flüssig ohne lange Pause
@@ -1176,7 +1201,8 @@
     var p1 = api('/api/tts', { text: s1 }).catch(function () { return null; });
     var p2 = rest ? api('/api/tts', { text: rest }).catch(function () { return null; }) : null;
     var r1 = await p1;
-    if (!r1 || !r1.ok || !r1.audio) { jvLog('TTS vom Backend fehlgeschlagen, nehme Gerätestimme'); ttsPause = Date.now() + 1800000; return speakDevice(t); }
+    if (!r1 || !r1.ok || !r1.audio) { r1 = await api('/api/tts', { text: s1 }).catch(function () { return null; }); }
+    if (!r1 || !r1.ok || !r1.audio) { jvLog('TTS vom Backend fehlgeschlagen, nehme Gerätestimme'); ttsPause = Date.now() + 180000; return speakDevice(t); }
     await playServer(r1.audio);
     if (!p2 || ttsAbbruch) return;
     var r2 = await p2;
@@ -1188,6 +1214,7 @@
   window.jvLog = jvLog;
   window.addEventListener('error', function (e) { jvLog('JS-Fehler: ' + (e.message || '') + ' @' + (e.lineno || '')); });
   function unlockAudio() {
+    try { if (!audioEl) { audioEl = new Audio(); audioEl.setAttribute('playsinline', ''); } if (!audioEl.paused) throw 0; if (!audioEl.src) audioEl.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA='; audioEl.muted = true; var pp = audioEl.play(); if (pp && pp.catch) pp.catch(function () {}); setTimeout(function () { try { audioEl.pause(); audioEl.muted = false; } catch (e) {} }, 50); } catch (e) {}
     try { if (hasTTS) { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } } catch (e) {}
     try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch (e) {}
   }
