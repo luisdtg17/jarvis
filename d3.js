@@ -37,7 +37,9 @@
     /* Lager-Karte */
     '#cc .cc-zeile{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid rgba(140,190,255,.07);font:400 13px -apple-system,system-ui,sans-serif;color:#d6e2f5}',
     '#cc .cc-zeile:first-of-type{border-top:0}',
-    '#cc .cc-zeile b{font-weight:600;color:#f2f7ff}'
+    '#cc .cc-zeile b{font-weight:600;color:#f2f7ff}',
+    /* gegriffene/vergrößerte Karte schwebt frei über allem */
+    'body.cc-on #cc > .cc-p.cc-los{position:absolute !important;margin:0 !important;max-height:none;z-index:25}'
   ].join('\n');
   document.head.appendChild(css);
 
@@ -54,8 +56,10 @@
       lager.innerHTML = '<h5>LAGER <em id="cc-lager-w"></em></h5><div id="cc-lager"><div class="cc-leer">lädt …</div></div>';
     }
     var ord = { l: ['MONATSZIEL', 'HEUTE ZU TUN', 'KAUFLAND'], r: ['UMSATZ', 'LIVE', 'TERMINE', '#lager', 'AKTIVIT'] };
-    ord.l.forEach(function (n) { var p = panelMit(n); if (p && p.parentNode !== spL) spL.appendChild(p); });
-    ord.r.forEach(function (n) { var p = n === '#lager' ? lager : panelMit(n); if (p && p.parentNode !== spR) spR.appendChild(p); });
+    var frei = function (p) { return p && /cc-greif|cc-gross|cc-los/.test(p.className); };
+    ord.l.forEach(function (n) { var p = panelMit(n); if (p && !frei(p) && p.parentNode !== spL) spL.appendChild(p); });
+    ord.r.forEach(function (n) { var p = n === '#lager' ? lager : panelMit(n); if (p && !frei(p) && p.parentNode !== spR) spR.appendChild(p); });
+    beobachten();
     // Leiste oben: Status-Pille, Datum, Standby/Stimme
     var bar = cc.querySelector('.cc-bar');
     if (bar && !$('cc-pill')) {
@@ -74,6 +78,32 @@
       nav.insertBefore(mic, mitte);
     }
     return true;
+  }
+
+  // Greifen/Vergrößern: Karte aus der Spalte lösen, damit sie frei schweben und in die Mitte fliegen kann
+  var mo = null;
+  function beobachten() {
+    if (mo || !window.MutationObserver) return;
+    var cc = $('cc'); if (!cc) return;
+    mo = new MutationObserver(function (liste) {
+      liste.forEach(function (m) {
+        var p = m.target; if (!p.classList || !p.classList.contains('cc-p')) return;
+        var aktiv = p.classList.contains('cc-greif') || p.classList.contains('cc-gross');
+        var spalte = p.parentNode && p.parentNode.classList && p.parentNode.classList.contains('cc-sp');
+        if (aktiv && spalte) {
+          var r = cc.getBoundingClientRect(), er = p.getBoundingClientRect();
+          p._spalte = p.parentNode; p._nach = p.nextSibling;
+          p.classList.add('cc-los'); cc.appendChild(p);
+          if (!p.style.left || p.style.left === 'auto') { p.style.left = (er.left - r.left) + 'px'; p.style.top = (er.top - r.top) + 'px'; }
+          p.style.width = er.width + 'px';
+        } else if (!aktiv && p.classList.contains('cc-los')) {
+          p.classList.remove('cc-los');
+          var sp = p._spalte; if (sp) { if (p._nach && p._nach.parentNode === sp) sp.insertBefore(p, p._nach); else sp.appendChild(p); }
+          p.style.left = ''; p.style.top = ''; p.style.width = ''; p.style.transform = '';
+        }
+      });
+    });
+    mo.observe(cc, { subtree: true, attributes: true, attributeFilter: ['class'] });
   }
 
   // Standby-/Stimm-Knöpfe: auf dem iPad in die obere Leiste, sonst zurück in den Kopf
